@@ -1,13 +1,23 @@
 import { useState } from "react";
+import { useParams } from "react-router";
 import BoardHeader from "../components/BoardHeader";
 import TaskColumn from "../components/TaskColumn";
 import TaskForm from "../components/TaskForm";
 import { mockTasks } from "../data/mockTasks";
 
+const boardNames = {
+  "collabboard-development": "CollabBoard Development",
+  "m1-planning": "Milestone 1 Planning",
+};
+
 function BoardPage() {
+  const { boardId } = useParams();
+
   const [tasks, setTasks] = useState(mockTasks);
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
+
+  const boardName = boardNames[boardId] ?? "Team Board";
 
   function openCreateTaskForm() {
     setEditingTask(null);
@@ -55,14 +65,16 @@ function BoardPage() {
     }
 
     setTasks((currentTasks) =>
-      currentTasks.filter((currentTask) => currentTask.id !== task.id),
+      currentTasks.filter(
+        (currentTask) => currentTask.id !== task.id,
+      ),
     );
   }
 
   return (
     <main className="board-page">
       <BoardHeader
-        boardName="CollabBoard Development"
+        boardName={boardName}
         taskCount={tasks.length}
         onAddTask={openCreateTaskForm}
       />
