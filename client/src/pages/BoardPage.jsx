@@ -45,6 +45,20 @@ function BoardPage() {
     closeTaskForm();
   }
 
+  function handleDeleteTask(task) {
+    const shouldDelete = window.confirm(
+      `Are you sure you want to delete "${task.title}"?`,
+    );
+
+    if (!shouldDelete) {
+      return;
+    }
+
+    setTasks((currentTasks) =>
+      currentTasks.filter((currentTask) => currentTask.id !== task.id),
+    );
+  }
+
   return (
     <main className="board-page">
       <BoardHeader
@@ -59,6 +73,7 @@ function BoardPage() {
           status="todo"
           tasks={tasks}
           onEditTask={openEditTaskForm}
+          onDeleteTask={handleDeleteTask}
         />
 
         <TaskColumn
@@ -66,6 +81,7 @@ function BoardPage() {
           status="doing"
           tasks={tasks}
           onEditTask={openEditTaskForm}
+          onDeleteTask={handleDeleteTask}
         />
 
         <TaskColumn
@@ -73,6 +89,7 @@ function BoardPage() {
           status="done"
           tasks={tasks}
           onEditTask={openEditTaskForm}
+          onDeleteTask={handleDeleteTask}
         />
       </div>
 

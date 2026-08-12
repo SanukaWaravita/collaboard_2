@@ -1,4 +1,4 @@
-function TaskCard({ task, onEdit }) {
+function TaskCard({ task, onEdit, onDelete }) {
   const statusLabels = {
     todo: "To Do",
     doing: "Doing",
@@ -26,7 +26,11 @@ function TaskCard({ task, onEdit }) {
           Edit
         </button>
 
-        <button type="button" className="button button--danger">
+        <button
+          type="button"
+          className="button button--danger"
+          onClick={() => onDelete(task)}
+        >
           Delete
         </button>
       </div>
