@@ -563,3 +563,64 @@ select:focus-visible {
     grid-template-columns: 1fr;
   }
 }
+
+.app-navbar {
+  position: sticky;
+  z-index: 100;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  min-height: 68px;
+  padding: 0 max(20px, calc((100% - 1360px) / 2));
+  border-bottom: 1px solid var(--border);
+  background: rgb(255 255 255 / 92%);
+  backdrop-filter: blur(12px);
+}
+
+.app-navbar__brand {
+  color: var(--primary);
+  font-size: 1.15rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.app-navbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-navbar__link {
+  border-radius: 7px;
+  padding: 8px 11px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.app-navbar__link:hover,
+.app-navbar__link--active {
+  color: var(--primary);
+  background: #eef2ff;
+}
+
+@media (max-width: 600px) {
+  .app-navbar {
+    padding: 0 16px;
+  }
+
+  .app-navbar__actions {
+    gap: 6px;
+  }
+
+  .app-navbar__link {
+    padding: 7px 8px;
+  }
+
+  .app-navbar .button {
+    padding: 7px 9px;
+  }
+}
