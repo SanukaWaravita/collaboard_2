@@ -1,4 +1,4 @@
-function BoardHeader({ boardName, taskCount }) {
+function BoardHeader({ boardName, taskCount, onAddTask }) {
   return (
     <header className="board-header">
       <div>
@@ -9,7 +9,11 @@ function BoardHeader({ boardName, taskCount }) {
         </p>
       </div>
 
-      <button type="button" className="button button--primary">
+      <button
+        type="button"
+        className="button button--primary"
+        onClick={onAddTask}
+      >
         Add Task
       </button>
     </header>
