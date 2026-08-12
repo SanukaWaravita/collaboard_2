@@ -1,6 +1,6 @@
 import TaskCard from "./TaskCard";
 
-function TaskColumn({ title, status, tasks }) {
+function TaskColumn({ title, status, tasks, onEditTask }) {
   const columnTasks = tasks.filter((task) => task.status === status);
 
   return (
@@ -13,7 +13,11 @@ function TaskColumn({ title, status, tasks }) {
       <div className="task-column__content">
         {columnTasks.length > 0 ? (
           columnTasks.map((task) => (
-            <TaskCard key={task.id} task={task} />
+            <TaskCard
+              key={task.id}
+              task={task}
+              onEdit={onEditTask}
+            />
           ))
         ) : (
           <p className="task-column__empty">No tasks in this column.</p>

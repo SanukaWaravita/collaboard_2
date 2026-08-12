@@ -1,9 +1,13 @@
 import { useState } from "react";
 
-function TaskForm({ onSubmit, onCancel }) {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [status, setStatus] = useState("todo");
+function TaskForm({ initialTask = null, onSubmit, onCancel }) {
+  const [title, setTitle] = useState(initialTask?.title ?? "");
+  const [description, setDescription] = useState(
+    initialTask?.description ?? "",
+  );
+  const [status, setStatus] = useState(initialTask?.status ?? "todo");
+
+  const isEditing = Boolean(initialTask);
 
   function handleSubmit(event) {
     event.preventDefault();
@@ -23,11 +27,22 @@ function TaskForm({ onSubmit, onCancel }) {
 
   return (
     <div className="modal-backdrop">
-      <form className="task-form" onSubmit={handleSubmit}>
+      <form
+        className="task-form"
+        onSubmit={handleSubmit}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="task-form-title"
+      >
         <header className="task-form__header">
           <div>
-            <p className="task-form__eyebrow">New task</p>
-            <h2>Create a task</h2>
+            <p className="task-form__eyebrow">
+              {isEditing ? "Edit task" : "New task"}
+            </p>
+
+            <h2 id="task-form-title">
+              {isEditing ? "Update task" : "Create a task"}
+            </h2>
           </div>
 
           <button
@@ -87,7 +102,7 @@ function TaskForm({ onSubmit, onCancel }) {
           </button>
 
           <button type="submit" className="button button--primary">
-            Create Task
+            {isEditing ? "Save Changes" : "Create Task"}
           </button>
         </div>
       </form>
