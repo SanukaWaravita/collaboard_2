@@ -304,7 +304,7 @@ Successful response: `200 OK`
 
 The server increments the task version after each update.
 
-If the supplied version is outdated, the server will eventually return:
+If the supplied version is outdated, the server returns:
 
 ```text
 409 Conflict
