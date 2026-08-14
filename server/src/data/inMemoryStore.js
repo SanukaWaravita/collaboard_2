@@ -1,4 +1,5 @@
 export const store = {
+  users: [],
   boards: [
     {
       id: "collabboard-development",
