@@ -3,9 +3,29 @@ import { store } from "../data/inMemoryStore.js";
 
 const allowedStatuses = new Set(["todo", "doing", "done"]);
 
+function findOwnedTask(taskId, userId) {
+  const task = store.tasks.find(
+    (currentTask) => currentTask.id === taskId,
+  );
+
+  if (!task) {
+    return null;
+  }
+
+  const ownedBoard = store.boards.find(
+    (board) =>
+      board.id === task.boardId &&
+      board.ownerId === userId,
+  );
+
+  return ownedBoard ? task : null;
+}
+
 export function createTask(request, response) {
   const board = store.boards.find(
-    (currentBoard) => currentBoard.id === request.params.boardId,
+    (currentBoard) =>
+      currentBoard.id === request.params.boardId &&
+      currentBoard.ownerId === request.user.id,
   );
 
   if (!board) {
@@ -57,8 +77,9 @@ export function createTask(request, response) {
 }
 
 export function getTask(request, response) {
-  const task = store.tasks.find(
-    (currentTask) => currentTask.id === request.params.taskId,
+  const task = findOwnedTask(
+    request.params.taskId,
+    request.user.id,
   );
 
   if (!task) {
@@ -71,8 +92,9 @@ export function getTask(request, response) {
 }
 
 export function updateTask(request, response) {
-  const task = store.tasks.find(
-    (currentTask) => currentTask.id === request.params.taskId,
+  const task = findOwnedTask(
+    request.params.taskId,
+    request.user.id,
   );
 
   if (!task) {
@@ -158,15 +180,20 @@ export function updateTask(request, response) {
 }
 
 export function deleteTask(request, response) {
-  const taskIndex = store.tasks.findIndex(
-    (task) => task.id === request.params.taskId,
+  const task = findOwnedTask(
+    request.params.taskId,
+    request.user.id,
   );
 
-  if (taskIndex === -1) {
+  if (!task) {
     return response.status(404).json({
       message: "Task not found",
     });
   }
+
+  const taskIndex = store.tasks.findIndex(
+    (currentTask) => currentTask.id === task.id,
+  );
 
   store.tasks.splice(taskIndex, 1);
 

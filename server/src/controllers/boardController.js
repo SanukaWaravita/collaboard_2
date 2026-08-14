@@ -13,7 +13,9 @@ function includeTaskCount(board) {
 }
 
 export function getBoards(request, response) {
-  const boards = store.boards.map(includeTaskCount);
+  const boards = store.boards
+    .filter((board) => board.ownerId === request.user.id)
+    .map(includeTaskCount);
 
   response.status(200).json({ boards });
 }
@@ -39,7 +41,7 @@ export function createBoard(request, response) {
     id: randomUUID(),
     name: name.trim(),
     description: description.trim(),
-    ownerId: "temporary-user",
+    ownerId: request.user.id,
     createdAt: timestamp,
     updatedAt: timestamp,
   };
@@ -53,7 +55,9 @@ export function createBoard(request, response) {
 
 export function getBoard(request, response) {
   const board = store.boards.find(
-    (currentBoard) => currentBoard.id === request.params.boardId,
+    (currentBoard) =>
+      currentBoard.id === request.params.boardId &&
+      currentBoard.ownerId === request.user.id,
   );
 
   if (!board) {
@@ -74,7 +78,9 @@ export function getBoard(request, response) {
 
 export function updateBoard(request, response) {
   const board = store.boards.find(
-    (currentBoard) => currentBoard.id === request.params.boardId,
+    (currentBoard) =>
+      currentBoard.id === request.params.boardId &&
+      currentBoard.ownerId === request.user.id,
   );
 
   if (!board) {
@@ -126,7 +132,9 @@ export function updateBoard(request, response) {
 
 export function deleteBoard(request, response) {
   const boardIndex = store.boards.findIndex(
-    (board) => board.id === request.params.boardId,
+    (board) =>
+      board.id === request.params.boardId &&
+      board.ownerId === request.user.id,
   );
 
   if (boardIndex === -1) {

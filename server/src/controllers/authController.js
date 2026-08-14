@@ -81,6 +81,14 @@ export async function registerUser(request, response) {
     updatedAt: timestamp,
   };
 
+    if (store.users.length === 0) {
+    store.boards.forEach((board) => {
+      if (board.ownerId === "temporary-user") {
+        board.ownerId = user.id;
+      }
+    });
+  }
+
   store.users.push(user);
 
   return response.status(201).json({
