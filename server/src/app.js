@@ -1,5 +1,7 @@
 import express from "express";
 import cors from "cors";
+import { errorMiddleware } from "./middleware/errorMiddleware.js";
+import { notFoundMiddleware } from "./middleware/notFoundMiddleware.js";
 import boardRoutes from "./routes/boardRoutes.js";
 import healthRoutes from "./routes/healthRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
@@ -13,10 +15,7 @@ app.use("/api/health", healthRoutes);
 app.use("/api/boards", boardRoutes);
 app.use("/api/tasks", taskRoutes);
 
-app.use((request, response) => {
-  response.status(404).json({
-    message: `Route ${request.method} ${request.originalUrl} not found`,
-  });
-});
+app.use(notFoundMiddleware);
+app.use(errorMiddleware);
 
 export default app;

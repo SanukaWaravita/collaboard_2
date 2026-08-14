@@ -19,7 +19,7 @@ export function getBoards(request, response) {
 }
 
 export function createBoard(request, response) {
-  const { name, description = "" } = request.body;
+  const { name, description = "" } = request.body ?? {};
 
   if (typeof name !== "string" || !name.trim()) {
     return response.status(400).json({
@@ -83,7 +83,7 @@ export function updateBoard(request, response) {
     });
   }
 
-  const { name, description } = request.body;
+  const { name, description } = request.body ?? {};
 
   if (name === undefined && description === undefined) {
     return response.status(400).json({
