@@ -1,12 +1,19 @@
-function CreateBoardForm({ onSubmit, onCancel }) {
+function CreateBoardForm({
+  onSubmit,
+  onCancel,
+  isSubmitting = false,
+  error = "",
+}) {
   function handleSubmit(event) {
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
-    const name = formData.get("name").trim();
-    const description = formData.get("description").trim();
+    const name = String(formData.get("name")).trim();
+    const description = String(
+      formData.get("description"),
+    ).trim();
 
-    if (!name) {
+    if (!name || isSubmitting) {
       return;
     }
 
@@ -33,6 +40,7 @@ function CreateBoardForm({ onSubmit, onCancel }) {
             className="task-form__close"
             onClick={onCancel}
             aria-label="Close board form"
+            disabled={isSubmitting}
           >
             ×
           </button>
@@ -47,6 +55,7 @@ function CreateBoardForm({ onSubmit, onCancel }) {
             placeholder="For example: Group Assignment"
             required
             autoFocus
+            disabled={isSubmitting}
           />
         </div>
 
@@ -57,20 +66,32 @@ function CreateBoardForm({ onSubmit, onCancel }) {
             name="description"
             placeholder="Describe the purpose of this board"
             rows="4"
+            disabled={isSubmitting}
           />
         </div>
+
+        {error && (
+          <p className="auth-form__error" role="alert">
+            {error}
+          </p>
+        )}
 
         <div className="task-form__actions">
           <button
             type="button"
             className="button button--secondary"
             onClick={onCancel}
+            disabled={isSubmitting}
           >
             Cancel
           </button>
 
-          <button type="submit" className="button button--primary">
-            Create Board
+          <button
+            type="submit"
+            className="button button--primary"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Creating..." : "Create Board"}
           </button>
         </div>
       </form>
