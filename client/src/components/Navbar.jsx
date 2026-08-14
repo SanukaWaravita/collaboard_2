@@ -1,10 +1,11 @@
 import { NavLink, useNavigate } from "react-router";
+import { clearSession } from "../services/api";
 
 function Navbar() {
   const navigate = useNavigate();
 
   function handleLogout() {
-    // Real token removal will be added with JWT authentication in M2.
+    clearSession();
     navigate("/login");
   }
 

@@ -1,16 +1,25 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
+import {
+  apiRequest,
+  saveSession,
+} from "../services/api";
 
 function RegisterPage() {
   const navigate = useNavigate();
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
-    const password = formData.get("password");
-    const confirmPassword = formData.get("confirmPassword");
+    const name = String(formData.get("name")).trim();
+    const email = String(formData.get("email")).trim();
+    const password = String(formData.get("password"));
+    const confirmPassword = String(
+      formData.get("confirmPassword"),
+    );
 
     if (password !== confirmPassword) {
       setError("The passwords do not match.");
@@ -18,9 +27,25 @@ function RegisterPage() {
     }
 
     setError("");
+    setIsSubmitting(true);
 
-    // Temporary M1 behaviour. Account creation will use the API in M2.
-    navigate("/boards");
+    try {
+      const session = await apiRequest("/auth/register", {
+        method: "POST",
+        body: {
+          name,
+          email,
+          password,
+        },
+      });
+
+      saveSession(session);
+      navigate("/boards");
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -65,9 +90,9 @@ function RegisterPage() {
               id="register-password"
               name="password"
               type="password"
-              placeholder="At least 6 characters"
+              placeholder="At least 8 characters"
               autoComplete="new-password"
-              minLength="6"
+              minLength="8"
               required
             />
           </div>
@@ -82,7 +107,7 @@ function RegisterPage() {
               type="password"
               placeholder="Enter the password again"
               autoComplete="new-password"
-              minLength="6"
+              minLength="8"
               required
             />
           </div>
@@ -96,13 +121,17 @@ function RegisterPage() {
           <button
             type="submit"
             className="button button--primary auth-form__submit"
+            disabled={isSubmitting}
           >
-            Create Account
+            {isSubmitting
+              ? "Creating Account..."
+              : "Create Account"}
           </button>
         </form>
 
         <p className="auth-card__footer">
-          Already have an account? <Link to="/login">Log in</Link>
+          Already have an account?{" "}
+          <Link to="/login">Log in</Link>
         </p>
       </section>
     </main>
