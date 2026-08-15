@@ -15,10 +15,18 @@ function BoardsPage() {
   const [loadError, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
 
-  const [isCreateFormOpen, setIsCreateFormOpen] =
+  const [isBoardFormOpen, setIsBoardFormOpen] =
     useState(false);
-  const [isCreating, setIsCreating] = useState(false);
-  const [createError, setCreateError] = useState("");
+  const [editingBoard, setEditingBoard] = useState(null);
+  const [isSavingBoard, setIsSavingBoard] =
+    useState(false);
+  const [boardFormError, setBoardFormError] =
+    useState("");
+
+  const [deletingBoardId, setDeletingBoardId] =
+    useState(null);
+  const [boardActionError, setBoardActionError] =
+    useState("");
 
   useEffect(() => {
     let shouldIgnore = false;
@@ -60,35 +68,62 @@ function BoardsPage() {
   }, [navigate, reloadKey]);
 
   function openCreateForm() {
-    setCreateError("");
-    setIsCreateFormOpen(true);
+    setEditingBoard(null);
+    setBoardFormError("");
+    setIsBoardFormOpen(true);
   }
 
-  function closeCreateForm() {
-    if (isCreating) {
+  function openEditForm(board) {
+    setEditingBoard(board);
+    setBoardFormError("");
+    setIsBoardFormOpen(true);
+  }
+
+  function closeBoardForm() {
+    if (isSavingBoard) {
       return;
     }
 
-    setCreateError("");
-    setIsCreateFormOpen(false);
+    setEditingBoard(null);
+    setBoardFormError("");
+    setIsBoardFormOpen(false);
   }
 
-  async function handleCreateBoard(boardData) {
-    setCreateError("");
-    setIsCreating(true);
+  async function handleSaveBoard(boardData) {
+    setBoardFormError("");
+    setIsSavingBoard(true);
 
     try {
-      const data = await apiRequest("/boards", {
-        method: "POST",
-        body: boardData,
-      });
+      if (editingBoard) {
+        const data = await apiRequest(
+          `/boards/${editingBoard.id}`,
+          {
+            method: "PATCH",
+            body: boardData,
+          },
+        );
 
-      setBoards((currentBoards) => [
-        ...currentBoards,
-        data.board,
-      ]);
+        setBoards((currentBoards) =>
+          currentBoards.map((board) =>
+            board.id === data.board.id
+              ? data.board
+              : board,
+          ),
+        );
+      } else {
+        const data = await apiRequest("/boards", {
+          method: "POST",
+          body: boardData,
+        });
 
-      setIsCreateFormOpen(false);
+        setBoards((currentBoards) => [
+          ...currentBoards,
+          data.board,
+        ]);
+      }
+
+      setEditingBoard(null);
+      setIsBoardFormOpen(false);
     } catch (requestError) {
       if (requestError.status === 401) {
         clearSession();
@@ -96,9 +131,45 @@ function BoardsPage() {
         return;
       }
 
-      setCreateError(requestError.message);
+      setBoardFormError(requestError.message);
     } finally {
-      setIsCreating(false);
+      setIsSavingBoard(false);
+    }
+  }
+
+  async function handleDeleteBoard(board) {
+    const shouldDelete = window.confirm(
+      `Delete "${board.name}" and all of its tasks?`,
+    );
+
+    if (!shouldDelete) {
+      return;
+    }
+
+    setBoardActionError("");
+    setDeletingBoardId(board.id);
+
+    try {
+      await apiRequest(`/boards/${board.id}`, {
+        method: "DELETE",
+      });
+
+      setBoards((currentBoards) =>
+        currentBoards.filter(
+          (currentBoard) =>
+            currentBoard.id !== board.id,
+        ),
+      );
+    } catch (requestError) {
+      if (requestError.status === 401) {
+        clearSession();
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      setBoardActionError(requestError.message);
+    } finally {
+      setDeletingBoardId(null);
     }
   }
 
@@ -106,9 +177,16 @@ function BoardsPage() {
     <main className="boards-page">
       <header className="boards-header">
         <div>
-          <p className="board-header__eyebrow">Workspace</p>
+          <p className="board-header__eyebrow">
+            Workspace
+          </p>
+
           <h1>My Boards</h1>
-          <p>Select a board or create a new workspace for your team.</p>
+
+          <p>
+            Select a board or create a new workspace
+            for your team.
+          </p>
         </div>
 
         <button
@@ -119,6 +197,12 @@ function BoardsPage() {
           Create Board
         </button>
       </header>
+
+      {boardActionError && (
+        <p className="board-action-error" role="alert">
+          {boardActionError}
+        </p>
+      )}
 
       {isLoading && (
         <p className="page-message" role="status">
@@ -134,7 +218,9 @@ function BoardsPage() {
             type="button"
             className="button button--secondary"
             onClick={() =>
-              setReloadKey((currentKey) => currentKey + 1)
+              setReloadKey(
+                (currentKey) => currentKey + 1,
+              )
             }
           >
             Try Again
@@ -147,7 +233,11 @@ function BoardsPage() {
         boards.length === 0 && (
           <section className="empty-state">
             <h2>No boards yet</h2>
-            <p>Create your first board to begin organizing tasks.</p>
+
+            <p>
+              Create your first board to begin
+              organizing tasks.
+            </p>
 
             <button
               type="button"
@@ -167,17 +257,27 @@ function BoardsPage() {
             aria-label="Available boards"
           >
             {boards.map((board) => (
-              <BoardCard key={board.id} board={board} />
+              <BoardCard
+                key={board.id}
+                board={board}
+                onEdit={openEditForm}
+                onDelete={handleDeleteBoard}
+                isDeleting={
+                  deletingBoardId === board.id
+                }
+              />
             ))}
           </section>
         )}
 
-      {isCreateFormOpen && (
+      {isBoardFormOpen && (
         <CreateBoardForm
-          onSubmit={handleCreateBoard}
-          onCancel={closeCreateForm}
-          isSubmitting={isCreating}
-          error={createError}
+          key={editingBoard?.id ?? "new-board"}
+          initialBoard={editingBoard}
+          onSubmit={handleSaveBoard}
+          onCancel={closeBoardForm}
+          isSubmitting={isSavingBoard}
+          error={boardFormError}
         />
       )}
     </main>
