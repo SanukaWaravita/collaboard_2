@@ -1,4 +1,9 @@
-function TaskCard({ task, onEdit, onDelete }) {
+function TaskCard({
+  task,
+  onEdit,
+  onDelete,
+  isDeleting = false,
+}) {
   const statusLabels = {
     todo: "To Do",
     doing: "Doing",
@@ -10,7 +15,9 @@ function TaskCard({ task, onEdit, onDelete }) {
       <div className="task-card__header">
         <h3>{task.title}</h3>
 
-        <span className={`task-status task-status--${task.status}`}>
+        <span
+          className={`task-status task-status--${task.status}`}
+        >
           {statusLabels[task.status]}
         </span>
       </div>
@@ -22,6 +29,7 @@ function TaskCard({ task, onEdit, onDelete }) {
           type="button"
           className="button button--secondary"
           onClick={() => onEdit(task)}
+          disabled={isDeleting}
         >
           Edit
         </button>
@@ -30,8 +38,9 @@ function TaskCard({ task, onEdit, onDelete }) {
           type="button"
           className="button button--danger"
           onClick={() => onDelete(task)}
+          disabled={isDeleting}
         >
-          Delete
+          {isDeleting ? "Deleting..." : "Delete"}
         </button>
       </div>
     </article>

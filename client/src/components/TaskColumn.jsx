@@ -6,14 +6,20 @@ function TaskColumn({
   tasks,
   onEditTask,
   onDeleteTask,
+  deletingTaskId,
 }) {
-  const columnTasks = tasks.filter((task) => task.status === status);
+  const columnTasks = tasks.filter(
+    (task) => task.status === status,
+  );
 
   return (
     <section className={`task-column task-column--${status}`}>
       <header className="task-column__header">
         <h2>{title}</h2>
-        <span className="task-column__count">{columnTasks.length}</span>
+
+        <span className="task-column__count">
+          {columnTasks.length}
+        </span>
       </header>
 
       <div className="task-column__content">
@@ -24,10 +30,13 @@ function TaskColumn({
               task={task}
               onEdit={onEditTask}
               onDelete={onDeleteTask}
+              isDeleting={deletingTaskId === task.id}
             />
           ))
         ) : (
-          <p className="task-column__empty">No tasks in this column.</p>
+          <p className="task-column__empty">
+            No tasks in this column.
+          </p>
         )}
       </div>
     </section>

@@ -1,13 +1,41 @@
+import { useState } from "react";
 import { Link, useNavigate } from "react-router";
+import {
+  apiRequest,
+  saveSession,
+} from "../services/api";
 
 function LoginPage() {
   const navigate = useNavigate();
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
 
-    // Temporary M1 behaviour. Real authentication will be added in M2.
-    navigate("/boards");
+    const formData = new FormData(event.currentTarget);
+    const email = String(formData.get("email")).trim();
+    const password = String(formData.get("password"));
+
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      const session = await apiRequest("/auth/login", {
+        method: "POST",
+        body: {
+          email,
+          password,
+        },
+      });
+
+      saveSession(session);
+      navigate("/boards");
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -42,16 +70,23 @@ function LoginPage() {
               type="password"
               placeholder="Enter your password"
               autoComplete="current-password"
-              minLength="6"
+              minLength="8"
               required
             />
           </div>
 
+          {error && (
+            <p className="auth-form__error" role="alert">
+              {error}
+            </p>
+          )}
+
           <button
             type="submit"
             className="button button--primary auth-form__submit"
+            disabled={isSubmitting}
           >
-            Log In
+            {isSubmitting ? "Logging In..." : "Log In"}
           </button>
         </form>
 
