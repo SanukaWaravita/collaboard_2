@@ -1,11 +1,21 @@
 import { useState } from "react";
 
-function TaskForm({ initialTask = null, onSubmit, onCancel }) {
-  const [title, setTitle] = useState(initialTask?.title ?? "");
+function TaskForm({
+  initialTask = null,
+  onSubmit,
+  onCancel,
+  isSubmitting = false,
+  error = "",
+}) {
+  const [title, setTitle] = useState(
+    initialTask?.title ?? "",
+  );
   const [description, setDescription] = useState(
     initialTask?.description ?? "",
   );
-  const [status, setStatus] = useState(initialTask?.status ?? "todo");
+  const [status, setStatus] = useState(
+    initialTask?.status ?? "todo",
+  );
 
   const isEditing = Boolean(initialTask);
 
@@ -14,7 +24,7 @@ function TaskForm({ initialTask = null, onSubmit, onCancel }) {
 
     const trimmedTitle = title.trim();
 
-    if (!trimmedTitle) {
+    if (!trimmedTitle || isSubmitting) {
       return;
     }
 
@@ -50,6 +60,7 @@ function TaskForm({ initialTask = null, onSubmit, onCancel }) {
             className="task-form__close"
             onClick={onCancel}
             aria-label="Close task form"
+            disabled={isSubmitting}
           >
             ×
           </button>
@@ -65,6 +76,7 @@ function TaskForm({ initialTask = null, onSubmit, onCancel }) {
             placeholder="Enter a task title"
             required
             autoFocus
+            disabled={isSubmitting}
           />
         </div>
 
@@ -73,9 +85,12 @@ function TaskForm({ initialTask = null, onSubmit, onCancel }) {
           <textarea
             id="task-description"
             value={description}
-            onChange={(event) => setDescription(event.target.value)}
+            onChange={(event) =>
+              setDescription(event.target.value)
+            }
             placeholder="Describe the task"
             rows="4"
+            disabled={isSubmitting}
           />
         </div>
 
@@ -85,6 +100,7 @@ function TaskForm({ initialTask = null, onSubmit, onCancel }) {
             id="task-status"
             value={status}
             onChange={(event) => setStatus(event.target.value)}
+            disabled={isSubmitting}
           >
             <option value="todo">To Do</option>
             <option value="doing">Doing</option>
@@ -92,17 +108,32 @@ function TaskForm({ initialTask = null, onSubmit, onCancel }) {
           </select>
         </div>
 
+        {error && (
+          <p className="auth-form__error" role="alert">
+            {error}
+          </p>
+        )}
+
         <div className="task-form__actions">
           <button
             type="button"
             className="button button--secondary"
             onClick={onCancel}
+            disabled={isSubmitting}
           >
             Cancel
           </button>
 
-          <button type="submit" className="button button--primary">
-            {isEditing ? "Save Changes" : "Create Task"}
+          <button
+            type="submit"
+            className="button button--primary"
+            disabled={isSubmitting}
+          >
+            {isSubmitting
+              ? "Saving..."
+              : isEditing
+                ? "Save Changes"
+                : "Create Task"}
           </button>
         </div>
       </form>

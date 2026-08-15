@@ -656,3 +656,30 @@ select:focus-visible {
   cursor: wait;
   opacity: 0.7;
 }
+
+.board-action-error {
+  margin: 0 0 20px;
+  padding: 12px 14px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.page-error__actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.task-card__actions .button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+@media (max-width: 500px) {
+  .page-error__actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
