@@ -1,21 +1,25 @@
 # CollabBoard
 
-CollabBoard is a collaborative Kanban task-management application developed as a third-year group project. It allows teams to organize work using boards and tasks grouped under **To Do**, **Doing**, and **Done**.
+CollabBoard is a collaborative Kanban task-management application developed as a third-year group project. Users can register, log in, create boards, and manage tasks across **To Do**, **Doing**, and **Done** columns.
 
 ## Current status
 
-Milestone 1 provides a responsive React interface powered by temporary mock data.
+Milestone 2 provides a working React client connected to a protected Express REST API.
 
 Implemented:
 
-- login and registration interfaces;
-- board listing and board creation;
-- three-column Kanban board;
-- task creation, editing, status changes, and deletion;
-- client-side routing;
-- shared navigation;
-- responsive layouts;
-- requirements, wireframes, and component documentation.
+- user registration and login;
+- password hashing;
+- JWT authentication;
+- protected client and server routes;
+- user-owned boards;
+- Board creation, viewing, editing, and deletion;
+- Task creation, viewing, editing, movement, and deletion;
+- three-column Kanban interface;
+- task-version conflict detection;
+- consistent JSON error responses;
+- documented REST API contract;
+- responsive layouts.
 
 ## Technology stack
 
@@ -25,22 +29,25 @@ Implemented:
 | Build tool | Vite |
 | Routing | React Router |
 | Styling | CSS |
-| Code quality | ESLint |
-| Server | Node.js and Express — planned |
-| Database | MongoDB and Mongoose — planned |
-| Real-time updates | Socket.io — planned |
-| Testing | Jest, Supertest, React Testing Library — planned |
-| Deployment | Docker Compose and public hosting — planned |
+| Server | Node.js and Express |
+| Authentication | JSON Web Tokens |
+| Password hashing | bcrypt.js |
+| Current data storage | Temporary in-memory store |
+| Database | MongoDB and Mongoose — planned for M3 |
+| Client persistence | localStorage |
+| Testing | Jest, Supertest, React Testing Library — planned for M4 |
+| Real-time updates | Socket.io — planned for M5 |
+| Deployment | Docker Compose and public hosting — planned for M5 |
 
-## Getting started
+## Prerequisites
 
-### Prerequisites
+Install:
 
-- Node.js 22 or newer
-- npm
-- Git
+- Node.js 22 or newer;
+- npm;
+- Git.
 
-### Installation
+## Installation
 
 Clone the repository:
 
@@ -49,46 +56,106 @@ git clone https://github.com/SanukaWaravita/collaboard_2.git
 cd collaboard
 ```
 
+If the GitHub repository has a different name or URL, use the exact URL shown under the repository’s **Code** button.
+
 Install client dependencies:
 
 ```bash
 cd client
 npm install
+cd ..
 ```
 
-Start the development server:
+Install server dependencies:
 
 ```bash
+cd server
+npm install
+cd ..
+```
+
+## Server configuration
+
+Create a local server environment file:
+
+```bash
+cd server
+nano .env
+```
+
+Add:
+
+```dotenv
+PORT=5000
+JWT_SECRET=replace-this-with-a-long-random-secret
+JWT_EXPIRES_IN=1h
+```
+
+A random development secret can be generated with:
+
+```bash
+openssl rand -hex 32
+```
+
+Replace `replace-this-with-a-long-random-secret` with the generated value.
+
+Do not commit the real `.env` file. The required variable names are documented in `server/.env.example`.
+
+## Running the application
+
+The client and server run in separate terminals.
+
+### Terminal 1: API server
+
+```bash
+cd server
 npm run dev
 ```
 
-Open the local URL displayed by Vite, normally:
+The API normally runs at:
+
+```text
+http://localhost:5000
+```
+
+### Terminal 2: React client
+
+```bash
+cd client
+npm run dev
+```
+
+Open the URL displayed by Vite, normally:
 
 ```text
 http://localhost:5173
 ```
 
+Because M2 currently uses server memory, restarting the server clears registered users, created boards, and task changes.
+
 ## Available scripts
 
-Run these commands from the `client` directory:
+### Client scripts
+
+Run from `client`:
 
 ```bash
 npm run dev
 ```
 
-Starts the development server.
+Starts the Vite development server.
 
 ```bash
 npm run lint
 ```
 
-Checks the client code for linting problems.
+Checks the client code with ESLint.
 
 ```bash
 npm run build
 ```
 
-Creates a production build.
+Creates the production client build.
 
 ```bash
 npm run preview
@@ -96,83 +163,173 @@ npm run preview
 
 Previews the production build locally.
 
-## Application routes
+### Server scripts
 
-| Route | Screen |
-|---|---|
-| `/login` | Login |
-| `/register` | Registration |
-| `/boards` | Board list |
-| `/boards/:boardId` | Individual Kanban board |
+Run from `server`:
+
+```bash
+npm run dev
+```
+
+Starts the API with Nodemon and automatically restarts it after server code changes.
+
+```bash
+npm start
+```
+
+Starts the API with Node.js.
+
+Automated test scripts will be added during Milestone 4.
+
+## Client routes
+
+| Route | Access | Screen |
+|---|---|---|
+| `/login` | Public | Login |
+| `/register` | Public | Registration |
+| `/boards` | Protected | Current user’s boards |
+| `/boards/:boardId` | Protected | Individual Kanban board |
+
+## API overview
+
+Local API base URL:
+
+```text
+http://localhost:5000/api
+```
+
+Protected endpoints require:
+
+```http
+Authorization: Bearer <token>
+```
+
+### Public endpoints
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `POST` | `/api/auth/register` | Register a user |
+| `POST` | `/api/auth/login` | Log in |
+| `GET` | `/api/health` | Check API health |
+
+### Protected Board endpoints
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `GET` | `/api/boards` | List the user’s boards |
+| `POST` | `/api/boards` | Create a board |
+| `GET` | `/api/boards/:boardId` | Get a board and its tasks |
+| `PATCH` | `/api/boards/:boardId` | Update a board |
+| `DELETE` | `/api/boards/:boardId` | Delete a board and its tasks |
+
+### Protected Task endpoints
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `POST` | `/api/boards/:boardId/tasks` | Create a task |
+| `GET` | `/api/tasks/:taskId` | Get a task |
+| `PATCH` | `/api/tasks/:taskId` | Edit or move a task |
+| `DELETE` | `/api/tasks/:taskId` | Delete a task |
+
+See the [complete API contract](docs/api-contract.md) for request bodies, responses, status codes, and conflict behavior.
 
 ## Project structure
 
 ```text
 collaboard/
 ├── client/
-│   └── src/
-│       ├── components/
-│       ├── data/
-│       ├── pages/
-│       ├── App.jsx
-│       ├── index.css
-│       └── main.jsx
-├── docs/
-│   ├── requirements.md
-│   ├── wireframes.md
-│   └── component-tree.md
+│   ├── src/
+│   │   ├── components/
+│   │   ├── data/
+│   │   ├── pages/
+│   │   ├── services/
+│   │   │   └── api.js
+│   │   ├── App.jsx
+│   │   ├── index.css
+│   │   └── main.jsx
+│   ├── .env.example
+│   └── package.json
 ├── server/
+│   ├── src/
+│   │   ├── config/
+│   │   ├── controllers/
+│   │   ├── data/
+│   │   ├── middleware/
+│   │   ├── models/
+│   │   ├── routes/
+│   │   ├── app.js
+│   │   └── server.js
+│   ├── .env.example
+│   └── package.json
+├── docs/
+│   ├── api-contract.md
+│   ├── component-tree.md
+│   ├── requirements.md
+│   └── wireframes.md
 ├── .gitignore
 └── README.md
 ```
 
-## Planned architecture
+## Current architecture
 
 ```mermaid
 flowchart TD
     User["User"]
 
     subgraph Client["React client"]
-        UI["Reusable components"]
-        Cache["localStorage or IndexedDB"]
+        Pages["Pages and components"]
+        APIClient["API service"]
+        Session["JWT in localStorage"]
     end
 
-    subgraph Server["Node.js and Express"]
-        Auth["JWT authentication"]
-        API["REST API"]
-        Socket["Socket.io"]
+    subgraph Server["Express server"]
+        Auth["JWT middleware"]
+        Routes["API routes"]
+        Controllers["Controllers"]
+        Memory["In-memory store"]
     end
 
-    Database[("MongoDB")]
-    CI["Tests and GitHub Actions"]
-    Deploy["Docker and public deployment"]
-
-    User --> UI
-    UI <--> Cache
-    UI --> Auth
-    Auth --> API
-    API --> Database
-    UI <--> Socket
-    Socket --> Database
-    CI -.-> Client
-    CI -.-> Server
-    Deploy -.-> Client
-    Deploy -.-> Server
+    User --> Pages
+    Pages --> APIClient
+    APIClient <--> Session
+    APIClient --> Auth
+    Auth --> Routes
+    Routes --> Controllers
+    Controllers --> Memory
 ```
+
+## Conflict detection
+
+Each task contains a numeric `version`.
+
+When a client edits a task, it submits the version it originally loaded. The server compares that value with the current stored version:
+
+- matching versions allow the update;
+- the server increments the version after a successful update;
+- an outdated version returns `409 Conflict`;
+- the client displays the newest task version instead of silently overwriting it.
+
+This provides the initial documented approach to concurrent edits. Real-time update delivery will be added with Socket.io during Milestone 5.
 
 ## Documentation
 
 - [Requirements](docs/requirements.md)
 - [Wireframes](docs/wireframes.md)
 - [Component tree](docs/component-tree.md)
+- [REST API contract](docs/api-contract.md)
 
 ## Current limitations
 
-- Login and registration are simulated and do not authenticate against a server.
-- Boards and tasks use client-side mock data.
-- Newly created data resets when the page is refreshed.
-- All board routes currently use the same mock task collection.
-- The server, database, automated tests, real-time updates, and deployment are not yet implemented.
+- Users, boards, and tasks are stored only in server memory.
+- Restarting the server resets all runtime changes.
+- The first registered user receives the temporary seeded boards.
+- The JWT is stored in browser `localStorage`.
+- MongoDB persistence is not implemented yet.
+- Automated client and server tests are not implemented yet.
+- Real-time Socket.io updates are not implemented yet.
+- Docker and public deployment are not implemented yet.
+
+These limitations are addressed progressively in Milestones 3–5.
 
 ## Development workflow
 
@@ -180,6 +337,6 @@ The repository uses:
 
 - `main` for stable milestone releases;
 - `develop` for integrated development;
-- `feature/*`, `fix/*`, and `docs/*` for individual changes.
+- `feature/*`, `fix/*`, and `docs/*` for isolated changes.
 
-Changes should be merged into `develop` using pull requests with meaningful commit history.
+Changes are merged into `develop` through pull requests with meaningful incremental commit history.
