@@ -12,6 +12,12 @@ import {
   getProjectInvitations,
   inviteProjectMember,
 } from "../controllers/invitationController.js";
+import {
+  getProjectMembers,
+  removeProjectMember,
+  transferProjectOwnership,
+  updateProjectMember,
+} from "../controllers/projectMemberController.js";
 
 const router = Router();
 
@@ -19,6 +25,26 @@ router
   .route("/")
   .get(getProjects)
   .post(createProject);
+
+router.get(
+  "/:projectId/members",
+  getProjectMembers,
+);
+
+router.patch(
+  "/:projectId/members/:userId",
+  updateProjectMember,
+);
+
+router.delete(
+  "/:projectId/members/:userId",
+  removeProjectMember,
+);
+
+router.post(
+  "/:projectId/transfer-ownership",
+  transferProjectOwnership,
+);
 
 router
   .route("/:projectId/invitations")
@@ -30,12 +56,12 @@ router.delete(
   cancelProjectInvitation,
 );
 
-router.post("/:projectId/tasks", createTask);
-
 router
-  .route("/:projectId")
-  .get(getProject)
-  .patch(updateProject)
-  .delete(deleteProject);
+.route("/:projectId")
+.get(getProject)
+.patch(updateProject)
+.delete(deleteProject);
+
+router.post("/:projectId/tasks", createTask);
 
 export default router;
