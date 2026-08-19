@@ -1,45 +1,42 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import BoardCard from "../components/BoardCard";
-import CreateBoardForm from "../components/CreateBoardForm";
+import WorkspaceCard from "../components/WorkspaceCard";
+import WorkspaceForm from "../components/WorkspaceForm";
 import {
   apiRequest,
   clearSession,
 } from "../services/api";
 
-function BoardsPage() {
+function WorkspacesPage() {
   const navigate = useNavigate();
 
-  const [boards, setBoards] = useState([]);
+  const [workspaces, setWorkspaces] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
 
-  const [isBoardFormOpen, setIsBoardFormOpen] =
-    useState(false);
-  const [editingBoard, setEditingBoard] = useState(null);
-  const [isSavingBoard, setIsSavingBoard] =
-    useState(false);
-  const [boardFormError, setBoardFormError] =
-    useState("");
-
-  const [deletingBoardId, setDeletingBoardId] =
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingWorkspace, setEditingWorkspace] =
     useState(null);
-  const [boardActionError, setBoardActionError] =
-    useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [formError, setFormError] = useState("");
+
+  const [deletingWorkspaceId, setDeletingWorkspaceId] =
+    useState(null);
+  const [actionError, setActionError] = useState("");
 
   useEffect(() => {
     let shouldIgnore = false;
 
-    async function loadBoards() {
+    async function loadWorkspaces() {
       setIsLoading(true);
       setLoadError("");
 
       try {
-        const data = await apiRequest("/boards");
+        const data = await apiRequest("/workspaces");
 
         if (!shouldIgnore) {
-          setBoards(data.boards);
+          setWorkspaces(data.workspaces);
         }
       } catch (requestError) {
         if (shouldIgnore) {
@@ -60,7 +57,7 @@ function BoardsPage() {
       }
     }
 
-    loadBoards();
+    loadWorkspaces();
 
     return () => {
       shouldIgnore = true;
@@ -68,62 +65,62 @@ function BoardsPage() {
   }, [navigate, reloadKey]);
 
   function openCreateForm() {
-    setEditingBoard(null);
-    setBoardFormError("");
-    setIsBoardFormOpen(true);
+    setEditingWorkspace(null);
+    setFormError("");
+    setIsFormOpen(true);
   }
 
-  function openEditForm(board) {
-    setEditingBoard(board);
-    setBoardFormError("");
-    setIsBoardFormOpen(true);
+  function openEditForm(workspace) {
+    setEditingWorkspace(workspace);
+    setFormError("");
+    setIsFormOpen(true);
   }
 
-  function closeBoardForm() {
-    if (isSavingBoard) {
+  function closeForm() {
+    if (isSaving) {
       return;
     }
 
-    setEditingBoard(null);
-    setBoardFormError("");
-    setIsBoardFormOpen(false);
+    setEditingWorkspace(null);
+    setFormError("");
+    setIsFormOpen(false);
   }
 
-  async function handleSaveBoard(boardData) {
-    setBoardFormError("");
-    setIsSavingBoard(true);
+  async function handleSaveWorkspace(workspaceData) {
+    setFormError("");
+    setIsSaving(true);
 
     try {
-      if (editingBoard) {
+      if (editingWorkspace) {
         const data = await apiRequest(
-          `/boards/${editingBoard.id}`,
+          `/workspaces/${editingWorkspace.id}`,
           {
             method: "PATCH",
-            body: boardData,
+            body: workspaceData,
           },
         );
 
-        setBoards((currentBoards) =>
-          currentBoards.map((board) =>
-            board.id === data.board.id
-              ? data.board
-              : board,
+        setWorkspaces((currentWorkspaces) =>
+          currentWorkspaces.map((workspace) =>
+            workspace.id === data.workspace.id
+              ? data.workspace
+              : workspace,
           ),
         );
       } else {
-        const data = await apiRequest("/boards", {
+        const data = await apiRequest("/workspaces", {
           method: "POST",
-          body: boardData,
+          body: workspaceData,
         });
 
-        setBoards((currentBoards) => [
-          ...currentBoards,
-          data.board,
+        setWorkspaces((currentWorkspaces) => [
+          ...currentWorkspaces,
+          data.workspace,
         ]);
       }
 
-      setEditingBoard(null);
-      setIsBoardFormOpen(false);
+      setEditingWorkspace(null);
+      setIsFormOpen(false);
     } catch (requestError) {
       if (requestError.status === 401) {
         clearSession();
@@ -131,33 +128,33 @@ function BoardsPage() {
         return;
       }
 
-      setBoardFormError(requestError.message);
+      setFormError(requestError.message);
     } finally {
-      setIsSavingBoard(false);
+      setIsSaving(false);
     }
   }
 
-  async function handleDeleteBoard(board) {
+  async function handleDeleteWorkspace(workspace) {
     const shouldDelete = window.confirm(
-      `Delete "${board.name}" and all of its tasks?`,
+      `Delete "${workspace.name}" and all of its projects and tasks?`,
     );
 
     if (!shouldDelete) {
       return;
     }
 
-    setBoardActionError("");
-    setDeletingBoardId(board.id);
+    setActionError("");
+    setDeletingWorkspaceId(workspace.id);
 
     try {
-      await apiRequest(`/boards/${board.id}`, {
+      await apiRequest(`/workspaces/${workspace.id}`, {
         method: "DELETE",
       });
 
-      setBoards((currentBoards) =>
-        currentBoards.filter(
-          (currentBoard) =>
-            currentBoard.id !== board.id,
+      setWorkspaces((currentWorkspaces) =>
+        currentWorkspaces.filter(
+          (currentWorkspace) =>
+            currentWorkspace.id !== workspace.id,
         ),
       );
     } catch (requestError) {
@@ -167,9 +164,9 @@ function BoardsPage() {
         return;
       }
 
-      setBoardActionError(requestError.message);
+      setActionError(requestError.message);
     } finally {
-      setDeletingBoardId(null);
+      setDeletingWorkspaceId(null);
     }
   }
 
@@ -178,14 +175,14 @@ function BoardsPage() {
       <header className="boards-header">
         <div>
           <p className="board-header__eyebrow">
-            Workspace
+            Collaboration
           </p>
 
-          <h1>My Boards</h1>
+          <h1>My Workspaces</h1>
 
           <p>
-            Select a board or create a new workspace
-            for your team.
+            Select a workspace to view its projects and
+            members.
           </p>
         </div>
 
@@ -194,19 +191,19 @@ function BoardsPage() {
           className="button button--primary"
           onClick={openCreateForm}
         >
-          Create Board
+          Create Workspace
         </button>
       </header>
 
-      {boardActionError && (
+      {actionError && (
         <p className="board-action-error" role="alert">
-          {boardActionError}
+          {actionError}
         </p>
       )}
 
       {isLoading && (
         <p className="page-message" role="status">
-          Loading boards...
+          Loading workspaces...
         </p>
       )}
 
@@ -230,13 +227,13 @@ function BoardsPage() {
 
       {!isLoading &&
         !loadError &&
-        boards.length === 0 && (
+        workspaces.length === 0 && (
           <section className="empty-state">
-            <h2>No boards yet</h2>
+            <h2>No workspaces yet</h2>
 
             <p>
-              Create your first board to begin
-              organizing tasks.
+              Create your first workspace to begin
+              organizing projects.
             </p>
 
             <button
@@ -244,44 +241,44 @@ function BoardsPage() {
               className="button button--primary"
               onClick={openCreateForm}
             >
-              Create Your First Board
+              Create Your First Workspace
             </button>
           </section>
         )}
 
       {!isLoading &&
         !loadError &&
-        boards.length > 0 && (
+        workspaces.length > 0 && (
           <section
             className="boards-grid"
-            aria-label="Available boards"
+            aria-label="Available workspaces"
           >
-            {boards.map((board) => (
-              <BoardCard
-                key={board.id}
-                board={board}
+            {workspaces.map((workspace) => (
+              <WorkspaceCard
+                key={workspace.id}
+                workspace={workspace}
                 onEdit={openEditForm}
-                onDelete={handleDeleteBoard}
+                onDelete={handleDeleteWorkspace}
                 isDeleting={
-                  deletingBoardId === board.id
+                  deletingWorkspaceId === workspace.id
                 }
               />
             ))}
           </section>
         )}
 
-      {isBoardFormOpen && (
-        <CreateBoardForm
-          key={editingBoard?.id ?? "new-board"}
-          initialBoard={editingBoard}
-          onSubmit={handleSaveBoard}
-          onCancel={closeBoardForm}
-          isSubmitting={isSavingBoard}
-          error={boardFormError}
+      {isFormOpen && (
+        <WorkspaceForm
+          key={editingWorkspace?.id ?? "new-workspace"}
+          initialWorkspace={editingWorkspace}
+          onSubmit={handleSaveWorkspace}
+          onCancel={closeForm}
+          isSubmitting={isSaving}
+          error={formError}
         />
       )}
     </main>
   );
 }
 
-export default BoardsPage;
+export default WorkspacesPage;

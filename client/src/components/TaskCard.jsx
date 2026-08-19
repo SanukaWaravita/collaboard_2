@@ -2,6 +2,8 @@ function TaskCard({
   task,
   onEdit,
   onDelete,
+  canEdit = false,
+  canDelete = false,
   isDeleting = false,
 }) {
   const statusLabels = {
@@ -24,25 +26,31 @@ function TaskCard({
 
       <p>{task.description}</p>
 
-      <div className="task-card__actions">
-        <button
-          type="button"
-          className="button button--secondary"
-          onClick={() => onEdit(task)}
-          disabled={isDeleting}
-        >
-          Edit
-        </button>
+      {(canEdit || canDelete) && (
+        <div className="task-card__actions">
+          {canEdit && (
+            <button
+              type="button"
+              className="button button--secondary"
+              onClick={() => onEdit(task)}
+              disabled={isDeleting}
+            >
+              Edit
+            </button>
+          )}
 
-        <button
-          type="button"
-          className="button button--danger"
-          onClick={() => onDelete(task)}
-          disabled={isDeleting}
-        >
-          {isDeleting ? "Deleting..." : "Delete"}
-        </button>
-      </div>
+          {canDelete && (
+            <button
+              type="button"
+              className="button button--danger"
+              onClick={() => onDelete(task)}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </button>
+          )}
+        </div>
+      )}
     </article>
   );
 }

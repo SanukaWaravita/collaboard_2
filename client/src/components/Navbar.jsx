@@ -11,20 +11,23 @@ function Navbar() {
 
   return (
     <nav className="app-navbar">
-      <NavLink to="/boards" className="app-navbar__brand">
-        CollabBoard
+      <NavLink
+        to="/workspaces"
+        className="app-navbar__brand"
+      >
+        CollaBoard
       </NavLink>
 
       <div className="app-navbar__actions">
         <NavLink
-          to="/boards"
+          to="/workspaces"
           className={({ isActive }) =>
             isActive
               ? "app-navbar__link app-navbar__link--active"
               : "app-navbar__link"
           }
         >
-          My Boards
+          My Workspaces
         </NavLink>
 
         <button

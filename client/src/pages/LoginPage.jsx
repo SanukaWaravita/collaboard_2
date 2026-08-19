@@ -30,7 +30,7 @@ function LoginPage() {
       });
 
       saveSession(session);
-      navigate("/boards");
+      navigate("/workspaces");
     } catch (requestError) {
       setError(requestError.message);
     } finally {
@@ -46,7 +46,10 @@ function LoginPage() {
         <header className="auth-card__header">
           <p className="auth-card__eyebrow">Welcome back</p>
           <h1>Log in to your account</h1>
-          <p>Continue managing your team’s boards and tasks.</p>
+          <p>
+            Continue managing your team’s workspaces,
+            projects, and tasks.
+          </p>
         </header>
 
         <form className="auth-form" onSubmit={handleSubmit}>

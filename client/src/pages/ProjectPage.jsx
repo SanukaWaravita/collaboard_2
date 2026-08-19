@@ -3,19 +3,20 @@ import {
   useNavigate,
   useParams,
 } from "react-router";
-import BoardHeader from "../components/BoardHeader";
+import ProjectHeader from "../components/ProjectHeader";
 import TaskColumn from "../components/TaskColumn";
 import TaskForm from "../components/TaskForm";
+import { PROJECT_PERMISSIONS } from "../constants/access";
 import {
   apiRequest,
   clearSession,
 } from "../services/api";
 
-function BoardPage() {
-  const { boardId } = useParams();
+function ProjectPage() {
+  const { workspaceId, projectId } = useParams();
   const navigate = useNavigate();
 
-  const [board, setBoard] = useState(null);
+  const [project, setProject] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -25,7 +26,8 @@ function BoardPage() {
     useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [isSavingTask, setIsSavingTask] = useState(false);
-  const [taskFormError, setTaskFormError] = useState("");
+  const [taskFormError, setTaskFormError] =
+    useState("");
 
   const [deletingTaskId, setDeletingTaskId] =
     useState(null);
@@ -35,17 +37,23 @@ function BoardPage() {
   useEffect(() => {
     let shouldIgnore = false;
 
-    async function loadBoard() {
+    async function loadProject() {
       setIsLoading(true);
       setLoadError("");
 
       try {
         const data = await apiRequest(
-          `/boards/${boardId}`,
+          `/projects/${projectId}`,
         );
 
+        if (data.project.workspaceId !== workspaceId) {
+          throw new Error(
+            "Project does not belong to this workspace",
+          );
+        }
+
         if (!shouldIgnore) {
-          setBoard(data.board);
+          setProject(data.project);
           setTasks(data.tasks);
         }
       } catch (requestError) {
@@ -67,20 +75,48 @@ function BoardPage() {
       }
     }
 
-    loadBoard();
+    loadProject();
 
     return () => {
       shouldIgnore = true;
     };
-  }, [boardId, navigate, reloadKey]);
+  }, [
+    workspaceId,
+    projectId,
+    navigate,
+    reloadKey,
+  ]);
+
+  const canCreateTask =
+    project?.permissions.includes(
+      PROJECT_PERMISSIONS.CREATE_TASK,
+    ) ?? false;
+
+  const canUpdateTasks =
+    project?.permissions.includes(
+      PROJECT_PERMISSIONS.UPDATE_TASK,
+    ) ?? false;
+
+  const canDeleteTasks =
+    project?.permissions.includes(
+      PROJECT_PERMISSIONS.DELETE_TASK,
+    ) ?? false;
 
   function openCreateTaskForm() {
+    if (!canCreateTask) {
+      return;
+    }
+
     setEditingTask(null);
     setTaskFormError("");
     setIsTaskFormOpen(true);
   }
 
   function openEditTaskForm(task) {
+    if (!canUpdateTasks) {
+      return;
+    }
+
     setEditingTask(task);
     setTaskFormError("");
     setIsTaskFormOpen(true);
@@ -122,7 +158,7 @@ function BoardPage() {
         );
       } else {
         const data = await apiRequest(
-          `/boards/${boardId}/tasks`,
+          `/projects/${projectId}/tasks`,
           {
             method: "POST",
             body: taskData,
@@ -175,6 +211,10 @@ function BoardPage() {
   }
 
   async function handleDeleteTask(task) {
+    if (!canDeleteTasks) {
+      return;
+    }
+
     const shouldDelete = window.confirm(
       `Are you sure you want to delete "${task.title}"?`,
     );
@@ -213,18 +253,18 @@ function BoardPage() {
     return (
       <main className="board-page">
         <p className="page-message" role="status">
-          Loading board...
+          Loading project...
         </p>
       </main>
     );
   }
 
-  if (loadError || !board) {
+  if (loadError || !project) {
     return (
       <main className="board-page">
         <section className="page-error">
           <p role="alert">
-            {loadError || "Board not found"}
+            {loadError || "Project not found"}
           </p>
 
           <div className="page-error__actions">
@@ -243,9 +283,13 @@ function BoardPage() {
             <button
               type="button"
               className="button button--primary"
-              onClick={() => navigate("/boards")}
+              onClick={() =>
+                navigate(
+                  `/workspaces/${workspaceId}/projects`,
+                )
+              }
             >
-              My Boards
+              Projects
             </button>
           </div>
         </section>
@@ -255,10 +299,12 @@ function BoardPage() {
 
   return (
     <main className="board-page">
-      <BoardHeader
-        boardName={board.name}
+      <ProjectHeader
+        project={project}
         taskCount={tasks.length}
+        backTo={`/workspaces/${workspaceId}/projects`}
         onAddTask={openCreateTaskForm}
+        canAddTask={canCreateTask}
       />
 
       {taskActionError && (
@@ -274,6 +320,8 @@ function BoardPage() {
           tasks={tasks}
           onEditTask={openEditTaskForm}
           onDeleteTask={handleDeleteTask}
+          canEditTasks={canUpdateTasks}
+          canDeleteTasks={canDeleteTasks}
           deletingTaskId={deletingTaskId}
         />
 
@@ -283,6 +331,8 @@ function BoardPage() {
           tasks={tasks}
           onEditTask={openEditTaskForm}
           onDeleteTask={handleDeleteTask}
+          canEditTasks={canUpdateTasks}
+          canDeleteTasks={canDeleteTasks}
           deletingTaskId={deletingTaskId}
         />
 
@@ -292,6 +342,8 @@ function BoardPage() {
           tasks={tasks}
           onEditTask={openEditTaskForm}
           onDeleteTask={handleDeleteTask}
+          canEditTasks={canUpdateTasks}
+          canDeleteTasks={canDeleteTasks}
           deletingTaskId={deletingTaskId}
         />
       </div>
@@ -314,4 +366,4 @@ function BoardPage() {
   );
 }
 
-export default BoardPage;
+export default ProjectPage;

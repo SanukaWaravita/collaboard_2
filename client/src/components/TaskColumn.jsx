@@ -6,6 +6,8 @@ function TaskColumn({
   tasks,
   onEditTask,
   onDeleteTask,
+  canEditTasks = false,
+  canDeleteTasks = false,
   deletingTaskId,
 }) {
   const columnTasks = tasks.filter(
@@ -30,6 +32,8 @@ function TaskColumn({
               task={task}
               onEdit={onEditTask}
               onDelete={onDeleteTask}
+              canEdit={canEditTasks}
+              canDelete={canDeleteTasks}
               isDeleting={deletingTaskId === task.id}
             />
           ))
