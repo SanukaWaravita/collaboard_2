@@ -7,6 +7,7 @@ import authRoutes from "./routes/authRoutes.js";
 import projectRoutes from "./routes/projectRoutes.js";
 import healthRoutes from "./routes/healthRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
+import workspaceRoutes from "./routes/workspaceRoutes.js";
 
 const app = express();
 
@@ -15,6 +16,11 @@ app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/health", healthRoutes);
+app.use(
+  "/api/workspaces",
+  authenticateUser,
+  workspaceRoutes,
+);
 app.use(
   "/api/projects",
   authenticateUser,

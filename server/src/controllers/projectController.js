@@ -62,6 +62,7 @@ function findWorkspaceMembershipForCreation(
 
 export function getProjects(request, response) {
   const requestedWorkspaceId =
+    request.params.workspaceId ??
     request.query.workspaceId;
 
   const projects = store.projects
@@ -91,12 +92,15 @@ export function getProjects(request, response) {
 
 export function createProject(request, response) {
   const {
-    workspaceId,
+    workspaceId: bodyWorkspaceId,
     name,
     description = "",
     projectKey,
     visibility = PROJECT_VISIBILITY.PRIVATE,
   } = request.body ?? {};
+
+  const workspaceId =
+    request.params.workspaceId ?? bodyWorkspaceId;
 
   if (typeof name !== "string" || !name.trim()) {
     return response.status(400).json({
