@@ -8,6 +8,7 @@ import projectRoutes from "./routes/projectRoutes.js";
 import healthRoutes from "./routes/healthRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
 import workspaceRoutes from "./routes/workspaceRoutes.js";
+import invitationRoutes from "./routes/invitationRoutes.js";
 
 const app = express();
 
@@ -25,6 +26,11 @@ app.use(
   "/api/projects",
   authenticateUser,
   projectRoutes,
+);
+app.use(
+  "/api/invitations",
+  authenticateUser,
+  invitationRoutes,
 );
 
 // Temporary compatibility until the React client is renamed.
