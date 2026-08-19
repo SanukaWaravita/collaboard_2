@@ -1,30 +1,57 @@
 export const store = {
   users: [],
-  boards: [
+
+  workspaces: [
     {
-      id: "collabboard-development",
-      name: "CollabBoard Development",
-      description: "Plan and monitor the development of the group project.",
-      ownerId: "temporary-user",
-      createdAt: "2026-08-14T00:00:00.000Z",
-      updatedAt: "2026-08-14T00:00:00.000Z",
-    },
-    {
-      id: "m1-planning",
-      name: "Milestone 1 Planning",
-      description: "Track the interface, documentation, and repository setup.",
+      id: "collaboard-workspace",
+      name: "CollaBoard Workspace",
+      slug: "collaboard-workspace",
       ownerId: "temporary-user",
       createdAt: "2026-08-14T00:00:00.000Z",
       updatedAt: "2026-08-14T00:00:00.000Z",
     },
   ],
 
+  workspaceMembers: [],
+
+  projects: [
+    {
+      id: "collabboard-development",
+      workspaceId: "collaboard-workspace",
+      projectKey: "CBD",
+      name: "CollaBoard Development",
+      description:
+        "Plan and monitor the development of the group project.",
+      visibility: "open",
+      ownerId: "temporary-user",
+      createdAt: "2026-08-14T00:00:00.000Z",
+      updatedAt: "2026-08-14T00:00:00.000Z",
+    },
+    {
+      id: "m1-planning",
+      workspaceId: "collaboard-workspace",
+      projectKey: "M1",
+      name: "Milestone 1 Planning",
+      description:
+        "Track the interface, documentation, and repository setup.",
+      visibility: "private",
+      ownerId: "temporary-user",
+      createdAt: "2026-08-14T00:00:00.000Z",
+      updatedAt: "2026-08-14T00:00:00.000Z",
+    },
+  ],
+
+  projectMembers: [],
+
+  projectInvitations: [],
+
   tasks: [
     {
       id: "task-1",
-      boardId: "collabboard-development",
+      projectId: "collabboard-development",
       title: "Create project repository",
-      description: "Initialize the repository and invite group members.",
+      description:
+        "Initialize the repository and invite group members.",
       status: "done",
       version: 1,
       createdAt: "2026-08-14T00:00:00.000Z",
@@ -32,9 +59,10 @@ export const store = {
     },
     {
       id: "task-2",
-      boardId: "collabboard-development",
+      projectId: "collabboard-development",
       title: "Prepare M1 documentation",
-      description: "Document requirements, wireframes, and the component tree.",
+      description:
+        "Document requirements, wireframes, and the component tree.",
       status: "done",
       version: 1,
       createdAt: "2026-08-14T00:00:00.000Z",
@@ -42,9 +70,10 @@ export const store = {
     },
     {
       id: "task-3",
-      boardId: "collabboard-development",
+      projectId: "collabboard-development",
       title: "Build board layout",
-      description: "Create the To Do, Doing, and Done columns.",
+      description:
+        "Create the To Do, Doing, and Done columns.",
       status: "doing",
       version: 1,
       createdAt: "2026-08-14T00:00:00.000Z",
@@ -52,9 +81,10 @@ export const store = {
     },
     {
       id: "task-4",
-      boardId: "collabboard-development",
+      projectId: "collabboard-development",
       title: "Create task card",
-      description: "Build a reusable task display component.",
+      description:
+        "Build a reusable task display component.",
       status: "todo",
       version: 1,
       createdAt: "2026-08-14T00:00:00.000Z",
@@ -62,9 +92,10 @@ export const store = {
     },
     {
       id: "task-5",
-      boardId: "collabboard-development",
+      projectId: "collabboard-development",
       title: "Add task form",
-      description: "Create a form for adding tasks to the board.",
+      description:
+        "Create a form for adding tasks to the project.",
       status: "todo",
       version: 1,
       createdAt: "2026-08-14T00:00:00.000Z",
