@@ -84,9 +84,6 @@ export function getProjects(request, response) {
 
   return response.status(200).json({
     projects,
-
-    // Temporary compatibility for the existing React client.
-    boards: projects,
   });
 }
 
@@ -218,9 +215,6 @@ export function createProject(request, response) {
 
   return response.status(201).json({
     project: presentedProject,
-
-    // Temporary compatibility for the React client.
-    board: presentedProject,
   });
 }
 
@@ -254,10 +248,6 @@ export function getProject(request, response) {
 
   return response.status(200).json({
     project: presentedProject,
-
-    // Temporary compatibility for the React client.
-    board: presentedProject,
-
     tasks,
   });
 }
@@ -355,7 +345,6 @@ export function updateProject(request, response) {
 
   return response.status(200).json({
     project: presentedProject,
-    board: presentedProject,
   });
 }
 
