@@ -82,6 +82,11 @@ function ProjectsPage() {
     workspace?.permissions.includes(
       WORKSPACE_PERMISSIONS.CREATE_PROJECT,
     ) ?? false;
+  
+  const canManageGuests =
+    workspace?.permissions.includes(
+      WORKSPACE_PERMISSIONS.MANAGE_MEMBERS,
+    ) ?? false;
 
   function openCreateForm() {
     setEditingProject(null);
@@ -277,15 +282,26 @@ function ProjectsPage() {
           </p>
         </div>
 
-        {canCreateProject && (
-          <button
-            type="button"
-            className="button button--primary"
-            onClick={openCreateForm}
-          >
-            Create Project
-          </button>
-        )}
+        <div className="board-header__actions">
+          {canManageGuests && (
+            <Link
+              to={`/workspaces/${workspaceId}/guests`}
+              className="button button--secondary"
+            >
+              Guest Users
+            </Link>
+          )}
+
+          {canCreateProject && (
+            <button
+              type="button"
+              className="button button--primary"
+              onClick={openCreateForm}
+            >
+              Create Project
+            </button>
+          )}
+        </div>
       </header>
 
       {actionError && (

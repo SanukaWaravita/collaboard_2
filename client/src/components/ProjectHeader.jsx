@@ -4,8 +4,10 @@ function ProjectHeader({
   project,
   taskCount,
   backTo,
+  manageAccessTo,
   onAddTask,
   canAddTask = false,
+  canManageMembers = false,
 }) {
   return (
     <header className="board-header">
@@ -32,15 +34,26 @@ function ProjectHeader({
         </p>
       </div>
 
-      {canAddTask && (
-        <button
-          type="button"
-          className="button button--primary"
-          onClick={onAddTask}
-        >
-          Add Task
-        </button>
-      )}
+      <div className="board-header__actions">
+        {canManageMembers && (
+          <Link
+            to={manageAccessTo}
+            className="button button--secondary"
+          >
+            Manage Access
+          </Link>
+        )}
+
+        {canAddTask && (
+          <button
+            type="button"
+            className="button button--primary"
+            onClick={onAddTask}
+          >
+            Add Task
+          </button>
+        )}
+      </div>
     </header>
   );
 }

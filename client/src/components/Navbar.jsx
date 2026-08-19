@@ -30,6 +30,17 @@ function Navbar() {
           My Workspaces
         </NavLink>
 
+        <NavLink
+          to="/invitations"
+          className={({ isActive }) =>
+            isActive
+              ? "app-navbar__link app-navbar__link--active"
+              : "app-navbar__link"
+          }
+        >
+          Invitations
+        </NavLink>
+
         <button
           type="button"
           className="button button--secondary"

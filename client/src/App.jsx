@@ -12,14 +12,20 @@ import RegisterPage from "./pages/RegisterPage";
 import WorkspacesPage from "./pages/WorkspacesPage";
 import ProjectsPage from "./pages/ProjectsPage";
 import ProjectPage from "./pages/ProjectPage";
+import ProjectAccessPage from "./pages/ProjectAccessPage";
+import InvitationsPage from "./pages/InvitationsPage";
+import WorkspaceGuestsPage from "./pages/WorkspaceGuestsPage";
 
 function App() {
   const location = useLocation();
   const isAuthenticated = Boolean(getToken());
 
   const shouldShowNavbar =
-    location.pathname.startsWith("/workspaces") &&
-    isAuthenticated;
+    isAuthenticated &&
+    (
+      location.pathname.startsWith("/workspaces") ||
+      location.pathname.startsWith("/invitations")
+    );
 
   return (
     <>
@@ -58,8 +64,23 @@ function App() {
           />
 
           <Route
+            path="/workspaces/:workspaceId/guests"
+            element={<WorkspaceGuestsPage />}
+          />
+
+          <Route
             path="/workspaces/:workspaceId/projects/:projectId"
             element={<ProjectPage />}
+          />
+
+          <Route
+            path="/workspaces/:workspaceId/projects/:projectId/access"
+            element={<ProjectAccessPage />}
+          />
+
+          <Route
+            path="/invitations"
+            element={<InvitationsPage />}
           />
         </Route>
 

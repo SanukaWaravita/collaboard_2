@@ -86,6 +86,11 @@ function ProjectPage() {
     navigate,
     reloadKey,
   ]);
+  
+  const canManageMembers =
+  project?.permissions.includes(
+    PROJECT_PERMISSIONS.MANAGE_MEMBERS,
+  ) ?? false;
 
   const canCreateTask =
     project?.permissions.includes(
@@ -303,8 +308,10 @@ function ProjectPage() {
         project={project}
         taskCount={tasks.length}
         backTo={`/workspaces/${workspaceId}/projects`}
+        manageAccessTo={`/workspaces/${workspaceId}/projects/${projectId}/access`}
         onAddTask={openCreateTaskForm}
         canAddTask={canCreateTask}
+        canManageMembers={canManageMembers}
       />
 
       {taskActionError && (

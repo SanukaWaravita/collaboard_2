@@ -1,3 +1,28 @@
+export const WORKSPACE_ROLES = Object.freeze({
+  OWNER: "OWNER",
+  ADMIN: "ADMIN",
+  MEMBER: "MEMBER",
+  GUEST: "GUEST",
+});
+
+export const PROJECT_ROLES = Object.freeze({
+  OWNER: "OWNER",
+  CONTRIBUTOR: "CONTRIBUTOR",
+  REVIEWER: "REVIEWER",
+});
+
+export const MEMBER_TYPES = Object.freeze({
+  INTERNAL: "INTERNAL",
+  GUEST: "GUEST",
+});
+
+export const INVITATION_STATUS = Object.freeze({
+  PENDING: "PENDING",
+  ACCEPTED: "ACCEPTED",
+  DECLINED: "DECLINED",
+  CANCELLED: "CANCELLED",
+});
+
 export const WORKSPACE_PERMISSIONS = Object.freeze({
   READ_WORKSPACE: "READ_WORKSPACE",
   UPDATE_WORKSPACE: "UPDATE_WORKSPACE",
