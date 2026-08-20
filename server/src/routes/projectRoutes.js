@@ -22,6 +22,7 @@ import {
   createWorkflowStatus,
   deleteWorkflowStatus,
   getWorkflowStatuses,
+  reorderWorkflowStatuses,
   updateWorkflowStatus,
 } from "../controllers/workflowStatusController.js";
 
@@ -66,6 +67,11 @@ router
   .route("/:projectId/statuses")
   .get(getWorkflowStatuses)
   .post(createWorkflowStatus);
+
+router.put(
+  "/:projectId/statuses/order",
+  reorderWorkflowStatuses,
+);
 
 router
   .route("/:projectId/statuses/:statusId")

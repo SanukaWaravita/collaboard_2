@@ -4,7 +4,7 @@
 
 This document defines the REST API used by the CollaBoard React client.
 
-CollaBoard currently stores users, workspaces, projects, workflow statuses, memberships, invitations, and tasks in server memory.
+CollaBoard currently stores users, Workspaces, Projects, Workflow Statuses, memberships, invitations, and Tasks in server memory.
 
 MongoDB persistence will replace the temporary in-memory store during a later milestone.
 
@@ -75,7 +75,7 @@ Response:
 }
 ```
 
-The first registered user becomes the owner of the seeded workspace and seeded projects.
+The first registered user becomes the owner of the seeded Workspace and seeded Projects.
 
 ### Login
 
@@ -107,27 +107,27 @@ Response:
 
 ## 5. Workspace roles
 
-|Role|Description|
-|---|---|
-|`OWNER`|Full workspace control, including deletion|
-|`ADMIN`|Workspace and member administration|
-|`MEMBER`|Ordinary internal workspace member|
-|`GUEST`|Can access only explicitly assigned projects|
+| Role | Description |
+| --- | --- |
+| `OWNER` | Full Workspace control, including deletion |
+| `ADMIN` | Workspace and member administration |
+| `MEMBER` | Ordinary internal Workspace member |
+| `GUEST` | Can access only explicitly assigned Projects |
 
 ## 6. Project roles
 
-|Role|Description|
-|---|---|
-|`OWNER`|Full Project and membership control|
-|`CONTRIBUTOR`|Can read the Project and manage tasks|
-|`REVIEWER`|Read-only Project and task access|
+| Role | Description |
+| --- | --- |
+| `OWNER` | Full Project, workflow, membership, and Task control |
+| `CONTRIBUTOR` | Can read the Project and manage Tasks |
+| `REVIEWER` | Read-only Project and Task access |
 
 ## 7. Project visibility
 
-|Visibility|Behaviour|
-|---|---|
-|`open`|Ordinary internal Workspace members receive implicit reviewer access|
-|`private`|Explicit Project membership is required|
+| Visibility | Behaviour |
+| --- | --- |
+| `open` | Ordinary internal Workspace members receive implicit reviewer access |
+| `private` | Explicit Project membership is required |
 
 Guest users do not automatically receive access to open Projects.
 
@@ -195,6 +195,7 @@ DELETE /api/workspaces/:workspaceId
 Deleting a Workspace also deletes its:
 
 - Projects;
+- Workflow Statuses;
 - Tasks;
 - Project memberships;
 - Workspace memberships;
@@ -272,7 +273,7 @@ Request:
 }
 ```
 
-When using the nested Workspace endpoint, `workspaceId` does not need to be included in the request body.
+When using the nested Workspace endpoint, `workspaceId` does not need to be included in the request body.
 
 Project Keys:
 
@@ -280,6 +281,12 @@ Project Keys:
 - begin with a letter;
 - are unique inside their Workspace;
 - cannot be changed after Project creation.
+
+Every newly created Project receives its own default Workflow Statuses:
+
+```text
+To Do → Doing → Done
+```
 
 ### Open a Project
 
@@ -322,7 +329,15 @@ Response:
     ],
     "currentUserRole": "OWNER",
     "isMember": true,
-    "permissions": []
+    "permissions": [
+      "READ_PROJECT",
+      "UPDATE_PROJECT",
+      "DELETE_PROJECT",
+      "MANAGE_MEMBERS",
+      "CREATE_TASK",
+      "UPDATE_TASK",
+      "DELETE_TASK"
+    ]
   },
   "tasks": []
 }
@@ -350,7 +365,12 @@ Request:
 DELETE /api/projects/:projectId
 ```
 
-Deleting a Project also deletes its Tasks, memberships, and invitations.
+Deleting a Project also deletes its:
+
+- Workflow Statuses;
+- Tasks;
+- memberships;
+- invitations.
 
 Successful deletion returns:
 
@@ -516,17 +536,17 @@ Workflow Statuses define the columns and stages belonging to an individual Proje
 
 Each Workflow Status contains:
 
-|Property|Purpose|
-|---|---|
-|`id`|Stable identifier stored by Tasks|
-|`name`|User-facing status and column name|
-|`color`|Six-digit hexadecimal display colour|
-|`position`|Current position in the Project workflow|
-|`isCompleted`|Indicates whether Tasks in the status are completed|
+| Property | Purpose |
+| --- | --- |
+| `id` | Stable identifier stored by Tasks |
+| `name` | User-facing status and column name |
+| `color` | Six-digit hexadecimal display colour |
+| `position` | Current position in the Project workflow |
+| `isCompleted` | Indicates whether Tasks in the status are completed |
 
 All users with Project read access can retrieve Workflow Statuses.
 
-Only the Project owner can create, edit, or delete them.
+Only the Project owner can create, edit, reorder, or delete them.
 
 ### List Workflow Statuses
 
@@ -564,7 +584,7 @@ Response:
 }
 ```
 
-Statuses are returned in ascending `position` order.
+Statuses are returned in ascending `position` order.
 
 ### Create a Workflow Status
 
@@ -592,7 +612,36 @@ Response:
     "position": 2,
     "isCompleted": false
   },
-  "workflowStatuses": []
+  "workflowStatuses": [
+    {
+      "id": "todo",
+      "name": "To Do",
+      "color": "#64748b",
+      "position": 0,
+      "isCompleted": false
+    },
+    {
+      "id": "doing",
+      "name": "Doing",
+      "color": "#2563eb",
+      "position": 1,
+      "isCompleted": false
+    },
+    {
+      "id": "generated-status-id",
+      "name": "Review",
+      "color": "#f59e0b",
+      "position": 2,
+      "isCompleted": false
+    },
+    {
+      "id": "done",
+      "name": "Done",
+      "color": "#16a34a",
+      "position": 3,
+      "isCompleted": true
+    }
+  ]
 }
 ```
 
@@ -628,6 +677,81 @@ A status identifier does not change when its name or colour changes.
 
 Tasks therefore do not need to be updated when a status is renamed.
 
+### Reorder Workflow Statuses
+
+```http
+PUT /api/projects/:projectId/statuses/order
+```
+
+Only the Project owner can reorder Workflow Statuses.
+
+The request must contain the complete ordered collection of status identifiers:
+
+```json
+{
+  "statusIds": [
+    "todo",
+    "review-status-id",
+    "doing",
+    "done"
+  ]
+}
+```
+
+Response:
+
+```json
+{
+  "workflowStatuses": [
+    {
+      "id": "todo",
+      "name": "To Do",
+      "color": "#64748b",
+      "position": 0,
+      "isCompleted": false
+    },
+    {
+      "id": "review-status-id",
+      "name": "Review",
+      "color": "#f59e0b",
+      "position": 1,
+      "isCompleted": false
+    },
+    {
+      "id": "doing",
+      "name": "Doing",
+      "color": "#2563eb",
+      "position": 2,
+      "isCompleted": false
+    },
+    {
+      "id": "done",
+      "name": "Done",
+      "color": "#16a34a",
+      "position": 3,
+      "isCompleted": true
+    }
+  ]
+}
+```
+
+Reordering rules:
+
+- the complete Workflow Status collection is required;
+- every identifier must be a non-empty string;
+- identifiers cannot be duplicated;
+- every identifier must belong to the same Project;
+- every current Project status must appear exactly once;
+- completed statuses must remain after active statuses;
+- positions are reassigned from zero after validation;
+- Task status identifiers are not changed;
+- Task versions are not incremented;
+- the Project's `updatedAt` timestamp is updated.
+
+The React client exposes reordering through accessible Move Up and Move Down controls.
+
+The first active Workflow Status becomes the default status when creating a Task.
+
 ### Delete a Workflow Status
 
 ```http
@@ -655,7 +779,29 @@ Response:
   "deletedStatusId": "deleted-status-id",
   "replacementStatusId": "doing",
   "movedTaskCount": 2,
-  "workflowStatuses": []
+  "workflowStatuses": [
+    {
+      "id": "todo",
+      "name": "To Do",
+      "color": "#64748b",
+      "position": 0,
+      "isCompleted": false
+    },
+    {
+      "id": "doing",
+      "name": "Doing",
+      "color": "#2563eb",
+      "position": 1,
+      "isCompleted": false
+    },
+    {
+      "id": "done",
+      "name": "Done",
+      "color": "#16a34a",
+      "position": 2,
+      "isCompleted": true
+    }
+  ]
 }
 ```
 
@@ -667,8 +813,6 @@ Deletion rules:
 - all affected Tasks are moved to the replacement status;
 - every moved Task has its version incremented;
 - positions are normalized after deletion.
-
-Manual Workflow Status reordering is not currently exposed through the API or client interface.
 
 ## 14. Task endpoints
 
@@ -714,6 +858,7 @@ Request:
   "version": 1
 }
 ```
+
 When changing a Task's status, the supplied identifier must belong to the Task's Project.
 
 An unknown status or a status belonging only to another Project is rejected with:
@@ -771,16 +916,16 @@ CANCELLED
 
 ## 16. Common HTTP responses
 
-|Status|Meaning|
-|---|---|
-|`200 OK`|Successful read or update|
-|`201 Created`|Resource created|
-|`204 No Content`|Resource deleted|
-|`400 Bad Request`|Invalid request data|
-|`401 Unauthorized`|Missing, invalid, or expired token|
-|`403 Forbidden`|Authenticated but insufficient permission|
-|`404 Not Found`|Resource or accessible resource not found|
-|`409 Conflict`|Duplicate resource, invalid state transition, or Task version conflict|
+| Status | Meaning |
+| --- | --- |
+| `200 OK` | Successful read or update |
+| `201 Created` | Resource created |
+| `204 No Content` | Resource deleted |
+| `400 Bad Request` | Invalid request data |
+| `401 Unauthorized` | Missing, invalid, or expired token |
+| `403 Forbidden` | Authenticated but insufficient permission |
+| `404 Not Found` | Resource or accessible resource not found |
+| `409 Conflict` | Duplicate resource, invalid state transition, or Task version conflict |
 
 Error responses use:
 
@@ -801,12 +946,16 @@ Restarting the Express server deletes:
 - created Projects;
 - memberships;
 - invitations;
+- created, renamed, recoloured, reordered, and deleted Workflow Statuses;
 - created Tasks;
 - Task updates.
-- created, renamed, recoloured, and deleted Workflow Statuses;
-
-The two seeded Projects are recreated with the default `To Do`, `Doing`, and `Done` Workflow Statuses when the server starts.
 
 The two seeded Projects and their seeded Tasks are recreated when the server starts.
+
+Each seeded Project is recreated with the default Workflow Statuses:
+
+```text
+To Do → Doing → Done
+```
 
 MongoDB persistence will replace this temporary behaviour in a later milestone.

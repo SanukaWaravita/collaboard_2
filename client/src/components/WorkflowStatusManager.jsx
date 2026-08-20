@@ -9,6 +9,7 @@ function WorkflowStatusManager({
   onCreateStatus,
   onUpdateStatus,
   onDeleteStatus,
+  onReorderStatuses,
   onClose,
   isSaving = false,
   error = "",
@@ -86,6 +87,72 @@ function WorkflowStatusManager({
       setNewColor(DEFAULT_STATUS_COLOR);
     }
   }
+
+  async function moveStatus(
+  statusId,
+  direction,
+) {
+  if (isSaving) {
+    return;
+  }
+
+  const currentIndex =
+    workflowStatuses.findIndex(
+      (status) => status.id === statusId,
+    );
+
+  if (currentIndex === -1) {
+    return;
+  }
+
+  const targetIndex =
+    direction === "up"
+      ? currentIndex - 1
+      : currentIndex + 1;
+
+  if (
+    targetIndex < 0 ||
+    targetIndex >= workflowStatuses.length
+  ) {
+    return;
+  }
+
+  const targetStatus =
+    workflowStatuses[targetIndex];
+
+  if (
+    workflowStatuses[currentIndex].isCompleted ||
+    targetStatus.isCompleted
+  ) {
+    return;
+  }
+
+  setEditingStatusId(null);
+  setEditName("");
+  setEditColor(DEFAULT_STATUS_COLOR);
+
+  setDeletingStatusId(null);
+  setReplacementStatusId("");
+
+  const reorderedStatuses = [
+    ...workflowStatuses,
+  ];
+
+  const [movedStatus] =
+    reorderedStatuses.splice(currentIndex, 1);
+
+  reorderedStatuses.splice(
+    targetIndex,
+    0,
+    movedStatus,
+  );
+
+  await onReorderStatuses(
+    reorderedStatuses.map(
+      (status) => status.id,
+    ),
+  );
+}
 
   function startEditing(status) {
     setDeletingStatusId(null);
@@ -205,9 +272,9 @@ function WorkflowStatusManager({
             </h2>
 
             <p>
-              Add, rename, recolour, or remove the
-              columns used by this Project.
-            </p>
+  Add, reorder, rename, recolour, or remove the
+  columns used by this Project.
+</p>
           </div>
 
           <button
@@ -301,7 +368,8 @@ function WorkflowStatusManager({
         </div>
 
         <ol className="workflow-manager__list">
-          {workflowStatuses.map((status) => {
+          {workflowStatuses.map(
+            (status, statusIndex) => {
             const taskCount =
               taskCounts.get(status.id) ?? 0;
 
@@ -309,9 +377,29 @@ function WorkflowStatusManager({
               editingStatusId === status.id;
 
             const isDeleting =
-              deletingStatusId === status.id;
+  deletingStatusId === status.id;
 
-            return (
+const previousStatus =
+  workflowStatuses[statusIndex - 1];
+
+const nextStatus =
+  workflowStatuses[statusIndex + 1];
+
+const canMoveUp =
+  !status.isCompleted &&
+  Boolean(
+    previousStatus &&
+      !previousStatus.isCompleted,
+  );
+
+const canMoveDown =
+  !status.isCompleted &&
+  Boolean(
+    nextStatus &&
+      !nextStatus.isCompleted,
+  );
+
+return (
               <li
                 key={status.id}
                 className="workflow-status-row"
@@ -406,6 +494,41 @@ function WorkflowStatusManager({
                     </div>
 
                     <div className="workflow-status-row__actions">
+                      <div className="workflow-status-row__reorder">
+  <button
+    type="button"
+    className="workflow-status-row__move"
+    onClick={() =>
+      moveStatus(status.id, "up")
+    }
+    disabled={isSaving || !canMoveUp}
+    aria-label={`Move ${status.name} up`}
+    title={
+      canMoveUp
+        ? `Move ${status.name} up`
+        : undefined
+    }
+  >
+    ↑
+  </button>
+
+  <button
+    type="button"
+    className="workflow-status-row__move"
+    onClick={() =>
+      moveStatus(status.id, "down")
+    }
+    disabled={isSaving || !canMoveDown}
+    aria-label={`Move ${status.name} down`}
+    title={
+      canMoveDown
+        ? `Move ${status.name} down`
+        : undefined
+    }
+  >
+    ↓
+  </button>
+</div>
                       <button
                         type="button"
                         className="button button--secondary"
@@ -527,7 +650,8 @@ function WorkflowStatusManager({
                 )}
               </li>
             );
-          })}
+          },
+        )}
         </ol>
       </section>
     </div>

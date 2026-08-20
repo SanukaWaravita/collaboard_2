@@ -1389,6 +1389,47 @@ select:focus-visible {
   gap: 8px;
 }
 
+.workflow-status-row__reorder {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 4px;
+}
+
+.workflow-status-row__move {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0;
+  color: var(--text);
+  background: var(--surface);
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.workflow-status-row__move:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: #eff6ff;
+}
+
+.workflow-status-row__move:focus-visible {
+  outline: 3px solid rgb(37 99 235 / 22%);
+  outline-offset: 2px;
+}
+
+.workflow-status-row__move:disabled {
+  color: var(--text-muted);
+  background: var(--surface-muted);
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 .workflow-status-row__actions .button,
 .workflow-status-row__delete-actions .button {
   padding: 7px 10px;
