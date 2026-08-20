@@ -4,8 +4,10 @@ import {
   useParams,
 } from "react-router";
 import ProjectHeader from "../components/ProjectHeader";
+import ProjectViewToggle from "../components/ProjectViewToggle";
 import TaskColumn from "../components/TaskColumn";
 import TaskForm from "../components/TaskForm";
+import TaskList from "../components/TaskList";
 import { PROJECT_PERMISSIONS } from "../constants/access";
 import {
   apiRequest,
@@ -18,6 +20,8 @@ function ProjectPage() {
 
   const [project, setProject] = useState(null);
   const [tasks, setTasks] = useState([]);
+  const [activeView, setActiveView] =
+    useState("kanban");
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
@@ -315,12 +319,34 @@ function ProjectPage() {
       />
 
       {taskActionError && (
-        <p className="board-action-error" role="alert">
-          {taskActionError}
-        </p>
-      )}
+  <p className="board-action-error" role="alert">
+    {taskActionError}
+  </p>
+)}
 
-      <div className="task-board">
+<section
+  className="project-view-toolbar"
+  aria-label="Project task view controls"
+>
+  <div>
+    <p className="project-view-toolbar__label">
+      Task view
+    </p>
+
+    <p className="project-view-toolbar__description">
+      Switch between the workflow board and a compact
+      task list.
+    </p>
+  </div>
+
+  <ProjectViewToggle
+    activeView={activeView}
+    onViewChange={setActiveView}
+  />
+</section>
+
+{activeView === "kanban" && (
+  <div className="task-board">
         <TaskColumn
           title="To Do"
           status="todo"
@@ -343,19 +369,31 @@ function ProjectPage() {
           deletingTaskId={deletingTaskId}
         />
 
-        <TaskColumn
-          title="Done"
-          status="done"
-          tasks={tasks}
-          onEditTask={openEditTaskForm}
-          onDeleteTask={handleDeleteTask}
-          canEditTasks={canUpdateTasks}
-          canDeleteTasks={canDeleteTasks}
-          deletingTaskId={deletingTaskId}
-        />
-      </div>
+            <TaskColumn
+      title="Done"
+      status="done"
+      tasks={tasks}
+      onEditTask={openEditTaskForm}
+      onDeleteTask={handleDeleteTask}
+      canEditTasks={canUpdateTasks}
+      canDeleteTasks={canDeleteTasks}
+      deletingTaskId={deletingTaskId}
+    />
+  </div>
+)}
 
-      {isTaskFormOpen && (
+{activeView === "list" && (
+  <TaskList
+    tasks={tasks}
+    onEditTask={openEditTaskForm}
+    onDeleteTask={handleDeleteTask}
+    canEditTasks={canUpdateTasks}
+    canDeleteTasks={canDeleteTasks}
+    deletingTaskId={deletingTaskId}
+  />
+)}
+
+{isTaskFormOpen && (
         <TaskForm
           key={
             editingTask
