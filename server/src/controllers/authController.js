@@ -2,6 +2,10 @@ import { randomUUID } from "node:crypto";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { store } from "../data/inMemoryStore.js";
+import {
+  PROJECT_ROLES,
+  WORKSPACE_ROLES,
+} from "../constants/access.js";
 
 function createToken(userId) {
   const secret = process.env.JWT_SECRET;
@@ -81,13 +85,43 @@ export async function registerUser(request, response) {
     updatedAt: timestamp,
   };
 
-    if (store.users.length === 0) {
-    store.boards.forEach((board) => {
-      if (board.ownerId === "temporary-user") {
-        board.ownerId = user.id;
-      }
+  if (store.users.length === 0) {
+  const joinedAt = new Date().toISOString();
+
+  store.workspaces.forEach((workspace) => {
+    if (workspace.ownerId !== "temporary-user") {
+      return;
+    }
+
+    workspace.ownerId = user.id;
+    workspace.updatedAt = joinedAt;
+
+    store.workspaceMembers.push({
+      id: randomUUID(),
+      workspaceId: workspace.id,
+      userId: user.id,
+      role: WORKSPACE_ROLES.OWNER,
+      joinedAt,
     });
-  }
+  });
+
+  store.projects.forEach((project) => {
+    if (project.ownerId !== "temporary-user") {
+      return;
+    }
+
+    project.ownerId = user.id;
+    project.updatedAt = joinedAt;
+
+    store.projectMembers.push({
+      id: randomUUID(),
+      projectId: project.id,
+      userId: user.id,
+      role: PROJECT_ROLES.OWNER,
+      joinedAt,
+    });
+  });
+}
 
   store.users.push(user);
 

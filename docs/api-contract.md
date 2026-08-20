@@ -1,12 +1,26 @@
-# CollabBoard REST API Contract
+# CollaBoard REST API Contract
 
 ## 1. Purpose
 
-This document defines the HTTP endpoints used by the CollabBoard React client.
+This document defines the REST API used by the CollaBoard React client.
 
-During Milestone 2, boards, tasks, and users are initially stored in server memory. MongoDB persistence will replace the temporary storage during Milestone 3.
+CollaBoard currently stores users, workspaces, projects, memberships, invitations, and tasks in server memory.
 
-## 2. Base URL
+MongoDB persistence will replace the temporary in-memory store during a later milestone.
+
+## 2. Domain model
+
+CollaBoard uses the following hierarchy:
+
+```text
+Workspace
+└── Project
+    └── Task
+```
+
+A Project is displayed as a Kanban-style task board in the React interface. It is not a separate Board entity.
+
+## 3. Base URL
 
 During local development:
 
@@ -16,94 +30,17 @@ http://localhost:5000/api
 
 Requests and responses use JSON unless otherwise stated.
 
-## 3. Authentication
+## 4. Authentication
 
-Protected endpoints require a JWT in the request header:
+Protected endpoints require a JWT:
 
 ```http
 Authorization: Bearer <token>
 ```
 
-Registration, login, and JWT authentication are implemented during Milestone 2.
+Tokens are returned by registration and login.
 
-## 4. Standard error response
-
-API errors use the following structure:
-
-```json
-{
-  "message": "Description of the error"
-}
-```
-
-Common status codes:
-
-| Status | Meaning |
-|---|---|
-| `200 OK` | Request completed successfully |
-| `201 Created` | A resource was created |
-| `204 No Content` | A resource was deleted |
-| `400 Bad Request` | Invalid or missing request data |
-| `401 Unauthorized` | Authentication is required or invalid |
-| `403 Forbidden` | The user cannot access the resource |
-| `404 Not Found` | The requested resource does not exist |
-| `409 Conflict` | The resource was modified by another request |
-| `500 Internal Server Error` | An unexpected server error occurred |
-
-## 5. User structure
-
-```json
-{
-  "id": "user-identifier",
-  "name": "Alex Silva",
-  "email": "alex@example.com"
-}
-```
-
-Passwords must never be returned by the API.
-
-## 6. Board structure
-
-```json
-{
-  "id": "board-identifier",
-  "name": "CollabBoard Development",
-  "description": "Plan and monitor project development.",
-  "ownerId": "user-identifier",
-  "taskCount": 5,
-  "createdAt": "2026-08-14T10:30:00.000Z",
-  "updatedAt": "2026-08-14T10:30:00.000Z"
-}
-```
-
-## 7. Task structure
-
-```json
-{
-  "id": "task-identifier",
-  "boardId": "board-identifier",
-  "title": "Create login page",
-  "description": "Build the initial login interface.",
-  "status": "todo",
-  "version": 1,
-  "createdAt": "2026-08-14T10:30:00.000Z",
-  "updatedAt": "2026-08-14T10:30:00.000Z"
-}
-```
-
-Allowed task statuses:
-
-```text
-todo
-doing
-done
-```
-
-The `version` field will later help detect conflicting updates.
-
-## 8. Authentication endpoints
-
-### Register a user
+### Register
 
 ```http
 POST /api/auth/register
@@ -113,26 +50,28 @@ Request:
 
 ```json
 {
-  "name": "Alex Silva",
-  "email": "alex@example.com",
-  "password": "secret123"
+  "name": "Sanuka",
+  "email": "sanuka@example.com",
+  "password": "password123"
 }
 ```
 
-Successful response: `201 Created`
+Response:
 
 ```json
 {
-  "token": "jwt-token",
+  "token": "...",
   "user": {
-    "id": "user-identifier",
-    "name": "Alex Silva",
-    "email": "alex@example.com"
+    "id": "...",
+    "name": "Sanuka",
+    "email": "sanuka@example.com"
   }
 }
 ```
 
-### Log in
+The first registered user becomes the owner of the seeded workspace and seeded projects.
+
+### Login
 
 ```http
 POST /api/auth/login
@@ -142,194 +81,529 @@ Request:
 
 ```json
 {
-  "email": "alex@example.com",
-  "password": "secret123"
+  "email": "sanuka@example.com",
+  "password": "password123"
 }
 ```
 
-Successful response: `200 OK`
+Response:
 
 ```json
 {
-  "token": "jwt-token",
+  "token": "...",
   "user": {
-    "id": "user-identifier",
-    "name": "Alex Silva",
-    "email": "alex@example.com"
+    "id": "...",
+    "name": "Sanuka",
+    "email": "sanuka@example.com"
   }
 }
 ```
 
-## 9. Board endpoints
+## 5. Workspace roles
 
-All board endpoints require authentication.
+|Role|Description|
+|---|---|
+|`OWNER`|Full workspace control, including deletion|
+|`ADMIN`|Workspace and member administration|
+|`MEMBER`|Ordinary internal workspace member|
+|`GUEST`|Can access only explicitly assigned projects|
 
-| Method | Endpoint | Purpose |
-|---|---|---|
-| `GET` | `/api/boards` | List the current user's boards |
-| `POST` | `/api/boards` | Create a board |
-| `GET` | `/api/boards/:boardId` | Get one board and its tasks |
-| `PATCH` | `/api/boards/:boardId` | Update a board |
-| `DELETE` | `/api/boards/:boardId` | Delete a board |
+## 6. Project roles
 
-### Create a board
+|Role|Description|
+|---|---|
+|`OWNER`|Full Project and membership control|
+|`CONTRIBUTOR`|Can read the Project and manage tasks|
+|`REVIEWER`|Read-only Project and task access|
+
+## 7. Project visibility
+
+|Visibility|Behaviour|
+|---|---|
+|`open`|Ordinary internal Workspace members receive implicit reviewer access|
+|`private`|Explicit Project membership is required|
+
+Guest users do not automatically receive access to open Projects.
+
+## 8. Workspace endpoints
+
+### List the current user's Workspaces
+
+```http
+GET /api/workspaces
+```
+
+Response:
+
+```json
+{
+  "workspaces": []
+}
+```
+
+### Create a Workspace
+
+```http
+POST /api/workspaces
+```
 
 Request:
 
 ```json
 {
-  "name": "Group Assignment",
-  "description": "Tasks for our group assignment."
+  "name": "Development Team",
+  "slug": "development-team"
 }
 ```
 
-Successful response: `201 Created`
+The slug is optional. If omitted, the server generates it from the name.
+
+### Open a Workspace
+
+```http
+GET /api/workspaces/:workspaceId
+```
+
+### Update a Workspace
+
+```http
+PATCH /api/workspaces/:workspaceId
+```
+
+Request:
 
 ```json
 {
-  "board": {
-    "id": "board-identifier",
-    "name": "Group Assignment",
-    "description": "Tasks for our group assignment.",
-    "ownerId": "user-identifier",
-    "taskCount": 0,
-    "createdAt": "2026-08-14T10:30:00.000Z",
-    "updatedAt": "2026-08-14T10:30:00.000Z"
-  }
+  "name": "Updated Workspace Name"
 }
 ```
 
-### Get one board
+Workspace slugs are immutable.
 
-Successful response: `200 OK`
+### Delete a Workspace
+
+```http
+DELETE /api/workspaces/:workspaceId
+```
+
+Deleting a Workspace also deletes its:
+
+- Projects;
+- Tasks;
+- Project memberships;
+- Workspace memberships;
+- Project invitations.
+
+Successful deletion returns:
+
+```http
+204 No Content
+```
+
+### List Workspace guest users
+
+```http
+GET /api/workspaces/:workspaceId/guests
+```
+
+This endpoint requires Workspace member-management permission.
+
+Response:
 
 ```json
 {
-  "board": {
-    "id": "board-identifier",
-    "name": "Group Assignment",
-    "description": "Tasks for our group assignment.",
-    "ownerId": "user-identifier",
-    "taskCount": 1,
-    "createdAt": "2026-08-14T10:30:00.000Z",
-    "updatedAt": "2026-08-14T10:30:00.000Z"
+  "guests": [],
+  "pendingGuestInvitations": []
+}
+```
+
+## 9. Project endpoints
+
+### List all accessible Projects
+
+```http
+GET /api/projects
+```
+
+Optional Workspace filter:
+
+```http
+GET /api/projects?workspaceId=:workspaceId
+```
+
+Response:
+
+```json
+{
+  "projects": []
+}
+```
+
+### List Projects inside a Workspace
+
+```http
+GET /api/workspaces/:workspaceId/projects
+```
+
+### Create a Project
+
+Either endpoint can be used:
+
+```http
+POST /api/projects
+POST /api/workspaces/:workspaceId/projects
+```
+
+Request:
+
+```json
+{
+  "workspaceId": "workspace-id",
+  "projectKey": "CBD",
+  "name": "CollaBoard Development",
+  "description": "Main development project",
+  "visibility": "private"
+}
+```
+
+When using the nested Workspace endpoint, `workspaceId` does not need to be included in the request body.
+
+Project Keys:
+
+- contain 2–10 uppercase letters or numbers;
+- begin with a letter;
+- are unique inside their Workspace;
+- cannot be changed after Project creation.
+
+### Open a Project
+
+```http
+GET /api/projects/:projectId
+```
+
+Response:
+
+```json
+{
+  "project": {
+    "id": "project-id",
+    "workspaceId": "workspace-id",
+    "projectKey": "CBD",
+    "name": "CollaBoard Development",
+    "visibility": "open",
+    "currentUserRole": "OWNER",
+    "isMember": true,
+    "permissions": []
   },
   "tasks": []
 }
 ```
 
-### Update a board
+### Update a Project
 
-Request fields are optional, but at least one must be supplied:
-
-```json
-{
-  "name": "Updated Board Name",
-  "description": "Updated description."
-}
+```http
+PATCH /api/projects/:projectId
 ```
-
-Successful response: `200 OK`
-
-### Delete a board
-
-Successful response:
-
-```text
-204 No Content
-```
-
-Deleting a board also deletes its tasks.
-
-## 10. Task endpoints
-
-All task endpoints require authentication.
-
-| Method | Endpoint | Purpose |
-|---|---|---|
-| `POST` | `/api/boards/:boardId/tasks` | Create a task in a board |
-| `GET` | `/api/tasks/:taskId` | Get one task |
-| `PATCH` | `/api/tasks/:taskId` | Edit or move a task |
-| `DELETE` | `/api/tasks/:taskId` | Delete a task |
-
-### Create a task
 
 Request:
 
 ```json
 {
-  "title": "Create login page",
-  "description": "Build the initial login interface.",
+  "name": "Updated Project",
+  "description": "Updated description",
+  "visibility": "private"
+}
+```
+
+### Delete a Project
+
+```http
+DELETE /api/projects/:projectId
+```
+
+Deleting a Project also deletes its Tasks, memberships, and invitations.
+
+Successful deletion returns:
+
+```http
+204 No Content
+```
+
+## 10. Project member endpoints
+
+### List Project members
+
+```http
+GET /api/projects/:projectId/members
+```
+
+Response:
+
+```json
+{
+  "members": [],
+  "canManageMembers": true
+}
+```
+
+### Change a Project member's role
+
+```http
+PATCH /api/projects/:projectId/members/:userId
+```
+
+Request:
+
+```json
+{
+  "role": "CONTRIBUTOR"
+}
+```
+
+The editable roles are:
+
+```text
+CONTRIBUTOR
+REVIEWER
+```
+
+The Project owner cannot be demoted through this endpoint.
+
+### Remove a Project member
+
+```http
+DELETE /api/projects/:projectId/members/:userId
+```
+
+The Project owner cannot be removed.
+
+Removing a guest from their final assigned Project also removes their Workspace guest membership.
+
+### Transfer Project ownership
+
+```http
+POST /api/projects/:projectId/transfer-ownership
+```
+
+Request:
+
+```json
+{
+  "userId": "new-owner-user-id"
+}
+```
+
+Rules:
+
+- only the current Project owner can transfer ownership;
+- the target must already be a Project member;
+- the target must be an internal Workspace member;
+- guest users cannot own Projects;
+- the previous owner becomes a contributor.
+
+## 11. Project invitation endpoints
+
+### List invitations for a Project
+
+```http
+GET /api/projects/:projectId/invitations
+```
+
+Requires Project member-management permission.
+
+### Invite a Project member
+
+```http
+POST /api/projects/:projectId/invitations
+```
+
+Request:
+
+```json
+{
+  "email": "member@example.com",
+  "role": "REVIEWER",
+  "memberType": "INTERNAL"
+}
+```
+
+Allowed roles:
+
+```text
+CONTRIBUTOR
+REVIEWER
+```
+
+Allowed member types:
+
+```text
+INTERNAL
+GUEST
+```
+
+### Cancel a pending invitation
+
+```http
+DELETE /api/projects/:projectId/invitations/:invitationId
+```
+
+The invitation status becomes:
+
+```text
+CANCELLED
+```
+
+## 12. Recipient invitation endpoints
+
+### List the current user's pending invitations
+
+```http
+GET /api/invitations
+```
+
+Invitations are matched using the authenticated user's email address.
+
+### Accept an invitation
+
+```http
+POST /api/invitations/:invitationId/accept
+```
+
+Accepting creates:
+
+- a Workspace membership when required;
+- a Project membership;
+- the requested contributor or reviewer role.
+
+### Decline an invitation
+
+```http
+POST /api/invitations/:invitationId/decline
+```
+
+## 13. Task endpoints
+
+### Create a Task
+
+```http
+POST /api/projects/:projectId/tasks
+```
+
+Request:
+
+```json
+{
+  "title": "Create API documentation",
+  "description": "Document all Project routes.",
   "status": "todo"
 }
 ```
 
-Successful response: `201 Created`
+### Open a Task
 
-```json
-{
-  "task": {
-    "id": "task-identifier",
-    "boardId": "board-identifier",
-    "title": "Create login page",
-    "description": "Build the initial login interface.",
-    "status": "todo",
-    "version": 1,
-    "createdAt": "2026-08-14T10:30:00.000Z",
-    "updatedAt": "2026-08-14T10:30:00.000Z"
-  }
-}
+```http
+GET /api/tasks/:taskId
 ```
 
-### Update or move a task
-
-The same endpoint handles editing and movement between columns:
+### Update a Task
 
 ```http
 PATCH /api/tasks/:taskId
 ```
 
-Example request:
+Request:
 
 ```json
 {
-  "title": "Complete login page",
-  "description": "Finish the login interface.",
+  "title": "Updated title",
+  "description": "Updated description",
   "status": "doing",
   "version": 1
 }
 ```
 
-Successful response: `200 OK`
+The version submitted by the client must match the current server version.
 
-The server increments the task version after each update.
+After a successful update, the server increments the Task version.
 
-If the supplied version is outdated, the server returns:
+### Task version conflict
 
-```text
+If the submitted version is outdated, the server returns:
+
+```http
 409 Conflict
 ```
 
-### Delete a task
-
-Successful response:
-
-```text
-204 No Content
-```
-
-## 11. Health endpoint
-
-```http
-GET /api/health
-```
-
-Successful response: `200 OK`
+Response:
 
 ```json
 {
-  "status": "ok",
-  "message": "CollabBoard API is running",
-  "timestamp": "2026-08-14T10:30:00.000Z"
+  "message": "Task was modified by another request",
+  "task": {
+    "id": "task-id",
+    "version": 2
+  }
 }
 ```
+
+The client must load the returned current Task before trying the update again.
+
+### Delete a Task
+
+```http
+DELETE /api/tasks/:taskId
+```
+
+Successful deletion returns:
+
+```http
+204 No Content
+```
+
+## 14. Invitation statuses
+
+```text
+PENDING
+ACCEPTED
+DECLINED
+CANCELLED
+```
+
+## 15. Common HTTP responses
+
+|Status|Meaning|
+|---|---|
+|`200 OK`|Successful read or update|
+|`201 Created`|Resource created|
+|`204 No Content`|Resource deleted|
+|`400 Bad Request`|Invalid request data|
+|`401 Unauthorized`|Missing, invalid, or expired token|
+|`403 Forbidden`|Authenticated but insufficient permission|
+|`404 Not Found`|Resource or accessible resource not found|
+|`409 Conflict`|Duplicate resource, invalid state transition, or Task version conflict|
+
+Error responses use:
+
+```json
+{
+  "message": "Explanation of the error"
+}
+```
+
+## 16. In-memory limitation
+
+All application data is currently stored in server memory.
+
+Restarting the Express server deletes:
+
+- registered users;
+- created Workspaces;
+- created Projects;
+- memberships;
+- invitations;
+- created Tasks;
+- Task updates.
+
+The two seeded Projects and their seeded Tasks are recreated when the server starts.
+
+MongoDB persistence will replace this temporary behaviour in a later milestone.

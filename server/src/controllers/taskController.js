@@ -1,9 +1,18 @@
 import { randomUUID } from "node:crypto";
 import { store } from "../data/inMemoryStore.js";
+import { PROJECT_PERMISSIONS } from "../constants/access.js";
+import {
+  getProjectAccess,
+  hasProjectPermission,
+} from "../utils/projectAccess.js";
 
-const allowedStatuses = new Set(["todo", "doing", "done"]);
+const allowedStatuses = new Set([
+  "todo",
+  "doing",
+  "done",
+]);
 
-function findOwnedTask(taskId, userId) {
+function findTaskAndProject(taskId) {
   const task = store.tasks.find(
     (currentTask) => currentTask.id === taskId,
   );
@@ -12,25 +21,39 @@ function findOwnedTask(taskId, userId) {
     return null;
   }
 
-  const ownedBoard = store.boards.find(
-    (board) =>
-      board.id === task.boardId &&
-      board.ownerId === userId,
+  const project = store.projects.find(
+    (currentProject) =>
+      currentProject.id === task.projectId,
   );
 
-  return ownedBoard ? task : null;
+  return project ? { task, project } : null;
 }
 
 export function createTask(request, response) {
-  const board = store.boards.find(
-    (currentBoard) =>
-      currentBoard.id === request.params.boardId &&
-      currentBoard.ownerId === request.user.id,
+  const project = store.projects.find(
+    (currentProject) =>
+      currentProject.id === request.params.projectId,
   );
 
-  if (!board) {
+  if (
+    !project ||
+    !getProjectAccess(project, request.user.id)
+  ) {
     return response.status(404).json({
-      message: "Board not found",
+      message: "Project not found",
+    });
+  }
+
+  if (
+    !hasProjectPermission(
+      project,
+      request.user.id,
+      PROJECT_PERMISSIONS.CREATE_TASK,
+    )
+  ) {
+    return response.status(403).json({
+      message:
+        "You cannot create tasks in this project",
     });
   }
 
@@ -54,7 +77,8 @@ export function createTask(request, response) {
 
   if (!allowedStatuses.has(status)) {
     return response.status(400).json({
-      message: "Task status must be todo, doing, or done",
+      message:
+        "Task status must be todo, doing, or done",
     });
   }
 
@@ -62,7 +86,7 @@ export function createTask(request, response) {
 
   const task = {
     id: randomUUID(),
-    boardId: board.id,
+    projectId: project.id,
     title: title.trim(),
     description: description.trim(),
     status,
@@ -77,29 +101,51 @@ export function createTask(request, response) {
 }
 
 export function getTask(request, response) {
-  const task = findOwnedTask(
+  const result = findTaskAndProject(
     request.params.taskId,
-    request.user.id,
   );
 
-  if (!task) {
+  if (
+    !result ||
+    !hasProjectPermission(
+      result.project,
+      request.user.id,
+      PROJECT_PERMISSIONS.READ_PROJECT,
+    )
+  ) {
     return response.status(404).json({
       message: "Task not found",
     });
   }
 
-  return response.status(200).json({ task });
+  return response.status(200).json({
+    task: result.task,
+  });
 }
 
 export function updateTask(request, response) {
-  const task = findOwnedTask(
+  const result = findTaskAndProject(
     request.params.taskId,
-    request.user.id,
   );
 
-  if (!task) {
+  if (!result) {
     return response.status(404).json({
       message: "Task not found",
+    });
+  }
+
+  const { task, project } = result;
+
+  if (
+    !hasProjectPermission(
+      project,
+      request.user.id,
+      PROJECT_PERMISSIONS.UPDATE_TASK,
+    )
+  ) {
+    return response.status(403).json({
+      message:
+        "You cannot edit tasks in this project",
     });
   }
 
@@ -117,7 +163,8 @@ export function updateTask(request, response) {
 
   if (!containsUpdate) {
     return response.status(400).json({
-      message: "Provide a title, description, or status to update",
+      message:
+        "Provide a title, description, or status to update",
     });
   }
 
@@ -129,7 +176,8 @@ export function updateTask(request, response) {
 
   if (version !== task.version) {
     return response.status(409).json({
-      message: "Task was modified by another request",
+      message:
+        "Task was modified by another request",
       task,
     });
   }
@@ -157,7 +205,8 @@ export function updateTask(request, response) {
     !allowedStatuses.has(status)
   ) {
     return response.status(400).json({
-      message: "Task status must be todo, doing, or done",
+      message:
+        "Task status must be todo, doing, or done",
     });
   }
 
@@ -180,19 +229,34 @@ export function updateTask(request, response) {
 }
 
 export function deleteTask(request, response) {
-  const task = findOwnedTask(
+  const result = findTaskAndProject(
     request.params.taskId,
-    request.user.id,
   );
 
-  if (!task) {
+  if (!result) {
     return response.status(404).json({
       message: "Task not found",
     });
   }
 
+  const { task, project } = result;
+
+  if (
+    !hasProjectPermission(
+      project,
+      request.user.id,
+      PROJECT_PERMISSIONS.DELETE_TASK,
+    )
+  ) {
+    return response.status(403).json({
+      message:
+        "You cannot delete tasks in this project",
+    });
+  }
+
   const taskIndex = store.tasks.findIndex(
-    (currentTask) => currentTask.id === task.id,
+    (currentTask) =>
+      currentTask.id === task.id,
   );
 
   store.tasks.splice(taskIndex, 1);
