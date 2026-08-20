@@ -5,12 +5,10 @@ import {
   getProjectAccess,
   hasProjectPermission,
 } from "../utils/projectAccess.js";
-
-const allowedStatuses = new Set([
-  "todo",
-  "doing",
-  "done",
-]);
+import {
+  findWorkflowStatus,
+  getInitialWorkflowStatus,
+} from "../utils/workflowStatuses.js";
 
 function findTaskAndProject(taskId) {
   const task = store.tasks.find(
@@ -60,7 +58,7 @@ export function createTask(request, response) {
   const {
     title,
     description = "",
-    status = "todo",
+    status,
   } = request.body ?? {};
 
   if (typeof title !== "string" || !title.trim()) {
@@ -75,10 +73,17 @@ export function createTask(request, response) {
     });
   }
 
-  if (!allowedStatuses.has(status)) {
+  const selectedStatus =
+    status === undefined
+      ? getInitialWorkflowStatus(project)
+      : findWorkflowStatus(project, status);
+
+  if (!selectedStatus) {
     return response.status(400).json({
       message:
-        "Task status must be todo, doing, or done",
+        status === undefined
+          ? "Project does not have a workflow status"
+          : "Task status does not exist in this project",
     });
   }
 
@@ -89,7 +94,7 @@ export function createTask(request, response) {
     projectId: project.id,
     title: title.trim(),
     description: description.trim(),
-    status,
+    status: selectedStatus.id,
     version: 1,
     createdAt: timestamp,
     updatedAt: timestamp,
@@ -202,11 +207,11 @@ export function updateTask(request, response) {
 
   if (
     status !== undefined &&
-    !allowedStatuses.has(status)
+    !findWorkflowStatus(project, status)
   ) {
     return response.status(400).json({
       message:
-        "Task status must be todo, doing, or done",
+        "Task status does not exist in this project",
     });
   }
 

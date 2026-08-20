@@ -1,8 +1,7 @@
 import TaskCard from "./TaskCard";
 
 function TaskColumn({
-  title,
-  status,
+  workflowStatus,
   tasks,
   onEditTask,
   onDeleteTask,
@@ -11,13 +10,18 @@ function TaskColumn({
   deletingTaskId,
 }) {
   const columnTasks = tasks.filter(
-    (task) => task.status === status,
+    (task) => task.status === workflowStatus.id,
   );
 
   return (
-    <section className={`task-column task-column--${status}`}>
+    <section
+      className="task-column"
+      style={{
+        "--status-color": workflowStatus.color,
+      }}
+    >
       <header className="task-column__header">
-        <h2>{title}</h2>
+        <h2>{workflowStatus.name}</h2>
 
         <span className="task-column__count">
           {columnTasks.length}
@@ -30,11 +34,14 @@ function TaskColumn({
             <TaskCard
               key={task.id}
               task={task}
+              workflowStatus={workflowStatus}
               onEdit={onEditTask}
               onDelete={onDeleteTask}
               canEdit={canEditTasks}
               canDelete={canDeleteTasks}
-              isDeleting={deletingTaskId === task.id}
+              isDeleting={
+                deletingTaskId === task.id
+              }
             />
           ))
         ) : (

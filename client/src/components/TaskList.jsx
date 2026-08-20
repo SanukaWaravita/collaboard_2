@@ -1,17 +1,19 @@
-const STATUS_LABELS = {
-  todo: "To Do",
-  doing: "Doing",
-  done: "Done",
-};
-
 function TaskList({
   tasks,
+  workflowStatuses = [],
   onEditTask,
   onDeleteTask,
   canEditTasks = false,
   canDeleteTasks = false,
   deletingTaskId = null,
 }) {
+  const statusesById = new Map(
+    workflowStatuses.map((status) => [
+      status.id,
+      status,
+    ]),
+  );
+
   if (tasks.length === 0) {
     return (
       <section className="task-list-empty">
@@ -53,6 +55,17 @@ function TaskList({
               const isDeleting =
                 deletingTaskId === task.id;
 
+              const workflowStatus =
+                statusesById.get(task.status);
+
+              const statusName =
+                workflowStatus?.name ??
+                "Unknown status";
+
+              const statusColor =
+                workflowStatus?.color ??
+                "#64748b";
+
               return (
                 <tr key={task.id}>
                   <td className="task-list__title">
@@ -60,18 +73,19 @@ function TaskList({
                   </td>
 
                   <td className="task-list__description">
-                    {task.description || "No description"}
+                    {task.description ||
+                      "No description"}
                   </td>
 
                   <td>
                     <span
-                      className={
-                        `task-status ` +
-                        `task-status--${task.status}`
-                      }
+                      className="task-status"
+                      style={{
+                        "--status-color":
+                          statusColor,
+                      }}
                     >
-                      {STATUS_LABELS[task.status] ??
-                        task.status}
+                      {statusName}
                     </span>
                   </td>
 
