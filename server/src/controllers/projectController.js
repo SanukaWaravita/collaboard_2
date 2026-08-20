@@ -16,6 +16,9 @@ import {
   projectKeyExists,
   validateProjectKey,
 } from "../utils/projectKey.js";
+import {
+  createDefaultWorkflowStatuses,
+} from "../utils/workflowStatuses.js";
 
 function presentProject(project, userId) {
   const access = getProjectAccess(project, userId);
@@ -194,6 +197,7 @@ export function createProject(request, response) {
     description: description.trim(),
     visibility,
     ownerId: request.user.id,
+    workflowStatuses: createDefaultWorkflowStatuses(),
     createdAt: timestamp,
     updatedAt: timestamp,
   };

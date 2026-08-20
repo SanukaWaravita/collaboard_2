@@ -18,6 +18,12 @@ import {
   transferProjectOwnership,
   updateProjectMember,
 } from "../controllers/projectMemberController.js";
+import {
+  createWorkflowStatus,
+  deleteWorkflowStatus,
+  getWorkflowStatuses,
+  updateWorkflowStatus,
+} from "../controllers/workflowStatusController.js";
 
 const router = Router();
 
@@ -57,10 +63,20 @@ router.delete(
 );
 
 router
-.route("/:projectId")
-.get(getProject)
-.patch(updateProject)
-.delete(deleteProject);
+  .route("/:projectId/statuses")
+  .get(getWorkflowStatuses)
+  .post(createWorkflowStatus);
+
+router
+  .route("/:projectId/statuses/:statusId")
+  .patch(updateWorkflowStatus)
+  .delete(deleteWorkflowStatus);
+
+router
+  .route("/:projectId")
+  .get(getProject)
+  .patch(updateProject)
+  .delete(deleteProject);
 
 router.post("/:projectId/tasks", createTask);
 

@@ -2,6 +2,7 @@ import { useState } from "react";
 
 function TaskForm({
   initialTask = null,
+  workflowStatuses = [],
   onSubmit,
   onCancel,
   isSubmitting = false,
@@ -10,21 +11,31 @@ function TaskForm({
   const [title, setTitle] = useState(
     initialTask?.title ?? "",
   );
+
   const [description, setDescription] = useState(
     initialTask?.description ?? "",
   );
+
   const [status, setStatus] = useState(
-    initialTask?.status ?? "todo",
+    initialTask?.status ??
+      workflowStatuses[0]?.id ??
+      "",
   );
 
   const isEditing = Boolean(initialTask);
+  const hasWorkflowStatuses =
+    workflowStatuses.length > 0;
 
   function handleSubmit(event) {
     event.preventDefault();
 
     const trimmedTitle = title.trim();
 
-    if (!trimmedTitle || isSubmitting) {
+    if (
+      !trimmedTitle ||
+      !status ||
+      isSubmitting
+    ) {
       return;
     }
 
@@ -51,7 +62,9 @@ function TaskForm({
             </p>
 
             <h2 id="task-form-title">
-              {isEditing ? "Update task" : "Create a task"}
+              {isEditing
+                ? "Update task"
+                : "Create a task"}
             </h2>
           </div>
 
@@ -68,11 +81,14 @@ function TaskForm({
 
         <div className="task-form__field">
           <label htmlFor="task-title">Title</label>
+
           <input
             id="task-title"
             type="text"
             value={title}
-            onChange={(event) => setTitle(event.target.value)}
+            onChange={(event) =>
+              setTitle(event.target.value)
+            }
             placeholder="Enter a task title"
             required
             autoFocus
@@ -81,7 +97,10 @@ function TaskForm({
         </div>
 
         <div className="task-form__field">
-          <label htmlFor="task-description">Description</label>
+          <label htmlFor="task-description">
+            Description
+          </label>
+
           <textarea
             id="task-description"
             value={description}
@@ -96,20 +115,42 @@ function TaskForm({
 
         <div className="task-form__field">
           <label htmlFor="task-status">Status</label>
+
           <select
             id="task-status"
             value={status}
-            onChange={(event) => setStatus(event.target.value)}
-            disabled={isSubmitting}
+            onChange={(event) =>
+              setStatus(event.target.value)
+            }
+            disabled={
+              isSubmitting || !hasWorkflowStatuses
+            }
+            required
           >
-            <option value="todo">To Do</option>
-            <option value="doing">Doing</option>
-            <option value="done">Done</option>
+            {!hasWorkflowStatuses && (
+              <option value="">
+                No workflow statuses available
+              </option>
+            )}
+
+            {workflowStatuses.map(
+              (workflowStatus) => (
+                <option
+                  key={workflowStatus.id}
+                  value={workflowStatus.id}
+                >
+                  {workflowStatus.name}
+                </option>
+              ),
+            )}
           </select>
         </div>
 
         {error && (
-          <p className="auth-form__error" role="alert">
+          <p
+            className="auth-form__error"
+            role="alert"
+          >
             {error}
           </p>
         )}
@@ -127,7 +168,9 @@ function TaskForm({
           <button
             type="submit"
             className="button button--primary"
-            disabled={isSubmitting}
+            disabled={
+              isSubmitting || !hasWorkflowStatuses
+            }
           >
             {isSubmitting
               ? "Saving..."

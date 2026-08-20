@@ -4,7 +4,7 @@
 
 This document defines the REST API used by the CollaBoard React client.
 
-CollaBoard currently stores users, workspaces, projects, memberships, invitations, and tasks in server memory.
+CollaBoard currently stores users, workspaces, projects, workflow statuses, memberships, invitations, and tasks in server memory.
 
 MongoDB persistence will replace the temporary in-memory store during a later milestone.
 
@@ -15,10 +15,16 @@ CollaBoard uses the following hierarchy:
 ```text
 Workspace
 └── Project
+    ├── Workflow Status
     └── Task
+        └── References one Workflow Status
 ```
 
-A Project is displayed as a Kanban-style task board in the React interface. It is not a separate Board entity.
+Every Project owns an ordered collection of Workflow Statuses.
+
+A Task's `status` property stores the identifier of one Workflow Status belonging to the same Project.
+
+A Project is displayed using Kanban and List views in the React interface. It is not a separate Board entity.
 
 ## 3. Base URL
 
@@ -291,6 +297,29 @@ Response:
     "projectKey": "CBD",
     "name": "CollaBoard Development",
     "visibility": "open",
+    "workflowStatuses": [
+      {
+        "id": "todo",
+        "name": "To Do",
+        "color": "#64748b",
+        "position": 0,
+        "isCompleted": false
+      },
+      {
+        "id": "doing",
+        "name": "Doing",
+        "color": "#2563eb",
+        "position": 1,
+        "isCompleted": false
+      },
+      {
+        "id": "done",
+        "name": "Done",
+        "color": "#16a34a",
+        "position": 2,
+        "isCompleted": true
+      }
+    ],
     "currentUserRole": "OWNER",
     "isMember": true,
     "permissions": []
@@ -481,7 +510,167 @@ Accepting creates:
 POST /api/invitations/:invitationId/decline
 ```
 
-## 13. Task endpoints
+## 13. Workflow Status endpoints
+
+Workflow Statuses define the columns and stages belonging to an individual Project.
+
+Each Workflow Status contains:
+
+|Property|Purpose|
+|---|---|
+|`id`|Stable identifier stored by Tasks|
+|`name`|User-facing status and column name|
+|`color`|Six-digit hexadecimal display colour|
+|`position`|Current position in the Project workflow|
+|`isCompleted`|Indicates whether Tasks in the status are completed|
+
+All users with Project read access can retrieve Workflow Statuses.
+
+Only the Project owner can create, edit, or delete them.
+
+### List Workflow Statuses
+
+```http
+GET /api/projects/:projectId/statuses
+```
+
+Response:
+
+```json
+{
+  "workflowStatuses": [
+    {
+      "id": "todo",
+      "name": "To Do",
+      "color": "#64748b",
+      "position": 0,
+      "isCompleted": false
+    },
+    {
+      "id": "doing",
+      "name": "Doing",
+      "color": "#2563eb",
+      "position": 1,
+      "isCompleted": false
+    },
+    {
+      "id": "done",
+      "name": "Done",
+      "color": "#16a34a",
+      "position": 2,
+      "isCompleted": true
+    }
+  ]
+}
+```
+
+Statuses are returned in ascending `position` order.
+
+### Create a Workflow Status
+
+```http
+POST /api/projects/:projectId/statuses
+```
+
+Request:
+
+```json
+{
+  "name": "Review",
+  "color": "#f59e0b"
+}
+```
+
+Response:
+
+```json
+{
+  "workflowStatus": {
+    "id": "generated-status-id",
+    "name": "Review",
+    "color": "#f59e0b",
+    "position": 2,
+    "isCompleted": false
+  },
+  "workflowStatuses": []
+}
+```
+
+New custom statuses are inserted immediately before the first completed status.
+
+Workflow Status rules:
+
+- a Project can contain a maximum of 12 statuses;
+- status names cannot exceed 40 characters;
+- status names must be unique inside the Project;
+- duplicate-name checking is case-insensitive;
+- colours must be six-digit hexadecimal values;
+- newly created custom statuses are non-completed statuses.
+
+### Update a Workflow Status
+
+```http
+PATCH /api/projects/:projectId/statuses/:statusId
+```
+
+Request:
+
+```json
+{
+  "name": "Quality Review",
+  "color": "#8b5cf6"
+}
+```
+
+The name and colour are independently optional, but at least one must be provided.
+
+A status identifier does not change when its name or colour changes.
+
+Tasks therefore do not need to be updated when a status is renamed.
+
+### Delete a Workflow Status
+
+```http
+DELETE /api/projects/:projectId/statuses/:statusId
+```
+
+An empty status can be deleted using an empty request body:
+
+```json
+{}
+```
+
+When the status contains Tasks, a replacement status is required:
+
+```json
+{
+  "replacementStatusId": "doing"
+}
+```
+
+Response:
+
+```json
+{
+  "deletedStatusId": "deleted-status-id",
+  "replacementStatusId": "doing",
+  "movedTaskCount": 2,
+  "workflowStatuses": []
+}
+```
+
+Deletion rules:
+
+- a Project must retain at least one Workflow Status;
+- the Project's only completed status cannot be deleted;
+- the replacement must be another status in the same Project;
+- all affected Tasks are moved to the replacement status;
+- every moved Task has its version incremented;
+- positions are normalized after deletion.
+
+Manual Workflow Status reordering is not currently exposed through the API or client interface.
+
+## 14. Task endpoints
 
 ### Create a Task
 
@@ -498,6 +687,10 @@ Request:
   "status": "todo"
 }
 ```
+
+The supplied `status` must identify a Workflow Status belonging to the same Project.
+
+If `status` is omitted, the server selects the first non-completed Workflow Status according to its position.
 
 ### Open a Task
 
@@ -520,6 +713,13 @@ Request:
   "status": "doing",
   "version": 1
 }
+```
+When changing a Task's status, the supplied identifier must belong to the Task's Project.
+
+An unknown status or a status belonging only to another Project is rejected with:
+
+```http
+400 Bad Request
 ```
 
 The version submitted by the client must match the current server version.
@@ -560,7 +760,7 @@ Successful deletion returns:
 204 No Content
 ```
 
-## 14. Invitation statuses
+## 15. Invitation statuses
 
 ```text
 PENDING
@@ -569,7 +769,7 @@ DECLINED
 CANCELLED
 ```
 
-## 15. Common HTTP responses
+## 16. Common HTTP responses
 
 |Status|Meaning|
 |---|---|
@@ -590,7 +790,7 @@ Error responses use:
 }
 ```
 
-## 16. In-memory limitation
+## 17. In-memory limitation
 
 All application data is currently stored in server memory.
 
@@ -603,6 +803,9 @@ Restarting the Express server deletes:
 - invitations;
 - created Tasks;
 - Task updates.
+- created, renamed, recoloured, and deleted Workflow Statuses;
+
+The two seeded Projects are recreated with the default `To Do`, `Doing`, and `Done` Workflow Statuses when the server starts.
 
 The two seeded Projects and their seeded Tasks are recreated when the server starts.
 

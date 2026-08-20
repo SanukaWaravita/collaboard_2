@@ -1,3 +1,7 @@
+import {
+  createDefaultWorkflowStatuses,
+} from "../utils/workflowStatuses.js";
+
 export const store = {
   users: [],
 
@@ -24,6 +28,7 @@ export const store = {
         "Plan and monitor the development of the group project.",
       visibility: "open",
       ownerId: "temporary-user",
+      workflowStatuses: createDefaultWorkflowStatuses(),
       createdAt: "2026-08-14T00:00:00.000Z",
       updatedAt: "2026-08-14T00:00:00.000Z",
     },
@@ -36,6 +41,7 @@ export const store = {
         "Track the interface, documentation, and repository setup.",
       visibility: "private",
       ownerId: "temporary-user",
+      workflowStatuses: createDefaultWorkflowStatuses(),
       createdAt: "2026-08-14T00:00:00.000Z",
       updatedAt: "2026-08-14T00:00:00.000Z",
     },

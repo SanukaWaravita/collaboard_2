@@ -1,16 +1,17 @@
 function TaskCard({
   task,
+  workflowStatus,
   onEdit,
   onDelete,
   canEdit = false,
   canDelete = false,
   isDeleting = false,
 }) {
-  const statusLabels = {
-    todo: "To Do",
-    doing: "Doing",
-    done: "Done",
-  };
+  const statusName =
+    workflowStatus?.name ?? "Unknown status";
+
+  const statusColor =
+    workflowStatus?.color ?? "#64748b";
 
   return (
     <article className="task-card">
@@ -18,9 +19,12 @@ function TaskCard({
         <h3>{task.title}</h3>
 
         <span
-          className={`task-status task-status--${task.status}`}
+          className="task-status"
+          style={{
+            "--status-color": statusColor,
+          }}
         >
-          {statusLabels[task.status]}
+          {statusName}
         </span>
       </div>
 
@@ -46,7 +50,9 @@ function TaskCard({
               onClick={() => onDelete(task)}
               disabled={isDeleting}
             >
-              {isDeleting ? "Deleting..." : "Delete"}
+              {isDeleting
+                ? "Deleting..."
+                : "Delete"}
             </button>
           )}
         </div>
