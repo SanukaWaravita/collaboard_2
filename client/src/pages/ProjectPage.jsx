@@ -232,6 +232,46 @@ async function handleUpdateWorkflowStatus(
   }
 }
 
+async function handleReorderWorkflowStatuses(
+  statusIds,
+) {
+  setWorkflowError("");
+  setIsSavingWorkflow(true);
+
+  try {
+    const data = await apiRequest(
+      `/projects/${projectId}/statuses/order`,
+      {
+        method: "PUT",
+        body: { statusIds },
+      },
+    );
+
+    setProject((currentProject) =>
+      currentProject
+        ? {
+            ...currentProject,
+            workflowStatuses:
+              data.workflowStatuses,
+          }
+        : currentProject,
+    );
+
+    return true;
+  } catch (requestError) {
+    if (requestError.status === 401) {
+      clearSession();
+      navigate("/login", { replace: true });
+      return false;
+    }
+
+    setWorkflowError(requestError.message);
+    return false;
+  } finally {
+    setIsSavingWorkflow(false);
+  }
+}
+
 async function handleDeleteWorkflowStatus(
   statusId,
   replacementStatusId,
@@ -579,6 +619,9 @@ async function handleDeleteWorkflowStatus(
     }
     onDeleteStatus={
       handleDeleteWorkflowStatus
+    }
+    onReorderStatuses={
+      handleReorderWorkflowStatuses
     }
     onClose={closeWorkflowManager}
     isSaving={isSavingWorkflow}

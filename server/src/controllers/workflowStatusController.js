@@ -307,6 +307,125 @@ export function updateWorkflowStatus(
   });
 }
 
+export function reorderWorkflowStatuses(
+  request,
+  response,
+) {
+  const project = findProject(
+    request.params.projectId,
+  );
+
+  if (!project) {
+    return response.status(404).json({
+      message: "Project not found",
+    });
+  }
+
+  if (!canManageWorkflow(project, request.user.id)) {
+    return response.status(403).json({
+      message:
+        "Only the project owner can reorder workflow statuses",
+    });
+  }
+
+  const {
+    statusIds,
+  } = request.body ?? {};
+
+  if (!Array.isArray(statusIds)) {
+    return response.status(400).json({
+      message:
+        "statusIds must be an ordered array",
+    });
+  }
+
+  if (
+    statusIds.length !==
+    project.workflowStatuses.length
+  ) {
+    return response.status(400).json({
+      message:
+        "The complete workflow status order is required",
+    });
+  }
+
+  if (
+    statusIds.some(
+      (statusId) =>
+        typeof statusId !== "string" ||
+        !statusId,
+    )
+  ) {
+    return response.status(400).json({
+      message:
+        "Every workflow status identifier must be text",
+    });
+  }
+
+  const uniqueStatusIds = new Set(statusIds);
+
+  if (uniqueStatusIds.size !== statusIds.length) {
+    return response.status(400).json({
+      message:
+        "Workflow status identifiers cannot be duplicated",
+    });
+  }
+
+  const statusesById = new Map(
+    project.workflowStatuses.map((status) => [
+      status.id,
+      status,
+    ]),
+  );
+
+  const containsUnknownStatus = statusIds.some(
+    (statusId) => !statusesById.has(statusId),
+  );
+
+  if (containsUnknownStatus) {
+    return response.status(400).json({
+      message:
+        "Every status must belong to this project",
+    });
+  }
+
+  const reorderedStatuses = statusIds.map(
+    (statusId) => statusesById.get(statusId),
+  );
+
+  let completedStatusFound = false;
+  let activeStatusAfterCompleted = false;
+
+  reorderedStatuses.forEach((status) => {
+    if (status.isCompleted) {
+      completedStatusFound = true;
+      return;
+    }
+
+    if (completedStatusFound) {
+      activeStatusAfterCompleted = true;
+    }
+  });
+
+  if (activeStatusAfterCompleted) {
+    return response.status(400).json({
+      message:
+        "Completed statuses must remain after active statuses",
+    });
+  }
+
+  reorderedStatuses.forEach((status, index) => {
+    status.position = index;
+  });
+
+  project.workflowStatuses = reorderedStatuses;
+  project.updatedAt = new Date().toISOString();
+
+  return response.status(200).json({
+    workflowStatuses: reorderedStatuses,
+  });
+}
+
 export function deleteWorkflowStatus(
   request,
   response,
