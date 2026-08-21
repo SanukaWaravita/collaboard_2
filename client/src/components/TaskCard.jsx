@@ -6,12 +6,29 @@ import {
 function TaskCard({
   task,
   workflowStatus,
+  projectMembers = [],
   onEdit,
   onDelete,
   canEdit = false,
   canDelete = false,
   isDeleting = false,
 }) {
+  const assignee = task.assigneeId
+  ? projectMembers.find(
+      (member) =>
+        member.userId === task.assigneeId,
+    )
+  : null;
+
+const assigneeName = task.assigneeId
+  ? assignee?.name ?? "Unknown assignee"
+  : "Unassigned";
+
+const assigneeInitial = assignee?.name
+  ?.trim()
+  .charAt(0)
+  .toUpperCase() ?? "—";
+
   const statusName =
     workflowStatus?.name ?? "Unknown status";
 
@@ -45,16 +62,41 @@ function TaskCard({
 
       <p>{task.description}</p>
 
-{task.dueDate && (
+<div className="task-card__metadata">
+  {task.dueDate && (
+    <div
+      className={
+        `task-due-date ` +
+        `task-due-date--${dueDateState}`
+      }
+    >
+      {dueDateLabel}
+    </div>
+  )}
+
   <div
     className={
-      `task-due-date ` +
-      `task-due-date--${dueDateState}`
+      `task-assignee ` +
+      `${
+        task.assigneeId
+          ? ""
+          : "task-assignee--unassigned"
+      }`
     }
+    title={assignee?.email ?? assigneeName}
   >
-    {dueDateLabel}
+    <span
+      className="task-assignee__avatar"
+      aria-hidden="true"
+    >
+      {assigneeInitial}
+    </span>
+
+    <span className="task-assignee__name">
+      {assigneeName}
+    </span>
   </div>
-)}
+</div>
 
 {(canEdit || canDelete) && (
         <div className="task-card__actions">

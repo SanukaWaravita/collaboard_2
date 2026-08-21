@@ -6,6 +6,7 @@ import {
 function TaskList({
   tasks,
   workflowStatuses = [],
+  projectMembers = [],
   onEditTask,
   onDeleteTask,
   canEditTasks = false,
@@ -16,6 +17,13 @@ function TaskList({
     workflowStatuses.map((status) => [
       status.id,
       status,
+    ]),
+  );
+
+  const membersById = new Map(
+    projectMembers.map((member) => [
+      member.userId,
+      member,
     ]),
   );
 
@@ -51,6 +59,7 @@ function TaskList({
               <th scope="col">Task</th>
               <th scope="col">Description</th>
               <th scope="col">Status</th>
+              <th scope="col">Assignee</th>
               <th scope="col">Due date</th>
               <th scope="col">Actions</th>
             </tr>
@@ -76,6 +85,19 @@ const dueDateState = getDueDateState(
   task.dueDate,
   workflowStatus?.isCompleted ?? false,
 );
+
+const assignee = task.assigneeId
+  ? membersById.get(task.assigneeId)
+  : null;
+
+const assigneeName = task.assigneeId
+  ? assignee?.name ?? "Unknown assignee"
+  : "Unassigned";
+
+const assigneeInitial = assignee?.name
+  ?.trim()
+  .charAt(0)
+  .toUpperCase() ?? "—";
 
 const dueDateLabel = getDueDateLabel(
   task.dueDate,
@@ -104,6 +126,31 @@ return (
                       {statusName}
                     </span>
                   </td>
+
+                  <td className="task-list__assignee">
+  <div
+    className={
+      `task-assignee ` +
+      `${
+        task.assigneeId
+          ? ""
+          : "task-assignee--unassigned"
+      }`
+    }
+    title={assignee?.email ?? assigneeName}
+  >
+    <span
+      className="task-assignee__avatar"
+      aria-hidden="true"
+    >
+      {assigneeInitial}
+    </span>
+
+    <span className="task-assignee__name">
+      {assigneeName}
+    </span>
+  </div>
+</td>
 
                   <td className="task-list__due-date">
                     <span

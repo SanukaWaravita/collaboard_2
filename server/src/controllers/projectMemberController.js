@@ -11,6 +11,10 @@ import {
   hasProjectPermission,
 } from "../utils/projectAccess.js";
 import { hasWorkspacePermission } from "../utils/workspaceAccess.js";
+import {
+  clearTaskAssignmentsForUser,
+  isAssignableProjectRole,
+} from "../utils/taskAssignee.js";
 
 const editableProjectRoles = new Set([
   PROJECT_ROLES.CONTRIBUTOR,
@@ -77,7 +81,10 @@ function presentProjectMember(membership, project) {
     name: user?.name ?? "Unknown user",
     email: user?.email ?? null,
     projectRole: membership.role,
-    workspaceRole: workspaceMembership?.role ?? null,
+canBeAssigned: isAssignableProjectRole(
+  membership.role,
+),
+workspaceRole: workspaceMembership?.role ?? null,
     memberType:
       workspaceMembership?.role === WORKSPACE_ROLES.GUEST
         ? MEMBER_TYPES.GUEST
@@ -236,13 +243,24 @@ export function updateProjectMember(request, response) {
     });
   }
 
-  membership.role = role;
-  membership.updatedAt = new Date().toISOString();
-  project.updatedAt = membership.updatedAt;
+  const timestamp = new Date().toISOString();
 
-  return response.status(200).json({
-    member: presentProjectMember(membership, project),
-  });
+membership.role = role;
+membership.updatedAt = timestamp;
+project.updatedAt = timestamp;
+
+const unassignedTaskCount =
+  isAssignableProjectRole(role)
+    ? 0
+    : clearTaskAssignmentsForUser(
+        project.id,
+        membership.userId,
+      );
+
+return response.status(200).json({
+  member: presentProjectMember(membership, project),
+  unassignedTaskCount,
+});
 }
 
 export function removeProjectMember(request, response) {
@@ -289,19 +307,26 @@ export function removeProjectMember(request, response) {
 
   store.projectMembers.splice(membershipIndex, 1);
 
-  const workspaceGuestRemoved =
-    removeUnusedGuestWorkspaceMembership(
-      project.workspaceId,
-      membership.userId,
-    );
+const unassignedTaskCount =
+  clearTaskAssignmentsForUser(
+    project.id,
+    membership.userId,
+  );
 
-  project.updatedAt = new Date().toISOString();
+const workspaceGuestRemoved =
+  removeUnusedGuestWorkspaceMembership(
+    project.workspaceId,
+    membership.userId,
+  );
 
-  return response.status(200).json({
-    message: "Project member removed",
-    userId: membership.userId,
-    workspaceGuestRemoved,
-  });
+project.updatedAt = new Date().toISOString();
+
+return response.status(200).json({
+  message: "Project member removed",
+  userId: membership.userId,
+  unassignedTaskCount,
+  workspaceGuestRemoved,
+});
 }
 
 export function transferProjectOwnership(

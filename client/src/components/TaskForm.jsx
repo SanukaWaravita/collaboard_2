@@ -3,6 +3,7 @@ import { useState } from "react";
 function TaskForm({
   initialTask = null,
   workflowStatuses = [],
+  assignees = [],
   onSubmit,
   onCancel,
   isSubmitting = false,
@@ -26,6 +27,9 @@ function TaskForm({
   initialTask?.dueDate ?? "",
   );
 
+  const [assigneeId, setAssigneeId] =
+  useState(initialTask?.assigneeId ?? "");
+
   const isEditing = Boolean(initialTask);
   const hasWorkflowStatuses =
     workflowStatuses.length > 0;
@@ -48,6 +52,7 @@ function TaskForm({
       description: description.trim(),
       status,
       dueDate: dueDate || null,
+      assigneeId: assigneeId || null,
     });
   }
 
@@ -140,7 +145,7 @@ function TaskForm({
       "task-form__clear-date"
     }
     onClick={() => setDueDate("")}
-    disabled={!dueDate}
+    disabled={!dueDate || isSubmitting}
   >
     Clear
   </button>
@@ -151,6 +156,40 @@ function TaskForm({
             deadline.
           </small>
         </div>
+
+        <div className="task-form__field">
+  <label htmlFor="task-assignee">
+    Assignee
+  </label>
+
+  <select
+    id="task-assignee"
+    value={assigneeId}
+    onChange={(event) =>
+      setAssigneeId(event.target.value)
+    }
+    disabled={isSubmitting}
+  >
+    <option value="">Unassigned</option>
+
+    {assignees.map((assignee) => (
+      <option
+        key={assignee.userId}
+        value={assignee.userId}
+      >
+        {assignee.name}
+        {assignee.email
+          ? ` — ${assignee.email}`
+          : ""}
+      </option>
+    ))}
+  </select>
+
+  <small>
+    Optional. Only Project owners and
+    contributors can be assigned.
+  </small>
+</div>
 
         <div className="task-form__field">
           <label htmlFor="task-status">Status</label>

@@ -13,6 +13,11 @@ import {
   isValidDueDate,
   normalizeDueDate,
 } from "../utils/taskDueDate.js";
+import {
+  findAssignableProjectMember,
+  isValidAssigneeIdValue,
+  normalizeAssigneeId,
+} from "../utils/taskAssignee.js";
 
 function findTaskAndProject(taskId) {
   const task = store.tasks.find(
@@ -64,6 +69,7 @@ export function createTask(request, response) {
   description = "",
   status,
   dueDate = null,
+  assigneeId = null,
 } = request.body ?? {};
 
   if (typeof title !== "string" || !title.trim()) {
@@ -82,6 +88,29 @@ export function createTask(request, response) {
   return response.status(400).json({
     message:
       "Due date must use YYYY-MM-DD format or be null",
+  });
+}
+
+if (!isValidAssigneeIdValue(assigneeId)) {
+  return response.status(400).json({
+    message:
+      "Assignee must be a user ID or null",
+  });
+}
+
+const normalizedAssigneeId =
+  normalizeAssigneeId(assigneeId);
+
+if (
+  normalizedAssigneeId &&
+  !findAssignableProjectMember(
+    project.id,
+    normalizedAssigneeId,
+  )
+) {
+  return response.status(400).json({
+    message:
+      "Assignee must be an owner or contributor in this project",
   });
 }
 
@@ -108,6 +137,7 @@ export function createTask(request, response) {
     description: description.trim(),
     status: selectedStatus.id,
     dueDate: normalizeDueDate(dueDate),
+    assigneeId: normalizedAssigneeId,
     version: 1,
     createdAt: timestamp,
     updatedAt: timestamp,
@@ -172,6 +202,7 @@ export function updateTask(request, response) {
   description,
   status,
   dueDate,
+  assigneeId,
   version,
 } = request.body ?? {};
 
@@ -179,12 +210,13 @@ export function updateTask(request, response) {
   title !== undefined ||
   description !== undefined ||
   status !== undefined ||
-  dueDate !== undefined;
+  dueDate !== undefined ||
+  assigneeId !== undefined;
 
   if (!containsUpdate) {
     return response.status(400).json({
       message:
-        "Provide a title, description, status, or Due Date to update",
+        "Provide a title, description, status, Due Date, or Assignee to update",
     });
   }
 
@@ -230,6 +262,33 @@ export function updateTask(request, response) {
   });
 }
 
+let normalizedAssigneeId;
+
+if (assigneeId !== undefined) {
+  if (!isValidAssigneeIdValue(assigneeId)) {
+    return response.status(400).json({
+      message:
+        "Assignee must be a user ID or null",
+    });
+  }
+
+  normalizedAssigneeId =
+    normalizeAssigneeId(assigneeId);
+
+  if (
+    normalizedAssigneeId &&
+    !findAssignableProjectMember(
+      project.id,
+      normalizedAssigneeId,
+    )
+  ) {
+    return response.status(400).json({
+      message:
+        "Assignee must be an owner or contributor in this project",
+    });
+  }
+}
+
   if (
     status !== undefined &&
     !findWorkflowStatus(project, status)
@@ -254,9 +313,13 @@ export function updateTask(request, response) {
 
   if (dueDate !== undefined) {
   task.dueDate = normalizeDueDate(dueDate);
-  }
+}
 
-  task.version += 1;
+if (assigneeId !== undefined) {
+  task.assigneeId = normalizedAssigneeId;
+}
+
+task.version += 1;
   task.updatedAt = new Date().toISOString();
 
   return response.status(200).json({ task });
