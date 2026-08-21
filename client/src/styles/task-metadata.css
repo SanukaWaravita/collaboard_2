@@ -1,0 +1,116 @@
+.task-due-date {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.task-card__metadata {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: -6px 0 16px;
+}
+
+.task-card .task-due-date {
+  margin: 0;
+}
+
+.task-assignee-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  min-width: 0;
+  gap: 6px;
+}
+
+.task-assignee {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-width: 0;
+  gap: 7px;
+  color: var(--text);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.task-assignee__avatar {
+  display: grid;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 1px solid #c7d2fe;
+  border-radius: 999px;
+  color: var(--primary-dark);
+  background: var(--primary-soft);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.task-assignee__name {
+  max-width: 170px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-assignee--unassigned {
+  color: var(--text-muted);
+}
+
+.task-assignee--unassigned .task-assignee__avatar {
+  border-color: #cbd5e1;
+  color: var(--status-default);
+  background: var(--surface-subtle);
+}
+
+.task-due-date--none {
+  border-color: #cbd5e1;
+  color: var(--status-default);
+  background: var(--surface-subtle);
+}
+
+.task-due-date--upcoming {
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+  background: #eff6ff;
+}
+
+.task-due-date--today {
+  border-color: #fde68a;
+  color: var(--warning-text);
+  background: #fffbeb;
+}
+
+.task-due-date--overdue {
+  border-color: var(--danger-border);
+  color: var(--danger-text);
+  background: var(--danger-surface);
+}
+
+.task-due-date--completed {
+  border-color: #bbf7d0;
+  color: var(--success-text);
+  background: #f0fdf4;
+}
+
+.task-list__assignee {
+  min-width: 220px;
+}
+
+.task-list__assignee .task-assignee__name {
+  max-width: 120px;
+}
+
+.task-list__due-date {
+  white-space: nowrap;
+}
