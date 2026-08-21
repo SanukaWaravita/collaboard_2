@@ -14,9 +14,9 @@ import {
   normalizeDueDate,
 } from "../utils/taskDueDate.js";
 import {
-  findAssignableProjectMember,
-  isValidAssigneeIdValue,
-  normalizeAssigneeId,
+  findInvalidAssigneeId,
+  isValidAssigneeIdsValue,
+  normalizeAssigneeIds,
 } from "../utils/taskAssignee.js";
 
 function findTaskAndProject(taskId) {
@@ -69,7 +69,7 @@ export function createTask(request, response) {
   description = "",
   status,
   dueDate = null,
-  assigneeId = null,
+  assigneeIds = [],
 } = request.body ?? {};
 
   if (typeof title !== "string" || !title.trim()) {
@@ -91,15 +91,31 @@ export function createTask(request, response) {
   });
 }
 
-if (!isValidAssigneeIdValue(assigneeId)) {
+if (!isValidAssigneeIdsValue(assigneeIds)) {
   return response.status(400).json({
     message:
-      "Assignee must be a user ID or null",
+      "Assignee IDs must be a duplicate-free array of user IDs or null",
+  });
+}
+
+const normalizedAssigneeIds =
+  normalizeAssigneeIds(assigneeIds);
+
+const invalidAssigneeId =
+  findInvalidAssigneeId(
+    project.id,
+    normalizedAssigneeIds,
+  );
+
+if (invalidAssigneeId) {
+  return response.status(400).json({
+    message:
+      "Every Assignee must be an owner or contributor in this project",
   });
 }
 
 const normalizedAssigneeId =
-  normalizeAssigneeId(assigneeId);
+  normalizeAssigneeIds(assigneeIds);
 
 if (
   normalizedAssigneeId &&
@@ -137,7 +153,7 @@ if (
     description: description.trim(),
     status: selectedStatus.id,
     dueDate: normalizeDueDate(dueDate),
-    assigneeId: normalizedAssigneeId,
+    assigneeIds: normalizedAssigneeIds,
     version: 1,
     createdAt: timestamp,
     updatedAt: timestamp,
@@ -202,7 +218,7 @@ export function updateTask(request, response) {
   description,
   status,
   dueDate,
-  assigneeId,
+  assigneeIds,
   version,
 } = request.body ?? {};
 
@@ -211,12 +227,12 @@ export function updateTask(request, response) {
   description !== undefined ||
   status !== undefined ||
   dueDate !== undefined ||
-  assigneeId !== undefined;
+  assigneeIds !== undefined;
 
   if (!containsUpdate) {
     return response.status(400).json({
       message:
-        "Provide a title, description, status, Due Date, or Assignee to update",
+        "Provide a title, description, status, Due Date, or Assignees to update",
     });
   }
 
@@ -262,29 +278,29 @@ export function updateTask(request, response) {
   });
 }
 
-let normalizedAssigneeId;
+let normalizedAssigneeIds;
 
-if (assigneeId !== undefined) {
-  if (!isValidAssigneeIdValue(assigneeId)) {
+if (assigneeIds !== undefined) {
+  if (!isValidAssigneeIdsValue(assigneeIds)) {
     return response.status(400).json({
       message:
-        "Assignee must be a user ID or null",
+        "Assignee IDs must be a duplicate-free array of user IDs or null",
     });
   }
 
-  normalizedAssigneeId =
-    normalizeAssigneeId(assigneeId);
+  normalizedAssigneeIds =
+    normalizeAssigneeIds(assigneeIds);
 
-  if (
-    normalizedAssigneeId &&
-    !findAssignableProjectMember(
+  const invalidAssigneeId =
+    findInvalidAssigneeId(
       project.id,
-      normalizedAssigneeId,
-    )
-  ) {
+      normalizedAssigneeIds,
+    );
+
+  if (invalidAssigneeId) {
     return response.status(400).json({
       message:
-        "Assignee must be an owner or contributor in this project",
+        "Every Assignee must be an owner or contributor in this project",
     });
   }
 }
@@ -315,8 +331,8 @@ if (assigneeId !== undefined) {
   task.dueDate = normalizeDueDate(dueDate);
 }
 
-if (assigneeId !== undefined) {
-  task.assigneeId = normalizedAssigneeId;
+if (assigneeIds !== undefined) {
+  task.assigneeIds = normalizedAssigneeIds;
 }
 
 task.version += 1;

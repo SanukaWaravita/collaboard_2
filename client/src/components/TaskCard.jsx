@@ -2,6 +2,9 @@ import {
   getDueDateLabel,
   getDueDateState,
 } from "../utils/taskDueDate";
+import {
+  resolveTaskAssignees,
+} from "../utils/taskAssignee";
 
 function TaskCard({
   task,
@@ -13,21 +16,10 @@ function TaskCard({
   canDelete = false,
   isDeleting = false,
 }) {
-  const assignee = task.assigneeId
-  ? projectMembers.find(
-      (member) =>
-        member.userId === task.assigneeId,
-    )
-  : null;
-
-const assigneeName = task.assigneeId
-  ? assignee?.name ?? "Unknown assignee"
-  : "Unassigned";
-
-const assigneeInitial = assignee?.name
-  ?.trim()
-  .charAt(0)
-  .toUpperCase() ?? "—";
+  const taskAssignees = resolveTaskAssignees(
+  task.assigneeIds,
+  projectMembers,
+);
 
   const statusName =
     workflowStatus?.name ?? "Unknown status";
@@ -75,27 +67,49 @@ const assigneeInitial = assignee?.name
   )}
 
   <div
-    className={
-      `task-assignee ` +
-      `${
-        task.assigneeId
-          ? ""
-          : "task-assignee--unassigned"
-      }`
-    }
-    title={assignee?.email ?? assigneeName}
-  >
-    <span
-      className="task-assignee__avatar"
-      aria-hidden="true"
+  className="task-assignee-list"
+  aria-label="Task Assignees"
+>
+  {taskAssignees.length === 0 ? (
+    <div
+      className={
+        "task-assignee " +
+        "task-assignee--unassigned"
+      }
+      title="Unassigned"
     >
-      {assigneeInitial}
-    </span>
+      <span
+        className="task-assignee__avatar"
+        aria-hidden="true"
+      >
+        —
+      </span>
 
-    <span className="task-assignee__name">
-      {assigneeName}
-    </span>
-  </div>
+      <span className="task-assignee__name">
+        Unassigned
+      </span>
+    </div>
+  ) : (
+    taskAssignees.map((assignee) => (
+      <div
+        key={assignee.userId}
+        className="task-assignee"
+        title={assignee.email ?? assignee.name}
+      >
+        <span
+          className="task-assignee__avatar"
+          aria-hidden="true"
+        >
+          {assignee.initial}
+        </span>
+
+        <span className="task-assignee__name">
+          {assignee.name}
+        </span>
+      </div>
+    ))
+  )}
+</div>
 </div>
 
 {(canEdit || canDelete) && (
