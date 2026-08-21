@@ -1,3 +1,8 @@
+import {
+  getDueDateLabel,
+  getDueDateState,
+} from "../utils/taskDueDate";
+
 function TaskList({
   tasks,
   workflowStatuses = [],
@@ -46,6 +51,7 @@ function TaskList({
               <th scope="col">Task</th>
               <th scope="col">Description</th>
               <th scope="col">Status</th>
+              <th scope="col">Due date</th>
               <th scope="col">Actions</th>
             </tr>
           </thead>
@@ -63,10 +69,20 @@ function TaskList({
                 "Unknown status";
 
               const statusColor =
-                workflowStatus?.color ??
-                "#64748b";
+  workflowStatus?.color ??
+  "#64748b";
 
-              return (
+const dueDateState = getDueDateState(
+  task.dueDate,
+  workflowStatus?.isCompleted ?? false,
+);
+
+const dueDateLabel = getDueDateLabel(
+  task.dueDate,
+  workflowStatus?.isCompleted ?? false,
+);
+
+return (
                 <tr key={task.id}>
                   <td className="task-list__title">
                     {task.title}
@@ -86,6 +102,17 @@ function TaskList({
                       }}
                     >
                       {statusName}
+                    </span>
+                  </td>
+
+                  <td className="task-list__due-date">
+                    <span
+                      className={
+                        `task-due-date ` +
+                        `task-due-date--${dueDateState}`
+                      }
+                    >
+                      {dueDateLabel}
                     </span>
                   </td>
 
