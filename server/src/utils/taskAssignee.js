@@ -10,25 +10,44 @@ export function isAssignableProjectRole(role) {
   return assignableProjectRoles.has(role);
 }
 
-export function isValidAssigneeIdValue(value) {
+export function isValidAssigneeIdsValue(value) {
+  if (value === null) {
+    return true;
+  }
+
+  if (!Array.isArray(value)) {
+    return false;
+  }
+
+  const normalizedIds = [];
+
+  for (const userId of value) {
+    if (
+      typeof userId !== "string" ||
+      !userId.trim()
+    ) {
+      return false;
+    }
+
+    normalizedIds.push(userId.trim());
+  }
+
   return (
-    value === null ||
-    value === "" ||
-    (typeof value === "string" &&
-      value.trim().length > 0)
+    new Set(normalizedIds).size ===
+    normalizedIds.length
   );
 }
 
-export function normalizeAssigneeId(value) {
-  if (value === null || value === "") {
-    return null;
+export function normalizeAssigneeIds(value) {
+  if (value === null) {
+    return [];
   }
 
-  if (typeof value !== "string") {
+  if (!Array.isArray(value)) {
     return value;
   }
 
-  return value.trim();
+  return value.map((userId) => userId.trim());
 }
 
 export function findAssignableProjectMember(
@@ -72,7 +91,22 @@ export function findAssignableProjectMember(
   };
 }
 
-export function clearTaskAssignmentsForUser(
+export function findInvalidAssigneeId(
+  projectId,
+  assigneeIds,
+) {
+  return (
+    assigneeIds.find(
+      (userId) =>
+        !findAssignableProjectMember(
+          projectId,
+          userId,
+        ),
+    ) ?? null
+  );
+}
+
+export function removeUserFromTaskAssignments(
   projectId,
   userId,
 ) {
@@ -82,12 +116,16 @@ export function clearTaskAssignmentsForUser(
   for (const task of store.tasks) {
     if (
       task.projectId !== projectId ||
-      task.assigneeId !== userId
+      !task.assigneeIds.includes(userId)
     ) {
       continue;
     }
 
-    task.assigneeId = null;
+    task.assigneeIds = task.assigneeIds.filter(
+  (currentAssigneeId) =>
+    currentAssigneeId !== userId,
+);
+
     task.version = (task.version ?? 0) + 1;
     task.updatedAt = timestamp;
     unassignedTaskCount += 1;

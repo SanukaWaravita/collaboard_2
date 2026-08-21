@@ -1,4 +1,7 @@
 import { useState } from "react";
+import {
+  getAssigneeInitial,
+} from "../utils/taskAssignee";
 
 function TaskForm({
   initialTask = null,
@@ -27,14 +30,24 @@ function TaskForm({
   initialTask?.dueDate ?? "",
   );
 
-  const [assigneeId, setAssigneeId] =
-  useState(initialTask?.assigneeId ?? "");
+  const [assigneeIds, setAssigneeIds] =
+  useState(initialTask?.assigneeIds ?? []);
 
   const isEditing = Boolean(initialTask);
   const hasWorkflowStatuses =
     workflowStatuses.length > 0;
 
-  function handleSubmit(event) {
+  function toggleAssignee(userId) {
+  setAssigneeIds((currentAssigneeIds) =>
+    currentAssigneeIds.includes(userId)
+      ? currentAssigneeIds.filter(
+          (currentUserId) =>
+            currentUserId !== userId,
+        )
+      : [...currentAssigneeIds, userId],
+  );
+}
+    function handleSubmit(event) {
     event.preventDefault();
 
     const trimmedTitle = title.trim();
@@ -52,7 +65,7 @@ function TaskForm({
       description: description.trim(),
       status,
       dueDate: dueDate || null,
-      assigneeId: assigneeId || null,
+      assigneeIds,
     });
   }
 
@@ -157,39 +170,101 @@ function TaskForm({
           </small>
         </div>
 
-        <div className="task-form__field">
-  <label htmlFor="task-assignee">
-    Assignee
-  </label>
+        <fieldset
+  className={
+    "task-form__field " +
+    "task-form__assignees"
+  }
+  disabled={isSubmitting}
+>
+  <legend>Assignees</legend>
 
-  <select
-    id="task-assignee"
-    value={assigneeId}
-    onChange={(event) =>
-      setAssigneeId(event.target.value)
-    }
-    disabled={isSubmitting}
-  >
-    <option value="">Unassigned</option>
+  {assignees.length === 0 ? (
+    <p className="task-form__assignees-empty">
+      No assignable Project members are available.
+    </p>
+  ) : (
+    <div
+      className="task-form__assignee-options"
+      role="group"
+      aria-label="Select Task Assignees"
+    >
+      {assignees.map((assignee) => {
+        const isSelected =
+          assigneeIds.includes(
+            assignee.userId,
+          );
 
-    {assignees.map((assignee) => (
-      <option
-        key={assignee.userId}
-        value={assignee.userId}
-      >
-        {assignee.name}
-        {assignee.email
-          ? ` — ${assignee.email}`
-          : ""}
-      </option>
-    ))}
-  </select>
+        return (
+          <label
+            key={assignee.userId}
+            className={
+              `task-form__assignee-option ` +
+              `${
+                isSelected
+                  ? "task-form__assignee-option--selected"
+                  : ""
+              }`
+            }
+          >
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={() =>
+                toggleAssignee(
+                  assignee.userId,
+                )
+              }
+            />
 
-  <small>
-    Optional. Only Project owners and
-    contributors can be assigned.
-  </small>
-</div>
+            <span
+              className="task-assignee__avatar"
+              aria-hidden="true"
+            >
+              {getAssigneeInitial(
+                assignee.name,
+              )}
+            </span>
+
+            <span className="task-form__assignee-details">
+              <strong>{assignee.name}</strong>
+
+              {assignee.email && (
+                <small>
+                  {assignee.email}
+                </small>
+              )}
+            </span>
+          </label>
+        );
+      })}
+    </div>
+  )}
+
+  <div className="task-form__assignee-summary">
+    <small>
+      {assigneeIds.length === 0
+        ? "No one is currently assigned."
+        : `${assigneeIds.length} ${
+            assigneeIds.length === 1
+              ? "person"
+              : "people"
+          } selected.`}
+    </small>
+
+    <button
+      type="button"
+      className="button button--secondary"
+      onClick={() => setAssigneeIds([])}
+      disabled={
+        isSubmitting ||
+        assigneeIds.length === 0
+      }
+    >
+      Clear all
+    </button>
+  </div>
+</fieldset>
 
         <div className="task-form__field">
           <label htmlFor="task-status">Status</label>

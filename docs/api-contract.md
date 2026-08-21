@@ -21,16 +21,16 @@ Workspace
     ├── Project Member
     └── Task
         ├── References one Workflow Status
-        └── Optionally references one Assignee
+        └── Optionally references multiple Assignees
 ```
 
 Every Project owns an ordered collection of Workflow Statuses.
 
 A Task’s `status` property stores the identifier of one Workflow Status belonging to the same Project.
 
-A Task’s optional `assigneeId` property stores the identifier of one assignable Project member.
+A Task’s `assigneeIds` property stores an array containing zero, one, or multiple assignable Project-member user IDs.
 
-A valid Assignee must:
+Every Assignee must:
 
 - be an explicit member of the Task’s Project;
 - exist as a registered user;
@@ -384,11 +384,7 @@ Request:
 DELETE /api/projects/:projectId
 ```
 
-Deleting a Project also deletes its:
-
-- Tasks;
-- Project memberships;
-- Project invitations.
+Deleting a Project also deletes its Tasks, Project memberships, and invitations.
 
 Successful deletion returns:
 
@@ -412,7 +408,17 @@ Response:
 {
   "members": [
     {
-      "userId": "user-identifier",
+      "userId": "owner-user-id",
+      "name": "Ayesha Perera",
+      "email": "owner@collaboard.test",
+      "projectRole": "OWNER",
+      "canBeAssigned": true,
+      "workspaceRole": "OWNER",
+      "memberType": "INTERNAL",
+      "joinedAt": "2026-08-21T00:00:00.000Z"
+    },
+    {
+      "userId": "contributor-user-id",
       "name": "Dilan Fernando",
       "email": "contributor@collaboard.test",
       "projectRole": "CONTRIBUTOR",
@@ -422,7 +428,7 @@ Response:
       "joinedAt": "2026-08-21T00:00:00.000Z"
     },
     {
-      "userId": "reviewer-identifier",
+      "userId": "reviewer-user-id",
       "name": "Nethmi Silva",
       "email": "reviewer@collaboard.test",
       "projectRole": "REVIEWER",
@@ -468,7 +474,7 @@ Response:
 ```json
 {
   "member": {
-    "userId": "user-identifier",
+    "userId": "contributor-user-id",
     "name": "Dilan Fernando",
     "projectRole": "REVIEWER",
     "canBeAssigned": false
@@ -477,14 +483,14 @@ Response:
 }
 ```
 
-Changing a member from `CONTRIBUTOR` to `REVIEWER` automatically:
+Changing a contributor to a reviewer automatically:
 
-- clears that user from every assigned Task in the Project;
-- changes each affected Task’s `assigneeId` to `null`;
+- removes that user’s ID from every assigned Task;
+- preserves other Assignees on those Tasks;
 - increments each affected Task version;
 - updates each affected Task’s `updatedAt` timestamp.
 
-Restoring the user to `CONTRIBUTOR` does not automatically reassign previous Tasks.
+Restoring the user to `CONTRIBUTOR` does not automatically add them back to previous Tasks.
 
 ### Remove a Project member
 
@@ -505,7 +511,11 @@ Response:
 }
 ```
 
-Removing a Project member automatically unassigns every Task assigned to that user.
+Removing a Project member:
+
+- removes that user’s ID from every assigned Task;
+- preserves other Assignees;
+- increments each affected Task version.
 
 Removing a guest from their final assigned Project also removes their Workspace guest membership.
 
@@ -531,7 +541,7 @@ Rules:
 - guest users cannot own Projects;
 - the previous owner becomes a contributor.
 
-Both `OWNER` and `CONTRIBUTOR` are assignable roles, so ownership transfer does not automatically unassign Tasks.
+Both `OWNER` and `CONTRIBUTOR` are assignable roles, so ownership transfer does not remove either user from Task assignments.
 
 ---
 
@@ -692,31 +702,16 @@ Request:
 }
 ```
 
-Response:
-
-```json
-{
-  "workflowStatus": {
-    "id": "generated-status-id",
-    "name": "Review",
-    "color": "#f59e0b",
-    "position": 2,
-    "isCompleted": false
-  },
-  "workflowStatuses": []
-}
-```
-
 New custom statuses are inserted immediately before the first completed status.
 
 Workflow Status rules:
 
 - a Project can contain a maximum of 12 statuses;
-- status names cannot exceed 40 characters;
-- status names must be unique inside the Project;
+- names cannot exceed 40 characters;
+- names must be unique inside the Project;
 - duplicate-name checking is case-insensitive;
 - colours must be six-digit hexadecimal values;
-- newly created custom statuses are non-completed statuses.
+- newly created custom statuses are non-completed.
 
 ### Update a Workflow Status
 
@@ -737,15 +732,13 @@ The name and colour are independently optional, but at least one must be provide
 
 A status identifier does not change when its name or colour changes.
 
-Tasks therefore do not need to be updated when a status is renamed.
-
 ### Reorder Workflow Statuses
 
 ```http
 PUT /api/projects/:projectId/statuses/order
 ```
 
-The request must contain the complete ordered collection of status identifiers:
+Request:
 
 ```json
 {
@@ -761,19 +754,15 @@ The request must contain the complete ordered collection of status identifiers:
 Reordering rules:
 
 - the complete Workflow Status collection is required;
-- every identifier must be a non-empty string;
+- identifiers must be non-empty strings;
 - identifiers cannot be duplicated;
 - every identifier must belong to the same Project;
-- every current Project status must appear exactly once;
+- every current status must appear exactly once;
 - completed statuses must remain after active statuses;
-- positions are reassigned from zero after validation;
-- Task status identifiers are not changed;
-- Task versions are not incremented;
+- positions are reassigned from zero;
+- Task status identifiers do not change;
+- Task versions do not increment;
 - the Project’s `updatedAt` timestamp is updated.
-
-The React client exposes reordering through accessible Move Up and Move Down controls.
-
-The first active Workflow Status becomes the default status when creating a Task.
 
 ### Delete a Workflow Status
 
@@ -781,13 +770,13 @@ The first active Workflow Status becomes the default status when creating a Task
 DELETE /api/projects/:projectId/statuses/:statusId
 ```
 
-An empty status can be deleted using an empty request body:
+An empty status can be deleted using:
 
 ```json
 {}
 ```
 
-When the status contains Tasks, a replacement status is required:
+When the status contains Tasks, a replacement is required:
 
 ```json
 {
@@ -795,25 +784,14 @@ When the status contains Tasks, a replacement status is required:
 }
 ```
 
-Response:
-
-```json
-{
-  "deletedStatusId": "deleted-status-id",
-  "replacementStatusId": "doing",
-  "movedTaskCount": 2,
-  "workflowStatuses": []
-}
-```
-
 Deletion rules:
 
 - a Project must retain at least one Workflow Status;
-- the Project’s only completed status cannot be deleted;
-- the replacement must be another status in the same Project;
+- the only completed status cannot be deleted;
+- the replacement must belong to the same Project;
 - affected Tasks move to the replacement status;
-- every moved Task has its version incremented;
-- positions are normalized after deletion.
+- every moved Task version increments;
+- positions are normalized.
 
 ---
 
@@ -829,7 +807,10 @@ A Task contains:
   "description": "Document all Project routes.",
   "status": "doing",
   "dueDate": "2026-08-30",
-  "assigneeId": "user-identifier",
+  "assigneeIds": [
+    "owner-user-id",
+    "contributor-user-id"
+  ],
   "version": 3,
   "createdAt": "2026-08-21T00:00:00.000Z",
   "updatedAt": "2026-08-21T02:00:00.000Z"
@@ -844,10 +825,18 @@ A Task contains:
 |`description`|Yes|Task description, which may be empty|
 |`status`|Yes|Workflow Status identifier|
 |`dueDate`|No|Optional `YYYY-MM-DD` deadline or `null`|
-|`assigneeId`|No|Optional eligible Project-member user ID or `null`|
+|`assigneeIds`|Yes|Duplicate-free array of eligible Project-member user IDs|
 |`version`|Yes|Optimistic concurrency version|
 |`createdAt`|Yes|Creation timestamp|
 |`updatedAt`|Yes|Last update timestamp|
+
+An unassigned Task stores:
+
+```json
+{
+  "assigneeIds": []
+}
+```
 
 ---
 
@@ -867,7 +856,10 @@ Request:
   "description": "Document all Project routes.",
   "status": "doing",
   "dueDate": "2026-08-30",
-  "assigneeId": "user-identifier"
+  "assigneeIds": [
+    "owner-user-id",
+    "contributor-user-id"
+  ]
 }
 ```
 
@@ -877,25 +869,19 @@ If `description` is omitted, it defaults to an empty string.
 
 If `status` is omitted, the server selects the first non-completed Workflow Status according to its position.
 
-If `dueDate` is omitted, empty, or `null`, it is stored as:
+If `dueDate` is omitted, empty, or `null`, it is stored as `null`.
+
+If `assigneeIds` is omitted or `null`, it is stored as:
 
 ```json
 {
-  "dueDate": null
+  "assigneeIds": []
 }
 ```
 
-If `assigneeId` is omitted, empty, or `null`, it is stored as:
+The supplied `status` must belong to the same Project.
 
-```json
-{
-  "assigneeId": null
-}
-```
-
-The supplied `status` must identify a Workflow Status belonging to the same Project.
-
-The supplied `assigneeId` must identify an explicit owner or contributor in the same Project.
+Every supplied Assignee ID must identify an explicit owner or contributor in the same Project.
 
 Response:
 
@@ -908,7 +894,10 @@ Response:
     "description": "Document all Project routes.",
     "status": "doing",
     "dueDate": "2026-08-30",
-    "assigneeId": "user-identifier",
+    "assigneeIds": [
+      "owner-user-id",
+      "contributor-user-id"
+    ],
     "version": 1,
     "createdAt": "2026-08-21T00:00:00.000Z",
     "updatedAt": "2026-08-21T00:00:00.000Z"
@@ -925,61 +914,45 @@ A non-empty Due Date must:
 - represent a real calendar date;
 - use a four-digit year of at least `1000`.
 
-Examples accepted:
-
-```text
-2026-08-21
-2030-12-31
-```
-
-Examples rejected:
-
-```text
-21-08-2026
-2026/08/21
-2026-02-30
-tomorrow
-```
-
 Invalid Due Dates return:
 
 ```http
 400 Bad Request
 ```
 
-### Assignee validation
+### Multiple-Assignee validation
 
-The Assignee value may be:
+`assigneeIds` may be:
 
-- a valid Project-member user ID;
-- an empty string;
-- `null`.
+- an empty array;
+- an array containing one eligible user ID;
+- an array containing multiple eligible user IDs;
+- `null`, which normalizes to an empty array.
 
-A non-null Assignee must:
+The array must:
 
-- exist as a registered user;
-- have explicit membership in the Task’s Project;
-- have the `OWNER` or `CONTRIBUTOR` Project role.
+- contain only non-empty strings;
+- contain no duplicate IDs;
+- contain only registered users;
+- contain only explicit members of the Task’s Project;
+- contain only owners or contributors.
 
-The following users cannot be assigned:
+The API rejects:
 
+- a single string instead of an array;
+- numbers;
+- objects;
+- duplicate IDs;
 - reviewers;
-- implicit viewers of open Projects;
+- implicit open-Project viewers;
 - members of another Project;
-- unknown users;
-- removed Project members.
+- removed or unknown users.
 
-Invalid Assignees return:
-
-```http
-400 Bad Request
-```
-
-Example response:
+Example invalid response:
 
 ```json
 {
-  "message": "Assignee must be an owner or contributor in this project"
+  "message": "Every Assignee must be an owner or contributor in this project"
 }
 ```
 
@@ -987,23 +960,6 @@ Example response:
 
 ```http
 GET /api/tasks/:taskId
-```
-
-Response:
-
-```json
-{
-  "task": {
-    "id": "task-identifier",
-    "projectId": "project-identifier",
-    "title": "Create API documentation",
-    "description": "Document all Project routes.",
-    "status": "doing",
-    "dueDate": "2026-08-30",
-    "assigneeId": "user-identifier",
-    "version": 1
-  }
-}
 ```
 
 ### Update a Task
@@ -1020,7 +976,10 @@ Request:
   "description": "Updated description",
   "status": "review-status-id",
   "dueDate": "2026-09-05",
-  "assigneeId": "another-user-id",
+  "assigneeIds": [
+    "owner-user-id",
+    "another-contributor-id"
+  ],
   "version": 1
 }
 ```
@@ -1032,21 +991,52 @@ title
 description
 status
 dueDate
-assigneeId
+assigneeIds
+```
+
+Updating `assigneeIds` replaces the complete Assignee collection.
+
+For example, if the Task currently contains:
+
+```json
+{
+  "assigneeIds": [
+    "user-one",
+    "user-two"
+  ]
+}
+```
+
+and the update submits:
+
+```json
+{
+  "assigneeIds": [
+    "user-two",
+    "user-three"
+  ],
+  "version": 2
+}
+```
+
+the final collection becomes:
+
+```json
+{
+  "assigneeIds": [
+    "user-two",
+    "user-three"
+  ]
+}
 ```
 
 A valid current `version` is required for every update.
 
-After a successful update, the server:
-
-- applies the supplied changes;
-- increments the Task version;
-- updates the Task’s `updatedAt` timestamp;
-- returns the updated Task.
+After a successful update, the Task version increments once, regardless of how many Assignees changed.
 
 ### Removing a Due Date
 
-A Due Date can be removed using:
+A Due Date can be removed using `null` or an empty string:
 
 ```json
 {
@@ -1055,48 +1045,31 @@ A Due Date can be removed using:
 }
 ```
 
-or:
+### Removing all Assignees
+
+Submit an empty array:
 
 ```json
 {
-  "dueDate": "",
+  "assigneeIds": [],
   "version": 2
 }
 ```
 
-Both values are normalized to:
+The API also accepts:
 
 ```json
 {
-  "dueDate": null
-}
-```
-
-### Removing an Assignee
-
-An Assignee can be removed using:
-
-```json
-{
-  "assigneeId": null,
+  "assigneeIds": null,
   "version": 2
 }
 ```
 
-or:
+`null` is normalized to:
 
 ```json
 {
-  "assigneeId": "",
-  "version": 2
-}
-```
-
-Both values are normalized to:
-
-```json
-{
-  "assigneeId": null
+  "assigneeIds": []
 }
 ```
 
@@ -1120,7 +1093,7 @@ Response:
 }
 ```
 
-The client must load the returned current Task before trying the update again.
+The client must load the returned current Task before trying again.
 
 ### Delete a Task
 
@@ -1138,41 +1111,62 @@ Successful deletion returns:
 
 ## 16. Automatic Assignee cleanup
 
-A Task cannot remain assigned to a user who no longer has an assignable role in its Project.
+A Task cannot retain a user who no longer has an assignable role in its Project.
 
 ### Contributor downgraded to reviewer
 
 When an assigned contributor becomes a reviewer:
 
-- the Project membership remains;
-- `canBeAssigned` becomes `false`;
-- every Task assigned to that user receives `assigneeId: null`;
-- every affected Task version increments;
-- every affected Task receives a new `updatedAt` timestamp.
+- only that contributor’s ID is removed from `assigneeIds`;
+- other Assignees remain;
+- the affected Task version increments;
+- the Task receives a new `updatedAt` timestamp.
+
+Example:
+
+```json
+{
+  "assigneeIds": [
+    "owner-id",
+    "contributor-id"
+  ]
+}
+```
+
+becomes:
+
+```json
+{
+  "assigneeIds": [
+    "owner-id"
+  ]
+}
+```
 
 ### Project member removed
 
 When an assigned member is removed:
 
-- the Project membership is deleted;
-- every Task assigned to that user receives `assigneeId: null`;
-- every affected Task version increments;
-- every affected Task receives a new `updatedAt` timestamp.
+- only that member’s ID is removed;
+- other Assignees remain;
+- each affected Task version increments;
+- each affected Task receives a new `updatedAt` timestamp.
 
 ### Project ownership transferred
 
-Ownership transfer does not clear assignments because:
+Ownership transfer does not remove assignments because:
 
 - the new owner has the assignable `OWNER` role;
 - the previous owner receives the assignable `CONTRIBUTOR` role.
 
-Automatic unassignment does not:
+Automatic Assignee cleanup does not:
 
 - delete the Task;
-- change its title;
-- change its description;
-- change its workflow status;
-- change its Due Date.
+- remove other eligible Assignees;
+- change the title;
+- change the description;
+- change the workflow status;
+- change the Due Date.
 
 ---
 
@@ -1227,14 +1221,12 @@ Restarting the Express server removes:
 - Task Assignees;
 - created, renamed, recoloured, reordered, and deleted Workflow Statuses.
 
-The seeded Workspaces, Projects, Tasks, and default Workflow Statuses are recreated when the server starts.
-
 Seeded Tasks use:
 
 ```json
 {
   "dueDate": null,
-  "assigneeId": null,
+  "assigneeIds": [],
   "version": 1
 }
 ```

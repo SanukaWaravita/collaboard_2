@@ -359,6 +359,15 @@ select:focus-visible {
   .task-form__clear-date {
     width: 100%;
   }
+
+  .task-form__assignee-summary {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .task-form__assignee-summary .button {
+    width: 100%;
+  }
 }
 
 .task-form__actions {
@@ -366,6 +375,112 @@ select:focus-visible {
   justify-content: flex-end;
   gap: 10px;
   margin-top: 24px;
+}
+
+.task-form__assignees {
+  min-width: 0;
+  border: 0;
+  padding: 0;
+}
+
+.task-form__assignees legend {
+  margin-bottom: 7px;
+  padding: 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.task-form__assignee-options {
+  display: grid;
+  max-height: 220px;
+  overflow-y: auto;
+  gap: 8px;
+  padding: 2px;
+}
+
+.task-form__assignee-option {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #ffffff;
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease;
+}
+
+.task-form__assignee-option:hover {
+  border-color: #a5b4fc;
+  background: #f8fafc;
+}
+
+.task-form__assignee-option--selected {
+  border-color: #818cf8;
+  background: #eef2ff;
+}
+
+.task-form__assignee-option input {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  padding: 0;
+  accent-color: #4f46e5;
+  cursor: pointer;
+}
+
+.task-form__assignee-details {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.task-form__assignee-details strong {
+  overflow: hidden;
+  font-size: 0.84rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-form__assignee-details small {
+  overflow: hidden;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-form__assignee-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.task-form__assignee-summary .button {
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  font-size: 0.78rem;
+}
+
+.task-form__assignees-empty {
+  margin: 0;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  color: var(--text-muted);
+  background: var(--surface-muted);
+  font-size: 0.82rem;
+}
+
+.task-form__assignees:disabled
+  .task-form__assignee-option {
+  cursor: wait;
+  opacity: 0.7;
 }
 
 .auth-page {
@@ -1545,6 +1660,14 @@ select:focus-visible {
   margin: 0;
 }
 
+.task-assignee-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  min-width: 0;
+  gap: 6px;
+}
+
 .task-assignee {
   display: inline-flex;
   align-items: center;
@@ -1619,13 +1742,12 @@ select:focus-visible {
 }
 
 .task-list__assignee {
-  min-width: 160px;
-  white-space: nowrap;
+  min-width: 220px;
 }
 
 .task-list__assignee
   .task-assignee__name {
-  max-width: 140px;
+  max-width: 120px;
 }
 
 .task-list__due-date {
@@ -1633,5 +1755,5 @@ select:focus-visible {
 }
 
 .task-list__table {
-  min-width: 1060px;
+  min-width: 1160px;
 }

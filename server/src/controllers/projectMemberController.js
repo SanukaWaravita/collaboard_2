@@ -12,8 +12,8 @@ import {
 } from "../utils/projectAccess.js";
 import { hasWorkspacePermission } from "../utils/workspaceAccess.js";
 import {
-  clearTaskAssignmentsForUser,
   isAssignableProjectRole,
+  removeUserFromTaskAssignments,
 } from "../utils/taskAssignee.js";
 
 const editableProjectRoles = new Set([
@@ -252,10 +252,10 @@ project.updatedAt = timestamp;
 const unassignedTaskCount =
   isAssignableProjectRole(role)
     ? 0
-    : clearTaskAssignmentsForUser(
-        project.id,
-        membership.userId,
-      );
+    : removeUserFromTaskAssignments(
+  project.id,
+  membership.userId,
+);
 
 return response.status(200).json({
   member: presentProjectMember(membership, project),
@@ -308,10 +308,10 @@ export function removeProjectMember(request, response) {
   store.projectMembers.splice(membershipIndex, 1);
 
 const unassignedTaskCount =
-  clearTaskAssignmentsForUser(
-    project.id,
-    membership.userId,
-  );
+  removeUserFromTaskAssignments(
+  project.id,
+  membership.userId,
+);
 
 const workspaceGuestRemoved =
   removeUnusedGuestWorkspaceMembership(
