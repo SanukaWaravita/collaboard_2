@@ -339,8 +339,26 @@ select:focus-visible {
   background: #ffffff;
 }
 
-.task-form__field textarea {
-  resize: vertical;
+.task-form__due-date-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.task-form__clear-date {
+  min-width: 76px;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .task-form__due-date-control {
+    grid-template-columns: 1fr;
+  }
+
+  .task-form__clear-date {
+    width: 100%;
+  }
 }
 
 .task-form__actions {
