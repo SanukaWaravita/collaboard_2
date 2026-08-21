@@ -9,6 +9,10 @@ import {
   findWorkflowStatus,
   getInitialWorkflowStatus,
 } from "../utils/workflowStatuses.js";
+import {
+  isValidDueDate,
+  normalizeDueDate,
+} from "../utils/taskDueDate.js";
 
 function findTaskAndProject(taskId) {
   const task = store.tasks.find(
@@ -56,10 +60,11 @@ export function createTask(request, response) {
   }
 
   const {
-    title,
-    description = "",
-    status,
-  } = request.body ?? {};
+  title,
+  description = "",
+  status,
+  dueDate = null,
+} = request.body ?? {};
 
   if (typeof title !== "string" || !title.trim()) {
     return response.status(400).json({
@@ -72,6 +77,13 @@ export function createTask(request, response) {
       message: "Task description must be text",
     });
   }
+
+  if (!isValidDueDate(dueDate)) {
+  return response.status(400).json({
+    message:
+      "Due date must use YYYY-MM-DD format or be null",
+  });
+}
 
   const selectedStatus =
     status === undefined
@@ -95,6 +107,7 @@ export function createTask(request, response) {
     title: title.trim(),
     description: description.trim(),
     status: selectedStatus.id,
+    dueDate: normalizeDueDate(dueDate),
     version: 1,
     createdAt: timestamp,
     updatedAt: timestamp,
@@ -155,21 +168,23 @@ export function updateTask(request, response) {
   }
 
   const {
-    title,
-    description,
-    status,
-    version,
-  } = request.body ?? {};
+  title,
+  description,
+  status,
+  dueDate,
+  version,
+} = request.body ?? {};
 
   const containsUpdate =
-    title !== undefined ||
-    description !== undefined ||
-    status !== undefined;
+  title !== undefined ||
+  description !== undefined ||
+  status !== undefined ||
+  dueDate !== undefined;
 
   if (!containsUpdate) {
     return response.status(400).json({
       message:
-        "Provide a title, description, or status to update",
+        "Provide a title, description, status, or Due Date to update",
     });
   }
 
@@ -206,6 +221,16 @@ export function updateTask(request, response) {
   }
 
   if (
+  dueDate !== undefined &&
+  !isValidDueDate(dueDate)
+) {
+  return response.status(400).json({
+    message:
+      "Due date must use YYYY-MM-DD format or be null",
+  });
+}
+
+  if (
     status !== undefined &&
     !findWorkflowStatus(project, status)
   ) {
@@ -225,6 +250,10 @@ export function updateTask(request, response) {
 
   if (status !== undefined) {
     task.status = status;
+  }
+
+  if (dueDate !== undefined) {
+  task.dueDate = normalizeDueDate(dueDate);
   }
 
   task.version += 1;

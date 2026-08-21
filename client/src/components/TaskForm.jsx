@@ -22,6 +22,10 @@ function TaskForm({
       "",
   );
 
+  const [dueDate, setDueDate] = useState(
+  initialTask?.dueDate ?? "",
+  );
+
   const isEditing = Boolean(initialTask);
   const hasWorkflowStatuses =
     workflowStatuses.length > 0;
@@ -43,6 +47,7 @@ function TaskForm({
       title: trimmedTitle,
       description: description.trim(),
       status,
+      dueDate: dueDate || null,
     });
   }
 
@@ -111,6 +116,26 @@ function TaskForm({
             rows="4"
             disabled={isSubmitting}
           />
+        </div>
+        <div className="task-form__field">
+          <label htmlFor="task-due-date">
+            Due date
+          </label>
+
+          <input
+            id="task-due-date"
+            type="date"
+            value={dueDate}
+            onChange={(event) =>
+              setDueDate(event.target.value)
+            }
+            disabled={isSubmitting}
+          />
+
+          <small>
+            Optional. Leave this empty if the Task has no
+            deadline.
+          </small>
         </div>
 
         <div className="task-form__field">

@@ -1,3 +1,8 @@
+import {
+  getDueDateLabel,
+  getDueDateState,
+} from "../utils/taskDueDate";
+
 function TaskCard({
   task,
   workflowStatus,
@@ -12,6 +17,16 @@ function TaskCard({
 
   const statusColor =
     workflowStatus?.color ?? "#64748b";
+
+  const dueDateState = getDueDateState(
+    task.dueDate,
+    workflowStatus?.isCompleted ?? false,
+  );
+
+  const dueDateLabel = getDueDateLabel(
+    task.dueDate,
+    workflowStatus?.isCompleted ?? false,
+  );
 
   return (
     <article className="task-card">
@@ -30,7 +45,18 @@ function TaskCard({
 
       <p>{task.description}</p>
 
-      {(canEdit || canDelete) && (
+{task.dueDate && (
+  <div
+    className={
+      `task-due-date ` +
+      `task-due-date--${dueDateState}`
+    }
+  >
+    {dueDateLabel}
+  </div>
+)}
+
+{(canEdit || canDelete) && (
         <div className="task-card__actions">
           {canEdit && (
             <button

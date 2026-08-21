@@ -59,6 +59,7 @@ export const store = {
       description:
         "Initialize the repository and invite group members.",
       status: "done",
+      dueDate: null,
       version: 1,
       createdAt: "2026-08-14T00:00:00.000Z",
       updatedAt: "2026-08-14T00:00:00.000Z",
@@ -70,6 +71,7 @@ export const store = {
       description:
         "Document requirements, wireframes, and the component tree.",
       status: "done",
+      dueDate: null,
       version: 1,
       createdAt: "2026-08-14T00:00:00.000Z",
       updatedAt: "2026-08-14T00:00:00.000Z",
@@ -81,6 +83,7 @@ export const store = {
       description:
         "Create the To Do, Doing, and Done columns.",
       status: "doing",
+      dueDate: null,
       version: 1,
       createdAt: "2026-08-14T00:00:00.000Z",
       updatedAt: "2026-08-14T00:00:00.000Z",
@@ -92,6 +95,7 @@ export const store = {
       description:
         "Build a reusable task display component.",
       status: "todo",
+      dueDate: null,
       version: 1,
       createdAt: "2026-08-14T00:00:00.000Z",
       updatedAt: "2026-08-14T00:00:00.000Z",
@@ -103,6 +107,7 @@ export const store = {
       description:
         "Create a form for adding tasks to the project.",
       status: "todo",
+      dueDate: null,
       version: 1,
       createdAt: "2026-08-14T00:00:00.000Z",
       updatedAt: "2026-08-14T00:00:00.000Z",

@@ -17,12 +17,19 @@ Workspace
 └── Project
     ├── Workflow Status
     └── Task
-        └── References one Workflow Status
+        ├── References one Workflow Status
+        └── May contain an optional Due Date
 ```
 
 Every Project owns an ordered collection of Workflow Statuses.
 
-A Task's `status` property stores the identifier of one Workflow Status belonging to the same Project.
+A Task's `status` property stores the identifier of one Workflow Status belonging to the same Project.
+
+A Task's optional `dueDate` property stores a date-only value using:
+
+```text
+YYYY-MM-DD
+```
 
 A Project is displayed using Kanban and List views in the React interface. It is not a separate Board entity.
 
@@ -107,27 +114,27 @@ Response:
 
 ## 5. Workspace roles
 
-| Role | Description |
-| --- | --- |
-| `OWNER` | Full Workspace control, including deletion |
-| `ADMIN` | Workspace and member administration |
-| `MEMBER` | Ordinary internal Workspace member |
-| `GUEST` | Can access only explicitly assigned Projects |
+|Role|Description|
+|---|---|
+|`OWNER`|Full Workspace control, including deletion|
+|`ADMIN`|Workspace and member administration|
+|`MEMBER`|Ordinary internal Workspace member|
+|`GUEST`|Can access only explicitly assigned Projects|
 
 ## 6. Project roles
 
-| Role | Description |
-| --- | --- |
-| `OWNER` | Full Project, workflow, membership, and Task control |
-| `CONTRIBUTOR` | Can read the Project and manage Tasks |
-| `REVIEWER` | Read-only Project and Task access |
+|Role|Description|
+|---|---|
+|`OWNER`|Full Project, workflow, membership, and Task control|
+|`CONTRIBUTOR`|Can read the Project and manage Tasks|
+|`REVIEWER`|Read-only Project and Task access|
 
 ## 7. Project visibility
 
-| Visibility | Behaviour |
-| --- | --- |
-| `open` | Ordinary internal Workspace members receive implicit reviewer access |
-| `private` | Explicit Project membership is required |
+|Visibility|Behaviour|
+|---|---|
+|`open`|Ordinary internal Workspace members receive implicit reviewer access|
+|`private`|Explicit Project membership is required|
 
 Guest users do not automatically receive access to open Projects.
 
@@ -273,7 +280,7 @@ Request:
 }
 ```
 
-When using the nested Workspace endpoint, `workspaceId` does not need to be included in the request body.
+When using the nested Workspace endpoint, `workspaceId` does not need to be included in the request body.
 
 Project Keys:
 
@@ -536,13 +543,13 @@ Workflow Statuses define the columns and stages belonging to an individual Proje
 
 Each Workflow Status contains:
 
-| Property | Purpose |
-| --- | --- |
-| `id` | Stable identifier stored by Tasks |
-| `name` | User-facing status and column name |
-| `color` | Six-digit hexadecimal display colour |
-| `position` | Current position in the Project workflow |
-| `isCompleted` | Indicates whether Tasks in the status are completed |
+|Property|Purpose|
+|---|---|
+|`id`|Stable identifier stored by Tasks|
+|`name`|User-facing status and column name|
+|`color`|Six-digit hexadecimal display colour|
+|`position`|Current position in the Project workflow|
+|`isCompleted`|Indicates whether Tasks in the status are completed|
 
 All users with Project read access can retrieve Workflow Statuses.
 
@@ -584,7 +591,7 @@ Response:
 }
 ```
 
-Statuses are returned in ascending `position` order.
+Statuses are returned in ascending `position` order.
 
 ### Create a Workflow Status
 
@@ -612,36 +619,7 @@ Response:
     "position": 2,
     "isCompleted": false
   },
-  "workflowStatuses": [
-    {
-      "id": "todo",
-      "name": "To Do",
-      "color": "#64748b",
-      "position": 0,
-      "isCompleted": false
-    },
-    {
-      "id": "doing",
-      "name": "Doing",
-      "color": "#2563eb",
-      "position": 1,
-      "isCompleted": false
-    },
-    {
-      "id": "generated-status-id",
-      "name": "Review",
-      "color": "#f59e0b",
-      "position": 2,
-      "isCompleted": false
-    },
-    {
-      "id": "done",
-      "name": "Done",
-      "color": "#16a34a",
-      "position": 3,
-      "isCompleted": true
-    }
-  ]
+  "workflowStatuses": []
 }
 ```
 
@@ -746,7 +724,7 @@ Reordering rules:
 - positions are reassigned from zero after validation;
 - Task status identifiers are not changed;
 - Task versions are not incremented;
-- the Project's `updatedAt` timestamp is updated.
+- the Project's `updatedAt` timestamp is updated.
 
 The React client exposes reordering through accessible Move Up and Move Down controls.
 
@@ -779,29 +757,7 @@ Response:
   "deletedStatusId": "deleted-status-id",
   "replacementStatusId": "doing",
   "movedTaskCount": 2,
-  "workflowStatuses": [
-    {
-      "id": "todo",
-      "name": "To Do",
-      "color": "#64748b",
-      "position": 0,
-      "isCompleted": false
-    },
-    {
-      "id": "doing",
-      "name": "Doing",
-      "color": "#2563eb",
-      "position": 1,
-      "isCompleted": false
-    },
-    {
-      "id": "done",
-      "name": "Done",
-      "color": "#16a34a",
-      "position": 2,
-      "isCompleted": true
-    }
-  ]
+  "workflowStatuses": []
 }
 ```
 
@@ -816,6 +772,20 @@ Deletion rules:
 
 ## 14. Task endpoints
 
+Each Task contains:
+
+|Property|Purpose|
+|---|---|
+|`id`|Stable Task identifier|
+|`projectId`|Project containing the Task|
+|`title`|Short Task name|
+|`description`|Detailed Task information|
+|`status`|Identifier of a Workflow Status in the same Project|
+|`dueDate`|Optional date-only deadline or `null`|
+|`version`|Optimistic-concurrency version|
+|`createdAt`|Creation timestamp|
+|`updatedAt`|Latest modification timestamp|
+
 ### Create a Task
 
 ```http
@@ -828,18 +798,79 @@ Request:
 {
   "title": "Create API documentation",
   "description": "Document all Project routes.",
-  "status": "todo"
+  "status": "todo",
+  "dueDate": "2026-08-30"
 }
 ```
 
-The supplied `status` must identify a Workflow Status belonging to the same Project.
+The `status` property is optional.
 
-If `status` is omitted, the server selects the first non-completed Workflow Status according to its position.
+When supplied, it must identify a Workflow Status belonging to the same Project.
+
+If `status` is omitted, the server selects the first non-completed Workflow Status according to its position.
+
+The `dueDate` property is optional.
+
+It may contain:
+
+```text
+YYYY-MM-DD
+```
+
+or:
+
+```json
+null
+```
+
+If `dueDate` is omitted, the server stores:
+
+```json
+{
+  "dueDate": null
+}
+```
+
+Response:
+
+```json
+{
+  "task": {
+    "id": "task-id",
+    "projectId": "project-id",
+    "title": "Create API documentation",
+    "description": "Document all Project routes.",
+    "status": "todo",
+    "dueDate": "2026-08-30",
+    "version": 1,
+    "createdAt": "2026-08-21T00:00:00.000Z",
+    "updatedAt": "2026-08-21T00:00:00.000Z"
+  }
+}
+```
 
 ### Open a Task
 
 ```http
 GET /api/tasks/:taskId
+```
+
+Response:
+
+```json
+{
+  "task": {
+    "id": "task-id",
+    "projectId": "project-id",
+    "title": "Create API documentation",
+    "description": "Document all Project routes.",
+    "status": "todo",
+    "dueDate": "2026-08-30",
+    "version": 1,
+    "createdAt": "2026-08-21T00:00:00.000Z",
+    "updatedAt": "2026-08-21T00:00:00.000Z"
+  }
+}
 ```
 
 ### Update a Task
@@ -855,9 +886,21 @@ Request:
   "title": "Updated title",
   "description": "Updated description",
   "status": "doing",
+  "dueDate": "2026-09-05",
   "version": 1
 }
 ```
+
+The client may update any combination of:
+
+```text
+title
+description
+status
+dueDate
+```
+
+At least one of those properties must be provided.
 
 When changing a Task's status, the supplied identifier must belong to the Task's Project.
 
@@ -867,9 +910,66 @@ An unknown status or a status belonging only to another Project is rejected with
 400 Bad Request
 ```
 
+The Due Date may be removed by sending:
+
+```json
+{
+  "dueDate": null,
+  "version": 1
+}
+```
+
+An empty Due Date string is also normalized to `null`:
+
+```json
+{
+  "dueDate": "",
+  "version": 1
+}
+```
+
+### Due Date rules
+
+Due Dates:
+
+- are optional;
+- use the `YYYY-MM-DD` date-only format;
+- are stored without a time or timezone;
+- must represent a real calendar date;
+- may be in the past;
+- may be changed or removed;
+- are included in optimistic-concurrency checks.
+
+Invalid examples include:
+
+```text
+30-08-2026
+2026/08/30
+2026-02-30
+tomorrow
+```
+
+Invalid Due Dates return:
+
+```http
+400 Bad Request
+```
+
+Response:
+
+```json
+{
+  "message": "Due date must use YYYY-MM-DD format or be null"
+}
+```
+
+### Task versioning
+
 The version submitted by the client must match the current server version.
 
 After a successful update, the server increments the Task version.
+
+Updating only the Due Date still increments the version.
 
 ### Task version conflict
 
@@ -916,16 +1016,16 @@ CANCELLED
 
 ## 16. Common HTTP responses
 
-| Status | Meaning |
-| --- | --- |
-| `200 OK` | Successful read or update |
-| `201 Created` | Resource created |
-| `204 No Content` | Resource deleted |
-| `400 Bad Request` | Invalid request data |
-| `401 Unauthorized` | Missing, invalid, or expired token |
-| `403 Forbidden` | Authenticated but insufficient permission |
-| `404 Not Found` | Resource or accessible resource not found |
-| `409 Conflict` | Duplicate resource, invalid state transition, or Task version conflict |
+|Status|Meaning|
+|---|---|
+|`200 OK`|Successful read or update|
+|`201 Created`|Resource created|
+|`204 No Content`|Resource deleted|
+|`400 Bad Request`|Invalid request data|
+|`401 Unauthorized`|Missing, invalid, or expired token|
+|`403 Forbidden`|Authenticated but insufficient permission|
+|`404 Not Found`|Resource or accessible resource not found|
+|`409 Conflict`|Duplicate resource, invalid state transition, or Task version conflict|
 
 Error responses use:
 
@@ -948,6 +1048,7 @@ Restarting the Express server deletes:
 - invitations;
 - created, renamed, recoloured, reordered, and deleted Workflow Statuses;
 - created Tasks;
+- Task Due Dates;
 - Task updates.
 
 The two seeded Projects and their seeded Tasks are recreated when the server starts.
@@ -958,4 +1059,12 @@ Each seeded Project is recreated with the default Workflow Statuses:
 To Do → Doing → Done
 ```
 
-MongoDB persistence will replace this temporary behaviour in a later milestone.
+Seeded Tasks are recreated with:
+
+```json
+{
+  "dueDate": null
+}
+```
+
+MongoDB persistence will replace this temporary behaviour during a later milestone.
