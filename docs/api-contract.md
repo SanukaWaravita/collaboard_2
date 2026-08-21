@@ -4,9 +4,11 @@
 
 This document defines the REST API used by the CollaBoard React client.
 
-CollaBoard currently stores users, Workspaces, Projects, Workflow Statuses, memberships, invitations, and Tasks in server memory.
+CollaBoard currently stores users, Workspaces, Projects, workflow statuses, memberships, invitations, and Tasks in server memory.
 
 MongoDB persistence will replace the temporary in-memory store during a later milestone.
+
+---
 
 ## 2. Domain model
 
@@ -16,22 +18,29 @@ CollaBoard uses the following hierarchy:
 Workspace
 └── Project
     ├── Workflow Status
+    ├── Project Member
     └── Task
         ├── References one Workflow Status
-        └── May contain an optional Due Date
+        └── Optionally references one Assignee
 ```
 
 Every Project owns an ordered collection of Workflow Statuses.
 
-A Task's `status` property stores the identifier of one Workflow Status belonging to the same Project.
+A Task’s `status` property stores the identifier of one Workflow Status belonging to the same Project.
 
-A Task's optional `dueDate` property stores a date-only value using:
+A Task’s optional `assigneeId` property stores the identifier of one assignable Project member.
 
-```text
-YYYY-MM-DD
-```
+A valid Assignee must:
+
+- be an explicit member of the Task’s Project;
+- exist as a registered user;
+- have the `OWNER` or `CONTRIBUTOR` Project role.
+
+Project reviewers, implicit viewers of open Projects, and users without Project access cannot be assigned.
 
 A Project is displayed using Kanban and List views in the React interface. It is not a separate Board entity.
+
+---
 
 ## 3. Base URL
 
@@ -42,6 +51,8 @@ http://localhost:5000/api
 ```
 
 Requests and responses use JSON unless otherwise stated.
+
+---
 
 ## 4. Authentication
 
@@ -63,9 +74,9 @@ Request:
 
 ```json
 {
-  "name": "Sanuka",
-  "email": "sanuka@example.com",
-  "password": "password123"
+  "name": "Ayesha Perera",
+  "email": "owner@collaboard.test",
+  "password": "CollaBoard@2026"
 }
 ```
 
@@ -75,9 +86,9 @@ Response:
 {
   "token": "...",
   "user": {
-    "id": "...",
-    "name": "Sanuka",
-    "email": "sanuka@example.com"
+    "id": "user-identifier",
+    "name": "Ayesha Perera",
+    "email": "owner@collaboard.test"
   }
 }
 ```
@@ -94,8 +105,8 @@ Request:
 
 ```json
 {
-  "email": "sanuka@example.com",
-  "password": "password123"
+  "email": "owner@collaboard.test",
+  "password": "CollaBoard@2026"
 }
 ```
 
@@ -105,12 +116,14 @@ Response:
 {
   "token": "...",
   "user": {
-    "id": "...",
-    "name": "Sanuka",
-    "email": "sanuka@example.com"
+    "id": "user-identifier",
+    "name": "Ayesha Perera",
+    "email": "owner@collaboard.test"
   }
 }
 ```
+
+---
 
 ## 5. Workspace roles
 
@@ -121,13 +134,21 @@ Response:
 |`MEMBER`|Ordinary internal Workspace member|
 |`GUEST`|Can access only explicitly assigned Projects|
 
+---
+
 ## 6. Project roles
 
-|Role|Description|
-|---|---|
-|`OWNER`|Full Project, workflow, membership, and Task control|
-|`CONTRIBUTOR`|Can read the Project and manage Tasks|
-|`REVIEWER`|Read-only Project and Task access|
+|Role|Description|Assignable to Tasks|
+|---|---|--:|
+|`OWNER`|Full Project, Task, workflow, and membership control|Yes|
+|`CONTRIBUTOR`|Can read the Project and manage Tasks|Yes|
+|`REVIEWER`|Read-only Project and Task access|No|
+
+An internal Workspace member with implicit access to an open Project is treated as a non-member reviewer and cannot be assigned.
+
+A guest with explicit `CONTRIBUTOR` Project membership can be assigned.
+
+---
 
 ## 7. Project visibility
 
@@ -138,9 +159,11 @@ Response:
 
 Guest users do not automatically receive access to open Projects.
 
+---
+
 ## 8. Workspace endpoints
 
-### List the current user's Workspaces
+### List the current user’s Workspaces
 
 ```http
 GET /api/workspaces
@@ -202,7 +225,6 @@ DELETE /api/workspaces/:workspaceId
 Deleting a Workspace also deletes its:
 
 - Projects;
-- Workflow Statuses;
 - Tasks;
 - Project memberships;
 - Workspace memberships;
@@ -230,6 +252,8 @@ Response:
   "pendingGuestInvitations": []
 }
 ```
+
+---
 
 ## 9. Project endpoints
 
@@ -289,12 +313,6 @@ Project Keys:
 - are unique inside their Workspace;
 - cannot be changed after Project creation.
 
-Every newly created Project receives its own default Workflow Statuses:
-
-```text
-To Do → Doing → Done
-```
-
 ### Open a Project
 
 ```http
@@ -310,7 +328,9 @@ Response:
     "workspaceId": "workspace-id",
     "projectKey": "CBD",
     "name": "CollaBoard Development",
+    "description": "Main development project",
     "visibility": "open",
+    "ownerId": "owner-user-id",
     "workflowStatuses": [
       {
         "id": "todo",
@@ -336,15 +356,7 @@ Response:
     ],
     "currentUserRole": "OWNER",
     "isMember": true,
-    "permissions": [
-      "READ_PROJECT",
-      "UPDATE_PROJECT",
-      "DELETE_PROJECT",
-      "MANAGE_MEMBERS",
-      "CREATE_TASK",
-      "UPDATE_TASK",
-      "DELETE_TASK"
-    ]
+    "permissions": []
   },
   "tasks": []
 }
@@ -374,10 +386,9 @@ DELETE /api/projects/:projectId
 
 Deleting a Project also deletes its:
 
-- Workflow Statuses;
 - Tasks;
-- memberships;
-- invitations.
+- Project memberships;
+- Project invitations.
 
 Successful deletion returns:
 
@@ -385,7 +396,9 @@ Successful deletion returns:
 204 No Content
 ```
 
-## 10. Project member endpoints
+---
+
+## 10. Project-member endpoints
 
 ### List Project members
 
@@ -397,12 +410,37 @@ Response:
 
 ```json
 {
-  "members": [],
+  "members": [
+    {
+      "userId": "user-identifier",
+      "name": "Dilan Fernando",
+      "email": "contributor@collaboard.test",
+      "projectRole": "CONTRIBUTOR",
+      "canBeAssigned": true,
+      "workspaceRole": "MEMBER",
+      "memberType": "INTERNAL",
+      "joinedAt": "2026-08-21T00:00:00.000Z"
+    },
+    {
+      "userId": "reviewer-identifier",
+      "name": "Nethmi Silva",
+      "email": "reviewer@collaboard.test",
+      "projectRole": "REVIEWER",
+      "canBeAssigned": false,
+      "workspaceRole": "MEMBER",
+      "memberType": "INTERNAL",
+      "joinedAt": "2026-08-21T00:00:00.000Z"
+    }
+  ],
   "canManageMembers": true
 }
 ```
 
-### Change a Project member's role
+The `canBeAssigned` property is calculated by the server.
+
+It is `true` only for Project owners and contributors.
+
+### Change a Project member’s role
 
 ```http
 PATCH /api/projects/:projectId/members/:userId
@@ -412,7 +450,7 @@ Request:
 
 ```json
 {
-  "role": "CONTRIBUTOR"
+  "role": "REVIEWER"
 }
 ```
 
@@ -425,6 +463,29 @@ REVIEWER
 
 The Project owner cannot be demoted through this endpoint.
 
+Response:
+
+```json
+{
+  "member": {
+    "userId": "user-identifier",
+    "name": "Dilan Fernando",
+    "projectRole": "REVIEWER",
+    "canBeAssigned": false
+  },
+  "unassignedTaskCount": 2
+}
+```
+
+Changing a member from `CONTRIBUTOR` to `REVIEWER` automatically:
+
+- clears that user from every assigned Task in the Project;
+- changes each affected Task’s `assigneeId` to `null`;
+- increments each affected Task version;
+- updates each affected Task’s `updatedAt` timestamp.
+
+Restoring the user to `CONTRIBUTOR` does not automatically reassign previous Tasks.
+
 ### Remove a Project member
 
 ```http
@@ -432,6 +493,19 @@ DELETE /api/projects/:projectId/members/:userId
 ```
 
 The Project owner cannot be removed.
+
+Response:
+
+```json
+{
+  "message": "Project member removed",
+  "userId": "removed-user-id",
+  "unassignedTaskCount": 2,
+  "workspaceGuestRemoved": false
+}
+```
+
+Removing a Project member automatically unassigns every Task assigned to that user.
 
 Removing a guest from their final assigned Project also removes their Workspace guest membership.
 
@@ -457,6 +531,10 @@ Rules:
 - guest users cannot own Projects;
 - the previous owner becomes a contributor.
 
+Both `OWNER` and `CONTRIBUTOR` are assignable roles, so ownership transfer does not automatically unassign Tasks.
+
+---
+
 ## 11. Project invitation endpoints
 
 ### List invitations for a Project
@@ -477,8 +555,8 @@ Request:
 
 ```json
 {
-  "email": "member@example.com",
-  "role": "REVIEWER",
+  "email": "member@collaboard.test",
+  "role": "CONTRIBUTOR",
   "memberType": "INTERNAL"
 }
 ```
@@ -497,6 +575,10 @@ INTERNAL
 GUEST
 ```
 
+Accepting a contributor invitation makes the user eligible for Task assignment.
+
+Accepting a reviewer invitation does not make the user assignable.
+
 ### Cancel a pending invitation
 
 ```http
@@ -509,15 +591,17 @@ The invitation status becomes:
 CANCELLED
 ```
 
+---
+
 ## 12. Recipient invitation endpoints
 
-### List the current user's pending invitations
+### List the current user’s pending invitations
 
 ```http
 GET /api/invitations
 ```
 
-Invitations are matched using the authenticated user's email address.
+Invitations are matched using the authenticated user’s email address.
 
 ### Accept an invitation
 
@@ -537,9 +621,9 @@ Accepting creates:
 POST /api/invitations/:invitationId/decline
 ```
 
-## 13. Workflow Status endpoints
+---
 
-Workflow Statuses define the columns and stages belonging to an individual Project.
+## 13. Workflow Status endpoints
 
 Each Workflow Status contains:
 
@@ -661,8 +745,6 @@ Tasks therefore do not need to be updated when a status is renamed.
 PUT /api/projects/:projectId/statuses/order
 ```
 
-Only the Project owner can reorder Workflow Statuses.
-
 The request must contain the complete ordered collection of status identifiers:
 
 ```json
@@ -672,43 +754,6 @@ The request must contain the complete ordered collection of status identifiers:
     "review-status-id",
     "doing",
     "done"
-  ]
-}
-```
-
-Response:
-
-```json
-{
-  "workflowStatuses": [
-    {
-      "id": "todo",
-      "name": "To Do",
-      "color": "#64748b",
-      "position": 0,
-      "isCompleted": false
-    },
-    {
-      "id": "review-status-id",
-      "name": "Review",
-      "color": "#f59e0b",
-      "position": 1,
-      "isCompleted": false
-    },
-    {
-      "id": "doing",
-      "name": "Doing",
-      "color": "#2563eb",
-      "position": 2,
-      "isCompleted": false
-    },
-    {
-      "id": "done",
-      "name": "Done",
-      "color": "#16a34a",
-      "position": 3,
-      "isCompleted": true
-    }
   ]
 }
 ```
@@ -724,7 +769,7 @@ Reordering rules:
 - positions are reassigned from zero after validation;
 - Task status identifiers are not changed;
 - Task versions are not incremented;
-- the Project's `updatedAt` timestamp is updated.
+- the Project’s `updatedAt` timestamp is updated.
 
 The React client exposes reordering through accessible Move Up and Move Down controls.
 
@@ -764,27 +809,49 @@ Response:
 Deletion rules:
 
 - a Project must retain at least one Workflow Status;
-- the Project's only completed status cannot be deleted;
+- the Project’s only completed status cannot be deleted;
 - the replacement must be another status in the same Project;
-- all affected Tasks are moved to the replacement status;
+- affected Tasks move to the replacement status;
 - every moved Task has its version incremented;
 - positions are normalized after deletion.
 
-## 14. Task endpoints
+---
 
-Each Task contains:
+## 14. Task model
 
-|Property|Purpose|
-|---|---|
-|`id`|Stable Task identifier|
-|`projectId`|Project containing the Task|
-|`title`|Short Task name|
-|`description`|Detailed Task information|
-|`status`|Identifier of a Workflow Status in the same Project|
-|`dueDate`|Optional date-only deadline or `null`|
-|`version`|Optimistic-concurrency version|
-|`createdAt`|Creation timestamp|
-|`updatedAt`|Latest modification timestamp|
+A Task contains:
+
+```json
+{
+  "id": "task-identifier",
+  "projectId": "project-identifier",
+  "title": "Create API documentation",
+  "description": "Document all Project routes.",
+  "status": "doing",
+  "dueDate": "2026-08-30",
+  "assigneeId": "user-identifier",
+  "version": 3,
+  "createdAt": "2026-08-21T00:00:00.000Z",
+  "updatedAt": "2026-08-21T02:00:00.000Z"
+}
+```
+
+|Property|Required|Purpose|
+|---|--:|---|
+|`id`|Yes|Stable Task identifier|
+|`projectId`|Yes|Project containing the Task|
+|`title`|Yes|Task title|
+|`description`|Yes|Task description, which may be empty|
+|`status`|Yes|Workflow Status identifier|
+|`dueDate`|No|Optional `YYYY-MM-DD` deadline or `null`|
+|`assigneeId`|No|Optional eligible Project-member user ID or `null`|
+|`version`|Yes|Optimistic concurrency version|
+|`createdAt`|Yes|Creation timestamp|
+|`updatedAt`|Yes|Last update timestamp|
+
+---
+
+## 15. Task endpoints
 
 ### Create a Task
 
@@ -798,32 +865,19 @@ Request:
 {
   "title": "Create API documentation",
   "description": "Document all Project routes.",
-  "status": "todo",
-  "dueDate": "2026-08-30"
+  "status": "doing",
+  "dueDate": "2026-08-30",
+  "assigneeId": "user-identifier"
 }
 ```
 
-The `status` property is optional.
+Only `title` is always required.
 
-When supplied, it must identify a Workflow Status belonging to the same Project.
+If `description` is omitted, it defaults to an empty string.
 
 If `status` is omitted, the server selects the first non-completed Workflow Status according to its position.
 
-The `dueDate` property is optional.
-
-It may contain:
-
-```text
-YYYY-MM-DD
-```
-
-or:
-
-```json
-null
-```
-
-If `dueDate` is omitted, the server stores:
+If `dueDate` is omitted, empty, or `null`, it is stored as:
 
 ```json
 {
@@ -831,21 +885,101 @@ If `dueDate` is omitted, the server stores:
 }
 ```
 
+If `assigneeId` is omitted, empty, or `null`, it is stored as:
+
+```json
+{
+  "assigneeId": null
+}
+```
+
+The supplied `status` must identify a Workflow Status belonging to the same Project.
+
+The supplied `assigneeId` must identify an explicit owner or contributor in the same Project.
+
 Response:
 
 ```json
 {
   "task": {
-    "id": "task-id",
-    "projectId": "project-id",
+    "id": "task-identifier",
+    "projectId": "project-identifier",
     "title": "Create API documentation",
     "description": "Document all Project routes.",
-    "status": "todo",
+    "status": "doing",
     "dueDate": "2026-08-30",
+    "assigneeId": "user-identifier",
     "version": 1,
     "createdAt": "2026-08-21T00:00:00.000Z",
     "updatedAt": "2026-08-21T00:00:00.000Z"
   }
+}
+```
+
+### Due Date validation
+
+A non-empty Due Date must:
+
+- be a string;
+- use exact `YYYY-MM-DD` format;
+- represent a real calendar date;
+- use a four-digit year of at least `1000`.
+
+Examples accepted:
+
+```text
+2026-08-21
+2030-12-31
+```
+
+Examples rejected:
+
+```text
+21-08-2026
+2026/08/21
+2026-02-30
+tomorrow
+```
+
+Invalid Due Dates return:
+
+```http
+400 Bad Request
+```
+
+### Assignee validation
+
+The Assignee value may be:
+
+- a valid Project-member user ID;
+- an empty string;
+- `null`.
+
+A non-null Assignee must:
+
+- exist as a registered user;
+- have explicit membership in the Task’s Project;
+- have the `OWNER` or `CONTRIBUTOR` Project role.
+
+The following users cannot be assigned:
+
+- reviewers;
+- implicit viewers of open Projects;
+- members of another Project;
+- unknown users;
+- removed Project members.
+
+Invalid Assignees return:
+
+```http
+400 Bad Request
+```
+
+Example response:
+
+```json
+{
+  "message": "Assignee must be an owner or contributor in this project"
 }
 ```
 
@@ -860,15 +994,14 @@ Response:
 ```json
 {
   "task": {
-    "id": "task-id",
-    "projectId": "project-id",
+    "id": "task-identifier",
+    "projectId": "project-identifier",
     "title": "Create API documentation",
     "description": "Document all Project routes.",
-    "status": "todo",
+    "status": "doing",
     "dueDate": "2026-08-30",
-    "version": 1,
-    "createdAt": "2026-08-21T00:00:00.000Z",
-    "updatedAt": "2026-08-21T00:00:00.000Z"
+    "assigneeId": "user-identifier",
+    "version": 1
   }
 }
 ```
@@ -885,91 +1018,87 @@ Request:
 {
   "title": "Updated title",
   "description": "Updated description",
-  "status": "doing",
+  "status": "review-status-id",
   "dueDate": "2026-09-05",
+  "assigneeId": "another-user-id",
   "version": 1
 }
 ```
 
-The client may update any combination of:
+At least one editable property must be provided:
 
 ```text
 title
 description
 status
 dueDate
+assigneeId
 ```
 
-At least one of those properties must be provided.
+A valid current `version` is required for every update.
 
-When changing a Task's status, the supplied identifier must belong to the Task's Project.
+After a successful update, the server:
 
-An unknown status or a status belonging only to another Project is rejected with:
+- applies the supplied changes;
+- increments the Task version;
+- updates the Task’s `updatedAt` timestamp;
+- returns the updated Task.
 
-```http
-400 Bad Request
-```
+### Removing a Due Date
 
-The Due Date may be removed by sending:
+A Due Date can be removed using:
 
 ```json
 {
   "dueDate": null,
-  "version": 1
+  "version": 2
 }
 ```
 
-An empty Due Date string is also normalized to `null`:
+or:
 
 ```json
 {
   "dueDate": "",
-  "version": 1
+  "version": 2
 }
 ```
 
-### Due Date rules
-
-Due Dates:
-
-- are optional;
-- use the `YYYY-MM-DD` date-only format;
-- are stored without a time or timezone;
-- must represent a real calendar date;
-- may be in the past;
-- may be changed or removed;
-- are included in optimistic-concurrency checks.
-
-Invalid examples include:
-
-```text
-30-08-2026
-2026/08/30
-2026-02-30
-tomorrow
-```
-
-Invalid Due Dates return:
-
-```http
-400 Bad Request
-```
-
-Response:
+Both values are normalized to:
 
 ```json
 {
-  "message": "Due date must use YYYY-MM-DD format or be null"
+  "dueDate": null
 }
 ```
 
-### Task versioning
+### Removing an Assignee
 
-The version submitted by the client must match the current server version.
+An Assignee can be removed using:
 
-After a successful update, the server increments the Task version.
+```json
+{
+  "assigneeId": null,
+  "version": 2
+}
+```
 
-Updating only the Due Date still increments the version.
+or:
+
+```json
+{
+  "assigneeId": "",
+  "version": 2
+}
+```
+
+Both values are normalized to:
+
+```json
+{
+  "assigneeId": null
+}
+```
 
 ### Task version conflict
 
@@ -1005,7 +1134,49 @@ Successful deletion returns:
 204 No Content
 ```
 
-## 15. Invitation statuses
+---
+
+## 16. Automatic Assignee cleanup
+
+A Task cannot remain assigned to a user who no longer has an assignable role in its Project.
+
+### Contributor downgraded to reviewer
+
+When an assigned contributor becomes a reviewer:
+
+- the Project membership remains;
+- `canBeAssigned` becomes `false`;
+- every Task assigned to that user receives `assigneeId: null`;
+- every affected Task version increments;
+- every affected Task receives a new `updatedAt` timestamp.
+
+### Project member removed
+
+When an assigned member is removed:
+
+- the Project membership is deleted;
+- every Task assigned to that user receives `assigneeId: null`;
+- every affected Task version increments;
+- every affected Task receives a new `updatedAt` timestamp.
+
+### Project ownership transferred
+
+Ownership transfer does not clear assignments because:
+
+- the new owner has the assignable `OWNER` role;
+- the previous owner receives the assignable `CONTRIBUTOR` role.
+
+Automatic unassignment does not:
+
+- delete the Task;
+- change its title;
+- change its description;
+- change its workflow status;
+- change its Due Date.
+
+---
+
+## 17. Invitation statuses
 
 ```text
 PENDING
@@ -1014,7 +1185,9 @@ DECLINED
 CANCELLED
 ```
 
-## 16. Common HTTP responses
+---
+
+## 18. Common HTTP responses
 
 |Status|Meaning|
 |---|---|
@@ -1025,7 +1198,7 @@ CANCELLED
 |`401 Unauthorized`|Missing, invalid, or expired token|
 |`403 Forbidden`|Authenticated but insufficient permission|
 |`404 Not Found`|Resource or accessible resource not found|
-|`409 Conflict`|Duplicate resource, invalid state transition, or Task version conflict|
+|`409 Conflict`|Duplicate resource, invalid transition, or Task version conflict|
 
 Error responses use:
 
@@ -1035,36 +1208,35 @@ Error responses use:
 }
 ```
 
-## 17. In-memory limitation
+---
+
+## 19. In-memory limitation
 
 All application data is currently stored in server memory.
 
-Restarting the Express server deletes:
+Restarting the Express server removes:
 
 - registered users;
 - created Workspaces;
 - created Projects;
 - memberships;
 - invitations;
-- created, renamed, recoloured, reordered, and deleted Workflow Statuses;
 - created Tasks;
+- Task updates;
 - Task Due Dates;
-- Task updates.
+- Task Assignees;
+- created, renamed, recoloured, reordered, and deleted Workflow Statuses.
 
-The two seeded Projects and their seeded Tasks are recreated when the server starts.
+The seeded Workspaces, Projects, Tasks, and default Workflow Statuses are recreated when the server starts.
 
-Each seeded Project is recreated with the default Workflow Statuses:
-
-```text
-To Do → Doing → Done
-```
-
-Seeded Tasks are recreated with:
+Seeded Tasks use:
 
 ```json
 {
-  "dueDate": null
+  "dueDate": null,
+  "assigneeId": null,
+  "version": 1
 }
 ```
 
-MongoDB persistence will replace this temporary behaviour during a later milestone.
+MongoDB persistence will replace this temporary behaviour in a later milestone.

@@ -3,6 +3,7 @@ import TaskCard from "./TaskCard";
 function TaskColumn({
   workflowStatus,
   tasks,
+  projectMembers = [],
   onEditTask,
   onDeleteTask,
   canEditTasks = false,
@@ -35,6 +36,7 @@ function TaskColumn({
               key={task.id}
               task={task}
               workflowStatus={workflowStatus}
+              projectMembers={projectMembers}
               onEdit={onEditTask}
               onDelete={onDeleteTask}
               canEdit={canEditTasks}

@@ -20,7 +20,9 @@ function ProjectPage() {
   const navigate = useNavigate();
 
   const [project, setProject] = useState(null);
-  const [tasks, setTasks] = useState([]);
+const [tasks, setTasks] = useState([]);
+const [projectMembers, setProjectMembers] =
+  useState([]);
   const [activeView, setActiveView] =
     useState("kanban");
   const [isLoading, setIsLoading] = useState(true);
@@ -57,20 +59,25 @@ const [workflowError, setWorkflowError] =
       setLoadError("");
 
       try {
-        const data = await apiRequest(
-          `/projects/${projectId}`,
-        );
+        const [projectData, memberData] =
+  await Promise.all([
+    apiRequest(`/projects/${projectId}`),
+    apiRequest(`/projects/${projectId}/members`),
+  ]);
 
-        if (data.project.workspaceId !== workspaceId) {
-          throw new Error(
-            "Project does not belong to this workspace",
-          );
-        }
+        if (
+  projectData.project.workspaceId !== workspaceId
+) {
+  throw new Error(
+    "Project does not belong to this workspace",
+  );
+}
 
         if (!shouldIgnore) {
-          setProject(data.project);
-          setTasks(data.tasks);
-        }
+  setProject(projectData.project);
+  setTasks(projectData.tasks);
+  setProjectMembers(memberData.members);
+}
       } catch (requestError) {
         if (shouldIgnore) {
           return;
@@ -127,6 +134,10 @@ const [workflowError, setWorkflowError] =
       PROJECT_PERMISSIONS.DELETE_TASK,
     ) ?? false;
 
+  const assignableProjectMembers =
+  projectMembers.filter(
+    (member) => member.canBeAssigned,
+  );
   const workflowStatuses = [
   ...(project?.workflowStatuses ?? []),
 ].sort(
@@ -584,6 +595,7 @@ async function handleDeleteWorkflowStatus(
           key={workflowStatus.id}
           workflowStatus={workflowStatus}
           tasks={tasks}
+          projectMembers={projectMembers}
           onEditTask={openEditTaskForm}
           onDeleteTask={handleDeleteTask}
           canEditTasks={canUpdateTasks}
@@ -599,6 +611,7 @@ async function handleDeleteWorkflowStatus(
   <TaskList
     tasks={tasks}
     workflowStatuses={workflowStatuses}
+    projectMembers={projectMembers}
     onEditTask={openEditTaskForm}
     onDeleteTask={handleDeleteTask}
     canEditTasks={canUpdateTasks}
@@ -638,6 +651,7 @@ async function handleDeleteWorkflowStatus(
           }
           initialTask={editingTask}
           workflowStatuses={workflowStatuses}
+          assignees={assignableProjectMembers}
           onSubmit={handleSaveTask}
           onCancel={closeTaskForm}
           isSubmitting={isSavingTask}
