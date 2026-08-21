@@ -122,15 +122,29 @@ function TaskForm({
             Due date
           </label>
 
-          <input
-            id="task-due-date"
-            type="date"
-            value={dueDate}
-            onChange={(event) =>
-              setDueDate(event.target.value)
-            }
-            disabled={isSubmitting}
-          />
+          <div className="task-form__due-date-control">
+  <input
+    id="task-due-date"
+    type="date"
+    value={dueDate}
+    onChange={(event) =>
+      setDueDate(event.target.value)
+    }
+    disabled={isSubmitting}
+  />
+
+  <button
+    type="button"
+    className={
+      "button button--secondary " +
+      "task-form__clear-date"
+    }
+    onClick={() => setDueDate("")}
+    disabled={!dueDate}
+  >
+    Clear
+  </button>
+</div>
 
           <small>
             Optional. Leave this empty if the Task has no
