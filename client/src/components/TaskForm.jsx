@@ -5,6 +5,7 @@ import {
 
 function TaskForm({
   initialTask = null,
+  initialStatusId = null,
   workflowStatuses = [],
   assignees = [],
   onSubmit,
@@ -20,8 +21,9 @@ function TaskForm({
     initialTask?.description ?? "",
   );
 
-  const [status, setStatus] = useState(
+    const [status, setStatus] = useState(
     initialTask?.status ??
+      initialStatusId ??
       workflowStatuses[0]?.id ??
       "",
   );
