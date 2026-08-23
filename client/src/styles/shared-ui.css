@@ -120,30 +120,6 @@
   }
 }
 
-.board-card__actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 8px;
-}
-
-.board-card__link[aria-disabled="true"] {
-  cursor: not-allowed;
-  opacity: 0.65;
-}
-
-@media (max-width: 600px) {
-  .board-card__footer {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .board-card__actions {
-    width: 100%;
-    justify-content: flex-start;
-  }
-}
-
 .entity-card__heading {
   display: flex;
   align-items: flex-start;
