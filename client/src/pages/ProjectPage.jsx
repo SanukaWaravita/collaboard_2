@@ -21,8 +21,16 @@ function ProjectPage() {
   const [loadError, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
 
-  const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
-  const [editingTask, setEditingTask] = useState(null);
+    const [isTaskFormOpen, setIsTaskFormOpen] =
+    useState(false);
+
+  const [editingTask, setEditingTask] =
+    useState(null);
+
+  const [
+    createTaskStatusId,
+    setCreateTaskStatusId,
+  ] = useState(null);
   const [isSavingTask, setIsSavingTask] = useState(false);
   const [taskFormError, setTaskFormError] = useState("");
 
@@ -282,12 +290,26 @@ function ProjectPage() {
     }
   }
 
-  function openCreateTaskForm() {
+  function openCreateTaskForm(
+    initialStatusId = null,
+  ) {
     if (!canCreateTask) {
       return;
     }
 
+    const isValidStatus = workflowStatuses.some(
+      (workflowStatus) =>
+        workflowStatus.id === initialStatusId,
+    );
+
     setEditingTask(null);
+
+    setCreateTaskStatusId(
+      isValidStatus
+        ? initialStatusId
+        : null,
+    );
+
     setTaskFormError("");
     setIsTaskFormOpen(true);
   }
@@ -298,17 +320,19 @@ function ProjectPage() {
     }
 
     setEditingTask(task);
+    setCreateTaskStatusId(null);
     setTaskFormError("");
     setIsTaskFormOpen(true);
   }
 
-  function closeTaskForm() {
+ function closeTaskForm() {
     if (isSavingTask) {
       return;
     }
 
     setIsTaskFormOpen(false);
     setEditingTask(null);
+    setCreateTaskStatusId(null);
     setTaskFormError("");
   }
 
@@ -342,6 +366,7 @@ function ProjectPage() {
 
       setIsTaskFormOpen(false);
       setEditingTask(null);
+      setCreateTaskStatusId(null);
     } catch (requestError) {
       if (requestError.status === 401) {
         clearSession();
@@ -588,65 +613,156 @@ function ProjectPage() {
 
       <section
         className="project-view-toolbar"
-        aria-label="Project task view controls"
+        aria-label="Project Task view controls"
       >
-        <div>
-          <p className="project-view-toolbar__label">Task view</p>
+        <div className="project-view-toolbar__view">
+          <span className="project-view-toolbar__label">
+            View
+          </span>
 
-          <p className="project-view-toolbar__description">
-            Switch between the workflow board and a compact task list.
-          </p>
-        </div>
-
-        <div className="project-view-toolbar__actions">
           <ProjectViewToggle
             activeView={activeView}
             onViewChange={setActiveView}
           />
+        </div>
+
+        <div className="project-view-toolbar__actions">
+          <span className="project-view-toolbar__summary">
+            {workflowStatuses.length}{" "}
+            {workflowStatuses.length === 1
+              ? "Status"
+              : "Statuses"}
+            {" · "}
+            {tasks.length}{" "}
+            {tasks.length === 1
+              ? "Task"
+              : "Tasks"}
+          </span>
 
           {canManageWorkflow && (
             <button
               type="button"
-              className="button button--secondary"
+              className={
+                "button button--secondary " +
+                "project-view-toolbar__manage"
+              }
               onClick={openWorkflowManager}
             >
-              Manage Statuses
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                aria-hidden="true"
+              >
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="3"
+                />
+
+                <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6 1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z" />
+              </svg>
+
+              <span>Manage Statuses</span>
             </button>
           )}
         </div>
       </section>
 
-      {activeView === "kanban" && canUpdateTasks && (
-        <p className="task-board__instruction">
-          Drag Task cards between status columns. Keyboard and touch users can
-          change the status through Edit.
-        </p>
-      )}
-
       {activeView === "kanban" && (
-        <div className="task-board">
-          {workflowStatuses.map((workflowStatus) => (
-            <TaskColumn
-              key={workflowStatus.id}
-              workflowStatus={workflowStatus}
-              tasks={tasks}
-              projectMembers={projectMembers}
-              onEditTask={openEditTaskForm}
-              onDeleteTask={handleDeleteTask}
-              onTaskDragStart={handleTaskDragStart}
-              onTaskDragEnd={handleTaskDragEnd}
-              onTaskDragOver={handleTaskDragOver}
-              onTaskDragLeave={handleTaskDragLeave}
-              onTaskDrop={handleTaskDrop}
-              canEditTasks={canUpdateTasks}
-              canDeleteTasks={canDeleteTasks}
-              deletingTaskId={deletingTaskId}
-              draggingTaskId={draggingTaskId}
-              movingTaskId={movingTaskId}
-              dropTargetStatusId={dropTargetStatusId}
-            />
-          ))}
-        </div>
+        <section
+          className="kanban-view"
+          aria-label="Project Kanban board"
+        >
+          {canUpdateTasks && (
+            <div className="task-board__instruction">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                aria-hidden="true"
+              >
+                <path d="M5 9h14" />
+
+                <path d="M5 15h14" />
+
+                <path d="m9 5-4 4 4 4" />
+
+                <path d="m15 11 4 4-4 4" />
+              </svg>
+
+              <span>
+                Drag Task cards between status columns.
+                Keyboard and touch users can change status
+                through Edit.
+              </span>
+            </div>
+          )}
+
+          <div className="task-board">
+            {workflowStatuses.map(
+              (workflowStatus) => (
+                <TaskColumn
+                  key={workflowStatus.id}
+                  workflowStatus={
+                    workflowStatus
+                  }
+                  tasks={tasks}
+                  projectMembers={
+                    projectMembers
+                  }
+                  onEditTask={
+                    openEditTaskForm
+                  }
+                  onDeleteTask={
+                    handleDeleteTask
+                  }
+                  onAddTask={
+                    openCreateTaskForm
+                  }
+                  onTaskDragStart={
+                    handleTaskDragStart
+                  }
+                  onTaskDragEnd={
+                    handleTaskDragEnd
+                  }
+                  onTaskDragOver={
+                    handleTaskDragOver
+                  }
+                  onTaskDragLeave={
+                    handleTaskDragLeave
+                  }
+                  onTaskDrop={
+                    handleTaskDrop
+                  }
+                  canAddTasks={
+                    canCreateTask
+                  }
+                  canEditTasks={
+                    canUpdateTasks
+                  }
+                  canDeleteTasks={
+                    canDeleteTasks
+                  }
+                  deletingTaskId={
+                    deletingTaskId
+                  }
+                  draggingTaskId={
+                    draggingTaskId
+                  }
+                  movingTaskId={
+                    movingTaskId
+                  }
+                  dropTargetStatusId={
+                    dropTargetStatusId
+                  }
+                />
+              ),
+            )}
+          </div>
+        </section>
       )}
 
       {activeView === "list" && (
@@ -681,9 +797,15 @@ function ProjectPage() {
           key={
             editingTask
               ? `${editingTask.id}-${editingTask.version}`
-              : "new-task"
+              : `new-task-${
+                  createTaskStatusId ??
+                  "default"
+                }`
           }
           initialTask={editingTask}
+          initialStatusId={
+            createTaskStatusId
+          }
           workflowStatuses={workflowStatuses}
           assignees={assignableProjectMembers}
           onSubmit={handleSaveTask}
