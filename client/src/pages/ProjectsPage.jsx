@@ -213,7 +213,7 @@ function ProjectsPage() {
 
   if (isLoading) {
     return (
-      <main className="boards-page">
+      <main className="entity-page">
         <p className="page-message" role="status">
           Loading workspace projects...
         </p>
@@ -223,7 +223,7 @@ function ProjectsPage() {
 
   if (loadError || !workspace) {
     return (
-      <main className="boards-page">
+      <main className="entity-page">
         <section className="page-error">
           <p role="alert">
             {loadError || "Workspace not found"}
@@ -256,53 +256,96 @@ function ProjectsPage() {
   }
 
   return (
-    <main className="boards-page">
-      <header className="boards-header">
-        <div>
-          <Link
-            to="/workspaces"
-            className="project-header__back"
-          >
-            ← My Workspaces
-          </Link>
+    <main className="entity-page">
+      <header className="entity-page__header">
+  <div className="entity-page__header-content">
+    <Link
+      to="/workspaces"
+      className="entity-page__back"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        aria-hidden="true"
+      >
+        <path d="M19 12H5" />
+        <path d="m11 18-6-6 6-6" />
+      </svg>
 
-          <p className="board-header__eyebrow">
-            {workspace.slug}
-          </p>
+      My Workspaces
+    </Link>
 
-          <h1>{workspace.name}</h1>
+    <p className="entity-page__eyebrow">
+      {workspace.slug}
+    </p>
 
-          <p>
-            {workspace.projectCount}{" "}
-            {workspace.projectCount === 1
-              ? "project"
-              : "projects"}
-            {" · "}
-            Your role: {workspace.currentUserRole}
-          </p>
-        </div>
+    <h1>{workspace.name}</h1>
 
-        <div className="board-header__actions">
-          {canManageGuests && (
-            <Link
-              to={`/workspaces/${workspaceId}/guests`}
-              className="button button--secondary"
-            >
-              Guest Users
-            </Link>
-          )}
+    <div className="entity-page__metadata">
+      <span>
+        {workspace.projectCount}{" "}
+        {workspace.projectCount === 1
+          ? "project"
+          : "projects"}
+      </span>
 
-          {canCreateProject && (
-            <button
-              type="button"
-              className="button button--primary"
-              onClick={openCreateForm}
-            >
-              Create Project
-            </button>
-          )}
-        </div>
-      </header>
+      <span aria-hidden="true">•</span>
+
+      <span>
+        Your role: {workspace.currentUserRole}
+      </span>
+    </div>
+  </div>
+
+  <div className="entity-page__actions">
+    {canManageGuests && (
+      <Link
+        to={`/workspaces/${workspaceId}/guests`}
+        className="button button--secondary"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          aria-hidden="true"
+        >
+          <circle cx="9" cy="8" r="3" />
+          <path d="M3 19v-2a6 6 0 0 1 12 0v2" />
+          <path d="M16 11a4 4 0 0 1 5 4v2" />
+        </svg>
+
+        Guest Users
+      </Link>
+    )}
+
+    {canCreateProject && (
+      <button
+        type="button"
+        className={
+          `button button--primary ` +
+          `entity-page__primary-action`
+        }
+        onClick={openCreateForm}
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          aria-hidden="true"
+        >
+          <path d="M12 5v14" />
+          <path d="M5 12h14" />
+        </svg>
+
+        Create Project
+      </button>
+    )}
+  </div>
+</header>
 
       {actionError && (
         <p className="board-action-error" role="alert">
@@ -332,7 +375,7 @@ function ProjectsPage() {
         </section>
       ) : (
         <section
-          className="boards-grid"
+          className="entity-grid"
           aria-label="Available projects"
         >
           {projects.map((project) => (

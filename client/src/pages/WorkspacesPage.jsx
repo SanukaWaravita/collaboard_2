@@ -171,29 +171,43 @@ function WorkspacesPage() {
   }
 
   return (
-    <main className="boards-page">
-      <header className="boards-header">
-        <div>
-          <p className="board-header__eyebrow">
-            Collaboration
-          </p>
+    <main className="entity-page">
+      <header className="entity-page__header">
+  <div className="entity-page__header-content">
+    <p className="entity-page__eyebrow">
+      Collaboration
+    </p>
 
-          <h1>My Workspaces</h1>
+    <h1>My Workspaces</h1>
 
-          <p>
-            Select a workspace to view its projects and
-            members.
-          </p>
-        </div>
+    <p>
+      Select a Workspace to view its Projects and
+      members.
+    </p>
+  </div>
 
-        <button
-          type="button"
-          className="button button--primary"
-          onClick={openCreateForm}
-        >
-          Create Workspace
-        </button>
-      </header>
+  <button
+    type="button"
+    className={
+      `button button--primary ` +
+      `entity-page__primary-action`
+    }
+    onClick={openCreateForm}
+  >
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden="true"
+    >
+      <path d="M12 5v14" />
+      <path d="M5 12h14" />
+    </svg>
+
+    Create Workspace
+  </button>
+</header>
 
       {actionError && (
         <p className="board-action-error" role="alert">
@@ -250,7 +264,7 @@ function WorkspacesPage() {
         !loadError &&
         workspaces.length > 0 && (
           <section
-            className="boards-grid"
+            className="entity-grid"
             aria-label="Available workspaces"
           >
             {workspaces.map((workspace) => (
