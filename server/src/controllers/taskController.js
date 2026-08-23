@@ -9,10 +9,7 @@ import {
   findWorkflowStatus,
   getInitialWorkflowStatus,
 } from "../utils/workflowStatuses.js";
-import {
-  isValidDueDate,
-  normalizeDueDate,
-} from "../utils/taskDueDate.js";
+import { isValidDueDate, normalizeDueDate } from "../utils/taskDueDate.js";
 import {
   findInvalidAssigneeId,
   isValidAssigneeIdsValue,
@@ -20,17 +17,14 @@ import {
 } from "../utils/taskAssignee.js";
 
 function findTaskAndProject(taskId) {
-  const task = store.tasks.find(
-    (currentTask) => currentTask.id === taskId,
-  );
+  const task = store.tasks.find((currentTask) => currentTask.id === taskId);
 
   if (!task) {
     return null;
   }
 
   const project = store.projects.find(
-    (currentProject) =>
-      currentProject.id === task.projectId,
+    (currentProject) => currentProject.id === task.projectId,
   );
 
   return project ? { task, project } : null;
@@ -38,14 +32,10 @@ function findTaskAndProject(taskId) {
 
 export function createTask(request, response) {
   const project = store.projects.find(
-    (currentProject) =>
-      currentProject.id === request.params.projectId,
+    (currentProject) => currentProject.id === request.params.projectId,
   );
 
-  if (
-    !project ||
-    !getProjectAccess(project, request.user.id)
-  ) {
+  if (!project || !getProjectAccess(project, request.user.id)) {
     return response.status(404).json({
       message: "Project not found",
     });
@@ -59,18 +49,17 @@ export function createTask(request, response) {
     )
   ) {
     return response.status(403).json({
-      message:
-        "You cannot create tasks in this project",
+      message: "You cannot create tasks in this project",
     });
   }
 
   const {
-  title,
-  description = "",
-  status,
-  dueDate = null,
-  assigneeIds = [],
-} = request.body ?? {};
+    title,
+    description = "",
+    status,
+    dueDate = null,
+    assigneeIds = [],
+  } = request.body ?? {};
 
   if (typeof title !== "string" || !title.trim()) {
     return response.status(400).json({
@@ -85,50 +74,30 @@ export function createTask(request, response) {
   }
 
   if (!isValidDueDate(dueDate)) {
-  return response.status(400).json({
-    message:
-      "Due date must use YYYY-MM-DD format or be null",
-  });
-}
+    return response.status(400).json({
+      message: "Due date must use YYYY-MM-DD format or be null",
+    });
+  }
 
-if (!isValidAssigneeIdsValue(assigneeIds)) {
-  return response.status(400).json({
-    message:
-      "Assignee IDs must be a duplicate-free array of user IDs or null",
-  });
-}
+  if (!isValidAssigneeIdsValue(assigneeIds)) {
+    return response.status(400).json({
+      message:
+        "Assignee IDs must be a duplicate-free array of user IDs or null",
+    });
+  }
 
-const normalizedAssigneeIds =
-  normalizeAssigneeIds(assigneeIds);
+  const normalizedAssigneeIds = normalizeAssigneeIds(assigneeIds);
 
-const invalidAssigneeId =
-  findInvalidAssigneeId(
+  const invalidAssigneeId = findInvalidAssigneeId(
     project.id,
     normalizedAssigneeIds,
   );
 
-if (invalidAssigneeId) {
-  return response.status(400).json({
-    message:
-      "Every Assignee must be an owner or contributor in this project",
-  });
-}
-
-const normalizedAssigneeId =
-  normalizeAssigneeIds(assigneeIds);
-
-if (
-  normalizedAssigneeId &&
-  !findAssignableProjectMember(
-    project.id,
-    normalizedAssigneeId,
-  )
-) {
-  return response.status(400).json({
-    message:
-      "Assignee must be an owner or contributor in this project",
-  });
-}
+  if (invalidAssigneeId) {
+    return response.status(400).json({
+      message: "Every Assignee must be an owner or contributor in this project",
+    });
+  }
 
   const selectedStatus =
     status === undefined
@@ -165,9 +134,7 @@ if (
 }
 
 export function getTask(request, response) {
-  const result = findTaskAndProject(
-    request.params.taskId,
-  );
+  const result = findTaskAndProject(request.params.taskId);
 
   if (
     !result ||
@@ -188,9 +155,7 @@ export function getTask(request, response) {
 }
 
 export function updateTask(request, response) {
-  const result = findTaskAndProject(
-    request.params.taskId,
-  );
+  const result = findTaskAndProject(request.params.taskId);
 
   if (!result) {
     return response.status(404).json({
@@ -208,26 +173,19 @@ export function updateTask(request, response) {
     )
   ) {
     return response.status(403).json({
-      message:
-        "You cannot edit tasks in this project",
+      message: "You cannot edit tasks in this project",
     });
   }
 
-  const {
-  title,
-  description,
-  status,
-  dueDate,
-  assigneeIds,
-  version,
-} = request.body ?? {};
+  const { title, description, status, dueDate, assigneeIds, version } =
+    request.body ?? {};
 
   const containsUpdate =
-  title !== undefined ||
-  description !== undefined ||
-  status !== undefined ||
-  dueDate !== undefined ||
-  assigneeIds !== undefined;
+    title !== undefined ||
+    description !== undefined ||
+    status !== undefined ||
+    dueDate !== undefined ||
+    assigneeIds !== undefined;
 
   if (!containsUpdate) {
     return response.status(400).json({
@@ -244,74 +202,57 @@ export function updateTask(request, response) {
 
   if (version !== task.version) {
     return response.status(409).json({
-      message:
-        "Task was modified by another request",
+      message: "Task was modified by another request",
       task,
     });
   }
 
-  if (
-    title !== undefined &&
-    (typeof title !== "string" || !title.trim())
-  ) {
+  if (title !== undefined && (typeof title !== "string" || !title.trim())) {
     return response.status(400).json({
       message: "Task title cannot be empty",
     });
   }
 
-  if (
-    description !== undefined &&
-    typeof description !== "string"
-  ) {
+  if (description !== undefined && typeof description !== "string") {
     return response.status(400).json({
       message: "Task description must be text",
     });
   }
 
-  if (
-  dueDate !== undefined &&
-  !isValidDueDate(dueDate)
-) {
-  return response.status(400).json({
-    message:
-      "Due date must use YYYY-MM-DD format or be null",
-  });
-}
-
-let normalizedAssigneeIds;
-
-if (assigneeIds !== undefined) {
-  if (!isValidAssigneeIdsValue(assigneeIds)) {
+  if (dueDate !== undefined && !isValidDueDate(dueDate)) {
     return response.status(400).json({
-      message:
-        "Assignee IDs must be a duplicate-free array of user IDs or null",
+      message: "Due date must use YYYY-MM-DD format or be null",
     });
   }
 
-  normalizedAssigneeIds =
-    normalizeAssigneeIds(assigneeIds);
+  let normalizedAssigneeIds;
 
-  const invalidAssigneeId =
-    findInvalidAssigneeId(
+  if (assigneeIds !== undefined) {
+    if (!isValidAssigneeIdsValue(assigneeIds)) {
+      return response.status(400).json({
+        message:
+          "Assignee IDs must be a duplicate-free array of user IDs or null",
+      });
+    }
+
+    normalizedAssigneeIds = normalizeAssigneeIds(assigneeIds);
+
+    const invalidAssigneeId = findInvalidAssigneeId(
       project.id,
       normalizedAssigneeIds,
     );
 
-  if (invalidAssigneeId) {
-    return response.status(400).json({
-      message:
-        "Every Assignee must be an owner or contributor in this project",
-    });
+    if (invalidAssigneeId) {
+      return response.status(400).json({
+        message:
+          "Every Assignee must be an owner or contributor in this project",
+      });
+    }
   }
-}
 
-  if (
-    status !== undefined &&
-    !findWorkflowStatus(project, status)
-  ) {
+  if (status !== undefined && !findWorkflowStatus(project, status)) {
     return response.status(400).json({
-      message:
-        "Task status does not exist in this project",
+      message: "Task status does not exist in this project",
     });
   }
 
@@ -328,23 +269,21 @@ if (assigneeIds !== undefined) {
   }
 
   if (dueDate !== undefined) {
-  task.dueDate = normalizeDueDate(dueDate);
-}
+    task.dueDate = normalizeDueDate(dueDate);
+  }
 
-if (assigneeIds !== undefined) {
-  task.assigneeIds = normalizedAssigneeIds;
-}
+  if (assigneeIds !== undefined) {
+    task.assigneeIds = normalizedAssigneeIds;
+  }
 
-task.version += 1;
+  task.version += 1;
   task.updatedAt = new Date().toISOString();
 
   return response.status(200).json({ task });
 }
 
 export function deleteTask(request, response) {
-  const result = findTaskAndProject(
-    request.params.taskId,
-  );
+  const result = findTaskAndProject(request.params.taskId);
 
   if (!result) {
     return response.status(404).json({
@@ -362,14 +301,12 @@ export function deleteTask(request, response) {
     )
   ) {
     return response.status(403).json({
-      message:
-        "You cannot delete tasks in this project",
+      message: "You cannot delete tasks in this project",
     });
   }
 
   const taskIndex = store.tasks.findIndex(
-    (currentTask) =>
-      currentTask.id === task.id,
+    (currentTask) => currentTask.id === task.id,
   );
 
   store.tasks.splice(taskIndex, 1);
