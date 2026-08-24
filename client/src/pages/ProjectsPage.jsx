@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import ProjectCard from "../components/ProjectCard";
 import ProjectForm from "../components/ProjectForm";
+import WorkspaceHeader from "../components/WorkspaceHeader";
+import WorkspaceProjectViewToggle from "../components/WorkspaceProjectViewToggle";
 import { WORKSPACE_PERMISSIONS } from "../constants/access";
 import { apiRequest, clearSession } from "../services/api";
 
@@ -10,8 +12,9 @@ function ProjectsPage() {
   const navigate = useNavigate();
 
   const [workspace, setWorkspace] = useState(null);
-  const [projects, setProjects] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+const [projects, setProjects] = useState([]);
+const [activeView, setActiveView] = useState("cards");
+const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
 
@@ -220,83 +223,49 @@ function ProjectsPage() {
   }
 
   return (
-    <main className="entity-page">
-      <header className="entity-page__header">
-        <div className="entity-page__header-content">
-          <Link to="/workspaces" className="entity-page__back">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              aria-hidden="true"
-            >
-              <path d="M19 12H5" />
-              <path d="m11 18-6-6 6-6" />
-            </svg>
-            My Workspaces
-          </Link>
+  <main
+    className={
+      "board-page entity-page " +
+      "workspace-projects-page"
+    }
+  >
+    <WorkspaceHeader
+      workspace={workspace}
+      projectCount={workspace.projectCount}
+      backTo="/workspaces"
+      membersTo={`/workspaces/${workspaceId}/members`}
+      onCreateProject={openCreateForm}
+      canManageMembers={canManageMembers}
+      canCreateProject={canCreateProject}
+    />
 
-          <p className="entity-page__eyebrow">{workspace.slug}</p>
+    <section
+      className={
+        "project-view-toolbar " +
+        "workspace-project-view-toolbar"
+      }
+      aria-label="Workspace Project view controls"
+    >
+      <div className="project-view-toolbar__view">
+        <span className="project-view-toolbar__label">
+          View
+        </span>
 
-          <h1>{workspace.name}</h1>
+        <WorkspaceProjectViewToggle
+          activeView={activeView}
+          onViewChange={setActiveView}
+        />
+      </div>
 
-          <div className="entity-page__metadata">
-            <span>
-              {workspace.projectCount}{" "}
-              {workspace.projectCount === 1 ? "project" : "projects"}
-            </span>
-
-            <span aria-hidden="true">•</span>
-
-            <span>Your role: {workspace.currentUserRole}</span>
-          </div>
-        </div>
-
-        <div className="entity-page__actions">
-          {canManageMembers && (
-            <Link
-              to={`/workspaces/${workspaceId}/members`}
-              className="button button--secondary"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                aria-hidden="true"
-              >
-                <circle cx="9" cy="8" r="3" />
-                <path d="M3 19v-2a6 6 0 0 1 12 0v2" />
-                <path d="M16 11a4 4 0 0 1 5 4v2" />
-              </svg>
-              Members & Access
-            </Link>
-          )}
-
-          {canCreateProject && (
-            <button
-              type="button"
-              className={
-                `button button--primary ` + `entity-page__primary-action`
-              }
-              onClick={openCreateForm}
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                aria-hidden="true"
-              >
-                <path d="M12 5v14" />
-                <path d="M5 12h14" />
-              </svg>
-              Create Project
-            </button>
-          )}
-        </div>
-      </header>
+      <div className="project-view-toolbar__actions">
+        <span className="project-view-toolbar__summary">
+          {projects.length}{" "}
+          {projects.length === 1
+            ? "available Project"
+            : "available Projects"}
+        </span>
+      </div>
+    </section>
 
       {actionError && (
         <p className="board-action-error" role="alert">
