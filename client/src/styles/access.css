@@ -395,6 +395,204 @@
   text-align: right;
 }
 
+.workspace-invitation-form {
+  display: grid;
+  gap: 20px;
+}
+
+.workspace-invitation-form .access-form-grid {
+  grid-template-columns:
+    minmax(0, 2fr)
+    minmax(220px, 1fr);
+}
+
+.workspace-invitation-form .task-form__field {
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.workspace-invitation-projects {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.workspace-invitation-projects__legend {
+  margin-bottom: 4px;
+  padding: 0;
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.workspace-invitation-projects__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.workspace-invitation-projects__heading p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.84rem;
+}
+
+.workspace-invitation-project-list {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.workspace-invitation-project {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(145px, 0.55fr);
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.workspace-invitation-project:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-card);
+}
+
+.workspace-invitation-project:focus-within {
+  border-color: var(--primary);
+  box-shadow:
+    0 0 0 3px var(--primary-alpha-25);
+}
+
+.workspace-invitation-project--selected {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.workspace-invitation-project__selection {
+  display: grid;
+  grid-template-columns:
+    auto
+    minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.workspace-invitation-project__selection input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.workspace-invitation-project__details {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+}
+
+.workspace-invitation-project__title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.workspace-invitation-project__title strong {
+  overflow-wrap: anywhere;
+  font-size: 0.88rem;
+}
+
+.workspace-invitation-project__metadata {
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.workspace-invitation-project__role {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.workspace-invitation-project__role label {
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.workspace-invitation-project__role select {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 10px;
+  color: var(--text);
+  background: var(--surface);
+}
+
+.workspace-invitation-project__role select:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.workspace-invitation-projects:disabled
+  .workspace-invitation-project__selection,
+.workspace-invitation-projects:disabled
+  .workspace-invitation-project__selection input {
+  cursor: wait;
+}
+
+.workspace-invitation-result {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid #86efac;
+  border-radius: 10px;
+  color: var(--success-text);
+  background: #f0fdf4;
+}
+
+.workspace-invitation-result p {
+  margin: 0;
+}
+
+.workspace-invitation-result ul {
+  display: grid;
+  gap: 5px;
+  margin: 8px 0 0;
+  padding-left: 20px;
+}
+
+.workspace-invitation-form__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.workspace-invitation-card__access .button {
+  min-height: 34px;
+  margin-left: 3px;
+  padding: 7px 10px;
+  white-space: nowrap;
+  font-size: 0.76rem;
+}
+
 .workspace-invitation-list {
   display: grid;
   gap: 12px;
@@ -508,14 +706,22 @@
     text-align: left;
   }
 
-  .workspace-invitation-card {
-  grid-template-columns: 1fr;
-  gap: 12px;
-}
+  .workspace-invitation-form .access-form-grid {
+    grid-template-columns: 1fr;
+  }
 
-.workspace-invitation-card__access {
-  justify-content: flex-start;
-}
+  .workspace-invitation-project-list {
+    grid-template-columns: 1fr;
+  }
+
+  .workspace-invitation-card {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .workspace-invitation-card__access {
+    justify-content: flex-start;
+  }
 }
 
 @media (max-width: 500px) {
@@ -571,5 +777,33 @@
 
   .workspace-member-card__remove-button {
     width: 100%;
+  }
+
+  .access-panel__header,
+  .workspace-invitation-projects__heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .workspace-invitation-project {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .workspace-invitation-project__role,
+  .workspace-invitation-project__role select {
+    width: 100%;
+  }
+
+  .workspace-invitation-form__actions,
+  .workspace-invitation-form__actions .button {
+    width: 100%;
+  }
+
+  .workspace-invitation-card__access .button {
+    flex-basis: 100%;
+    width: 100%;
+    margin-top: 5px;
+    margin-left: 0;
   }
 }

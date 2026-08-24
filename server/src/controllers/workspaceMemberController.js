@@ -102,20 +102,15 @@ function presentProjectSummary(project) {
   };
 }
 
-function presentPendingWorkspaceInvitation(
-  invitation,
-) {
+function presentPendingWorkspaceInvitation(invitation) {
   const project = store.projects.find(
     (currentProject) =>
-      currentProject.id ===
-        invitation.projectId &&
-      currentProject.workspaceId ===
-        invitation.workspaceId,
+      currentProject.id === invitation.projectId &&
+      currentProject.workspaceId === invitation.workspaceId,
   );
 
   const invitedBy = store.users.find(
-    (user) =>
-      user.id === invitation.invitedById,
+    (user) => user.id === invitation.invitedById,
   );
 
   return {
@@ -277,28 +272,19 @@ export function getWorkspaceMembers(request, response) {
       return firstMember.name.localeCompare(secondMember.name);
     });
 
-  const pendingInvitations =
-  store.projectInvitations
+  const pendingInvitations = store.projectInvitations
     .filter(
       (invitation) =>
-        invitation.workspaceId ===
-          workspace.id &&
-        invitation.status ===
-          INVITATION_STATUS.PENDING,
+        invitation.workspaceId === workspace.id &&
+        invitation.status === INVITATION_STATUS.PENDING,
     )
-    .map(
-      presentPendingWorkspaceInvitation,
-    )
+    .map(presentPendingWorkspaceInvitation)
     .sort(
       (firstInvitation, secondInvitation) =>
-        new Date(
-          secondInvitation.createdAt,
-        ).getTime() -
-        new Date(
-          firstInvitation.createdAt,
-        ).getTime(),
+        new Date(secondInvitation.createdAt).getTime() -
+        new Date(firstInvitation.createdAt).getTime(),
     );
-    return response.status(200).json({
+  return response.status(200).json({
     workspace: {
       id: workspace.id,
       name: workspace.name,
@@ -307,6 +293,14 @@ export function getWorkspaceMembers(request, response) {
     },
 
     members,
+
+    projects: projects.map((project) => ({
+      id: project.id,
+      projectKey: project.projectKey,
+      name: project.name,
+      visibility: project.visibility,
+    })),
+
     pendingInvitations,
 
     currentUserId: request.user.id,
