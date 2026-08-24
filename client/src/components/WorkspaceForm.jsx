@@ -24,9 +24,7 @@ function WorkspaceForm({
     const workspaceData = { name };
 
     if (!isEditing) {
-      const slug = String(
-        formData.get("slug") ?? "",
-      )
+      const slug = String(formData.get("slug") ?? "")
         .trim()
         .toLowerCase();
 
@@ -50,15 +48,11 @@ function WorkspaceForm({
         <header className="task-form__header">
           <div>
             <p className="task-form__eyebrow">
-              {isEditing
-                ? "Edit workspace"
-                : "New workspace"}
+              {isEditing ? "Edit workspace" : "New workspace"}
             </p>
 
             <h2 id="workspace-form-title">
-              {isEditing
-                ? "Update workspace"
-                : "Create a workspace"}
+              {isEditing ? "Update workspace" : "Create a workspace"}
             </h2>
           </div>
 
@@ -74,9 +68,7 @@ function WorkspaceForm({
         </header>
 
         <div className="task-form__field">
-          <label htmlFor="workspace-name">
-            Workspace name
-          </label>
+          <label htmlFor="workspace-name">Workspace name</label>
 
           <input
             id="workspace-name"
@@ -92,9 +84,7 @@ function WorkspaceForm({
 
         {!isEditing && (
           <div className="task-form__field">
-            <label htmlFor="workspace-slug">
-              Workspace slug
-            </label>
+            <label htmlFor="workspace-slug">Workspace slug</label>
 
             <input
               id="workspace-slug"
@@ -106,17 +96,15 @@ function WorkspaceForm({
             />
 
             <small>
-              Optional. If omitted, the server generates it
-              from the workspace name.
+              Optional. If omitted, the server generates it from the workspace
+              name.
             </small>
           </div>
         )}
 
         {isEditing && (
           <div className="task-form__field">
-            <label htmlFor="workspace-existing-slug">
-              Workspace slug
-            </label>
+            <label htmlFor="workspace-existing-slug">Workspace slug</label>
 
             <input
               id="workspace-existing-slug"
@@ -125,10 +113,7 @@ function WorkspaceForm({
               disabled
             />
 
-            <small>
-              Workspace slugs cannot be changed after
-              creation.
-            </small>
+            <small>Workspace slugs cannot be changed after creation.</small>
           </div>
         )}
 

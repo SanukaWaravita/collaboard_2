@@ -78,12 +78,10 @@
   color: var(--kanban-accent-dark);
 }
 
-.project-view-toggle__button--active
-  .project-view-toggle__indicator {
+.project-view-toggle__button--active .project-view-toggle__indicator {
   border-color: var(--kanban-accent-dark);
   background: var(--kanban-accent-dark);
-  box-shadow:
-    inset 0 0 0 2px var(--surface);
+  box-shadow: inset 0 0 0 2px var(--surface);
 }
 
 .project-view-toggle__button--active:hover {
@@ -100,9 +98,7 @@
   font-size: 0.72rem;
 }
 
-.project-view-toolbar__manage:hover:not(
-  :disabled
-) {
+.project-view-toolbar__manage:hover:not(:disabled) {
   border-color: #9dd6ef;
   color: var(--kanban-accent-dark);
   background: var(--kanban-accent-soft);

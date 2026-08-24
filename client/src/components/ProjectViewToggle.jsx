@@ -9,10 +9,7 @@ const VIEW_OPTIONS = [
   },
 ];
 
-function ProjectViewToggle({
-  activeView,
-  onViewChange,
-}) {
+function ProjectViewToggle({ activeView, onViewChange }) {
   return (
     <div
       className="project-view-toggle"
@@ -20,8 +17,7 @@ function ProjectViewToggle({
       aria-label="Select Task view"
     >
       {VIEW_OPTIONS.map((viewOption) => {
-        const isActive =
-          activeView === viewOption.value;
+        const isActive = activeView === viewOption.value;
 
         return (
           <button
@@ -29,21 +25,13 @@ function ProjectViewToggle({
             type="button"
             className={
               "project-view-toggle__button" +
-              (isActive
-                ? " project-view-toggle__button--active"
-                : "")
+              (isActive ? " project-view-toggle__button--active" : "")
             }
-            onClick={() =>
-              onViewChange(
-                viewOption.value,
-              )
-            }
+            onClick={() => onViewChange(viewOption.value)}
             aria-pressed={isActive}
           >
             <span
-              className={
-                "project-view-toggle__indicator"
-              }
+              className={"project-view-toggle__indicator"}
               aria-hidden="true"
             />
 

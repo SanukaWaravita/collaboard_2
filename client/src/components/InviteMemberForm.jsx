@@ -1,13 +1,6 @@
-import {
-  MEMBER_TYPES,
-  PROJECT_ROLES,
-} from "../constants/access";
+import { MEMBER_TYPES, PROJECT_ROLES } from "../constants/access";
 
-function InviteMemberForm({
-  onSubmit,
-  isSubmitting = false,
-  error = "",
-}) {
+function InviteMemberForm({ onSubmit, isSubmitting = false, error = "" }) {
   function handleSubmit(event) {
     event.preventDefault();
 
@@ -17,20 +10,14 @@ function InviteMemberForm({
 
     const formData = new FormData(event.currentTarget);
 
-    const email = String(
-      formData.get("email") ?? "",
-    )
+    const email = String(formData.get("email") ?? "")
       .trim()
       .toLowerCase();
 
-    const role = String(
-      formData.get("role") ??
-        PROJECT_ROLES.REVIEWER,
-    );
+    const role = String(formData.get("role") ?? PROJECT_ROLES.REVIEWER);
 
     const memberType = String(
-      formData.get("memberType") ??
-        MEMBER_TYPES.INTERNAL,
+      formData.get("memberType") ?? MEMBER_TYPES.INTERNAL,
     );
 
     if (!email) {
@@ -45,30 +32,22 @@ function InviteMemberForm({
   }
 
   return (
-    <form
-      className="access-panel"
-      onSubmit={handleSubmit}
-    >
+    <form className="access-panel" onSubmit={handleSubmit}>
       <header className="access-panel__header">
         <div>
-          <p className="task-form__eyebrow">
-            Project access
-          </p>
+          <p className="task-form__eyebrow">Project access</p>
 
           <h2>Invite a member</h2>
 
           <p>
-            Invite an internal workspace member or a
-            guest user to this project.
+            Invite an internal workspace member or a guest user to this project.
           </p>
         </div>
       </header>
 
       <div className="access-form-grid">
         <div className="task-form__field">
-          <label htmlFor="invitation-email">
-            Email address
-          </label>
+          <label htmlFor="invitation-email">Email address</label>
 
           <input
             id="invitation-email"
@@ -81,9 +60,7 @@ function InviteMemberForm({
         </div>
 
         <div className="task-form__field">
-          <label htmlFor="invitation-role">
-            Project role
-          </label>
+          <label htmlFor="invitation-role">Project role</label>
 
           <select
             id="invitation-role"
@@ -91,20 +68,14 @@ function InviteMemberForm({
             defaultValue={PROJECT_ROLES.REVIEWER}
             disabled={isSubmitting}
           >
-            <option value={PROJECT_ROLES.CONTRIBUTOR}>
-              Contributor
-            </option>
+            <option value={PROJECT_ROLES.CONTRIBUTOR}>Contributor</option>
 
-            <option value={PROJECT_ROLES.REVIEWER}>
-              Reviewer
-            </option>
+            <option value={PROJECT_ROLES.REVIEWER}>Reviewer</option>
           </select>
         </div>
 
         <div className="task-form__field">
-          <label htmlFor="invitation-member-type">
-            Member type
-          </label>
+          <label htmlFor="invitation-member-type">Member type</label>
 
           <select
             id="invitation-member-type"
@@ -112,31 +83,26 @@ function InviteMemberForm({
             defaultValue={MEMBER_TYPES.INTERNAL}
             disabled={isSubmitting}
           >
-            <option value={MEMBER_TYPES.INTERNAL}>
-              Internal member
-            </option>
+            <option value={MEMBER_TYPES.INTERNAL}>Internal member</option>
 
-            <option value={MEMBER_TYPES.GUEST}>
-              Guest user
-            </option>
+            <option value={MEMBER_TYPES.GUEST}>Guest user</option>
           </select>
         </div>
       </div>
 
       <div className="access-role-help">
         <p>
-          <strong>Contributor:</strong> Can create,
-          update, and delete tasks.
+          <strong>Contributor:</strong> Can create, update, and delete tasks.
         </p>
 
         <p>
-          <strong>Reviewer:</strong> Can view the project
-          and its tasks without modifying them.
+          <strong>Reviewer:</strong> Can view the project and its tasks without
+          modifying them.
         </p>
 
         <p>
-          <strong>Guest:</strong> Can access only projects
-          to which they are explicitly assigned.
+          <strong>Guest:</strong> Can access only projects to which they are
+          explicitly assigned.
         </p>
       </div>
 
@@ -151,9 +117,7 @@ function InviteMemberForm({
         className="button button--primary"
         disabled={isSubmitting}
       >
-        {isSubmitting
-          ? "Sending Invitation..."
-          : "Send Invitation"}
+        {isSubmitting ? "Sending Invitation..." : "Send Invitation"}
       </button>
     </form>
   );

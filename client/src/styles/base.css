@@ -29,14 +29,11 @@
   --warning-text: #92400e;
   --warning-surface: #fef3c7;
 
-  --shadow-card:
-    0 4px 12px rgb(23 32 51 / 5%);
+  --shadow-card: 0 4px 12px rgb(23 32 51 / 5%);
 
-  --shadow-card-hover:
-    0 10px 24px rgb(23 32 51 / 10%);
+  --shadow-card-hover: 0 10px 24px rgb(23 32 51 / 10%);
 
-  --shadow-modal:
-    0 24px 60px rgb(15 23 42 / 25%);
+  --shadow-modal: 0 24px 60px rgb(15 23 42 / 25%);
 
   font-family:
     Inter,

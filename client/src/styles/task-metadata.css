@@ -99,8 +99,7 @@
   color: var(--text-muted);
 }
 
-.task-assignee--unassigned
-  .task-assignee__avatar {
+.task-assignee--unassigned .task-assignee__avatar {
   border-color: #cbd5e1;
   color: var(--status-default);
   background: var(--surface-subtle);
@@ -137,14 +136,8 @@
   height: 22px;
   border: 2px solid #ffffff;
   color: #ffffff;
-  background:
-    linear-gradient(
-      135deg,
-      #1596d1,
-      #0b577a
-    );
-  box-shadow:
-    0 1px 4px rgb(20 49 67 / 16%);
+  background: linear-gradient(135deg, #1596d1, #0b577a);
+  box-shadow: 0 1px 4px rgb(20 49 67 / 16%);
   font-size: 0.6rem;
 }
 
@@ -152,15 +145,12 @@
   max-width: 108px;
 }
 
-.task-card
-  .task-assignee--unassigned {
+.task-card .task-assignee--unassigned {
   color: #7f8b91;
   background: #f7f8f9;
 }
 
-.task-card
-  .task-assignee--unassigned
-  .task-assignee__avatar {
+.task-card .task-assignee--unassigned .task-assignee__avatar {
   border-color: #ffffff;
   color: #7f8b91;
   background: #e4e8ea;
@@ -175,13 +165,11 @@
   min-width: 220px;
 }
 
-.task-list__assignee
-  .task-assignee-list {
+.task-list__assignee .task-assignee-list {
   gap: 8px;
 }
 
-.task-list__assignee
-  .task-assignee__name {
+.task-list__assignee .task-assignee__name {
   max-width: 120px;
 }
 

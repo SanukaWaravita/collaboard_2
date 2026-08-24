@@ -1,9 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
-import {
-  apiRequest,
-  saveSession,
-} from "../services/api";
+import { apiRequest, saveSession } from "../services/api";
 import AuthVisual from "../components/AuthVisual";
 
 const REGISTER_FEATURES = [
@@ -24,9 +21,7 @@ function RegisterPage() {
     const name = String(formData.get("name")).trim();
     const email = String(formData.get("email")).trim();
     const password = String(formData.get("password"));
-    const confirmPassword = String(
-      formData.get("confirmPassword"),
-    );
+    const confirmPassword = String(formData.get("confirmPassword"));
 
     if (password !== confirmPassword) {
       setError("The passwords do not match.");
@@ -68,39 +63,27 @@ function RegisterPage() {
           }
           description={
             <>
-              Create a shared workspace where everyone
-              knows what needs to happen next.
+              Create a shared workspace where everyone knows what needs to
+              happen next.
             </>
           }
           features={REGISTER_FEATURES}
         />
 
         <section className="auth-card">
-          <div className="auth-card__brand">
-            CollaBoard
-          </div>
+          <div className="auth-card__brand">CollaBoard</div>
 
           <header className="auth-card__header">
-            <p className="auth-card__eyebrow">
-              Get started
-            </p>
+            <p className="auth-card__eyebrow">Get started</p>
 
             <h1>Create your account</h1>
 
-            <p>
-              Set up your account and start collaborating
-              with your team.
-            </p>
+            <p>Set up your account and start collaborating with your team.</p>
           </header>
 
-          <form
-            className="auth-form"
-            onSubmit={handleSubmit}
-          >
+          <form className="auth-form" onSubmit={handleSubmit}>
             <div className="auth-form__field">
-              <label htmlFor="register-name">
-                Full name
-              </label>
+              <label htmlFor="register-name">Full name</label>
 
               <input
                 id="register-name"
@@ -113,9 +96,7 @@ function RegisterPage() {
             </div>
 
             <div className="auth-form__field">
-              <label htmlFor="register-email">
-                Email address
-              </label>
+              <label htmlFor="register-email">Email address</label>
 
               <input
                 id="register-email"
@@ -128,9 +109,7 @@ function RegisterPage() {
             </div>
 
             <div className="auth-form__field">
-              <label htmlFor="register-password">
-                Password
-              </label>
+              <label htmlFor="register-password">Password</label>
 
               <input
                 id="register-password"
@@ -160,31 +139,22 @@ function RegisterPage() {
             </div>
 
             {error && (
-              <p
-                className="auth-form__error"
-                role="alert"
-              >
+              <p className="auth-form__error" role="alert">
                 {error}
               </p>
             )}
 
             <button
               type="submit"
-              className={
-                "button button--primary " +
-                "auth-form__submit"
-              }
+              className={"button button--primary " + "auth-form__submit"}
               disabled={isSubmitting}
             >
-              {isSubmitting
-                ? "Creating Account..."
-                : "Create Account"}
+              {isSubmitting ? "Creating Account..." : "Create Account"}
             </button>
           </form>
 
           <p className="auth-card__footer">
-            Already have an account?{" "}
-            <Link to="/login">Sign in</Link>
+            Already have an account? <Link to="/login">Sign in</Link>
           </p>
         </section>
       </section>

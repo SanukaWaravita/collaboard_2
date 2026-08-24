@@ -1,12 +1,7 @@
 import { Link } from "react-router";
 import { PROJECT_PERMISSIONS } from "../constants/access";
 
-function ProjectCard({
-  project,
-  onEdit,
-  onDelete,
-  isDeleting = false,
-}) {
+function ProjectCard({ project, onEdit, onDelete, isDeleting = false }) {
   const canEdit = project.permissions.includes(
     PROJECT_PERMISSIONS.UPDATE_PROJECT,
   );
@@ -18,10 +13,7 @@ function ProjectCard({
   return (
     <article className="entity-card entity-card--project">
       <div className="entity-card__body">
-        <div
-          className="entity-card__icon"
-          aria-hidden="true"
-        >
+        <div className="entity-card__icon" aria-hidden="true">
           <svg
             viewBox="0 0 24 24"
             fill="none"
@@ -36,17 +28,14 @@ function ProjectCard({
         <div className="entity-card__content">
           <div className="entity-card__heading">
             <div>
-              <span className="project-key">
-                {project.projectKey}
-              </span>
+              <span className="project-key">{project.projectKey}</span>
 
               <h2>{project.name}</h2>
             </div>
 
             <span
               className={
-                `entity-badge ` +
-                `entity-badge--${project.visibility}`
+                `entity-badge ` + `entity-badge--${project.visibility}`
               }
             >
               {project.visibility}
@@ -54,14 +43,11 @@ function ProjectCard({
           </div>
 
           <p className="entity-card__description">
-            {project.description ||
-              "No description provided."}
+            {project.description || "No description provided."}
           </p>
 
           <div className="entity-card__metadata">
-            <span>
-              Role: {project.currentUserRole ?? "None"}
-            </span>
+            <span>Role: {project.currentUserRole ?? "None"}</span>
 
             {!project.isMember && (
               <>
@@ -97,10 +83,7 @@ function ProjectCard({
           </svg>
 
           <span>
-            {project.taskCount}{" "}
-            {project.taskCount === 1
-              ? "task"
-              : "tasks"}
+            {project.taskCount} {project.taskCount === 1 ? "task" : "tasks"}
           </span>
         </div>
 
@@ -129,13 +112,9 @@ function ProjectCard({
 
           <Link
             to={
-              `/workspaces/${project.workspaceId}` +
-              `/projects/${project.id}`
+              `/workspaces/${project.workspaceId}` + `/projects/${project.id}`
             }
-            className={
-              `button button--primary ` +
-              `entity-card__open-link`
-            }
+            className={`button button--primary ` + `entity-card__open-link`}
             aria-disabled={isDeleting}
             onClick={(event) => {
               if (isDeleting) {
@@ -144,7 +123,6 @@ function ProjectCard({
             }}
           >
             Open Project
-
             <svg
               viewBox="0 0 24 24"
               fill="none"

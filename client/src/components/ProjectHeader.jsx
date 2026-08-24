@@ -9,8 +9,7 @@ function ProjectHeader({
   canAddTask = false,
   canManageMembers = false,
 }) {
-  const taskCountLabel =
-    `${taskCount} ${taskCount === 1 ? "Task" : "Tasks"}`;
+  const taskCountLabel = `${taskCount} ${taskCount === 1 ? "Task" : "Tasks"}`;
 
   return (
     <header className="board-header">
@@ -36,18 +35,14 @@ function ProjectHeader({
           <div className="project-title-row">
             <h1>{project.name}</h1>
 
-            <span className="project-task-count">
-              {taskCountLabel}
-            </span>
+            <span className="project-task-count">{taskCountLabel}</span>
           </div>
 
           <div
             className="project-header__metadata"
             aria-label="Project information"
           >
-            <span className="project-header__key">
-              {project.projectKey}
-            </span>
+            <span className="project-header__key">{project.projectKey}</span>
 
             <span aria-hidden="true">·</span>
 
@@ -68,10 +63,7 @@ function ProjectHeader({
         {canManageMembers && (
           <Link
             to={manageAccessTo}
-            className={
-              "button button--secondary " +
-              "board-header__access"
-            }
+            className={"button button--secondary " + "board-header__access"}
           >
             <svg
               viewBox="0 0 24 24"
@@ -93,19 +85,12 @@ function ProjectHeader({
         {canAddTask && (
           <button
             type="button"
-            className={
-              "button button--primary " +
-              "board-header__add-task"
-            }
+            className={"button button--primary " + "board-header__add-task"}
             onClick={() => onAddTask()}
           >
-            <span
-              className="board-header__add-icon"
-              aria-hidden="true"
-            >
+            <span className="board-header__add-icon" aria-hidden="true">
               +
             </span>
-
             Add Task
           </button>
         )}

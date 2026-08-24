@@ -159,6 +159,298 @@
   text-decoration: underline;
 }
 
+.workspace-access-overview {
+  background: var(--surface-subtle);
+}
+
+.workspace-member-list {
+  display: grid;
+  gap: 18px;
+}
+
+.workspace-member-card {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.workspace-member-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.workspace-member-card__header h2 {
+  margin: 0 0 4px;
+  font-size: 1.1rem;
+}
+
+.workspace-member-card__header p {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.workspace-member-card__summary {
+  display: grid;
+  flex: 0 0 auto;
+  justify-items: end;
+  gap: 2px;
+  text-align: right;
+}
+
+.workspace-member-card__summary strong {
+  color: var(--text);
+  font-size: 1.1rem;
+}
+
+.workspace-member-card__summary span,
+.workspace-member-card__summary small {
+  color: var(--text-muted);
+}
+
+.workspace-project-access-list {
+  display: grid;
+}
+
+.workspace-project-access-row {
+  display: grid;
+  grid-template-columns:
+    minmax(180px, 1.1fr)
+    minmax(270px, 1.5fr)
+    minmax(150px, 0.8fr)
+    minmax(160px, 0.8fr);
+  align-items: center;
+  gap: 20px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.workspace-project-access-row:last-child {
+  border-bottom: 0;
+}
+
+.workspace-project-access-row--none {
+  background: var(--surface-subtle);
+}
+
+.workspace-project-access-row__project {
+  display: grid;
+  justify-items: start;
+  gap: 7px;
+  min-width: 0;
+}
+
+.workspace-project-access-row__project h3 {
+  overflow-wrap: anywhere;
+  margin: 7px 0 0;
+  font-size: 0.96rem;
+}
+
+.workspace-project-access-row__relationship {
+  min-width: 0;
+}
+
+.workspace-project-access-row__badges {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.workspace-project-access-row__badges .entity-badge,
+.workspace-project-access-row__badges .workspace-access-source {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  line-height: 1;
+}
+
+.workspace-project-access-row__relationship strong {
+  font-size: 0.82rem;
+}
+
+.workspace-access-source {
+  display: inline-flex;
+  width: fit-content;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.workspace-access-source--explicit {
+  color: #166534;
+  background: #dcfce7;
+}
+
+.workspace-access-source--inherited {
+  color: #1d4ed8;
+  background: #dbeafe;
+}
+
+.workspace-access-source--none {
+  color: var(--text-muted);
+  background: var(--surface-subtle);
+}
+
+.workspace-project-access-row__permissions {
+  color: var(--text-muted);
+  font-size: 0.84rem;
+}
+
+.workspace-project-access-row__permissions p {
+  margin: 0;
+}
+
+.workspace-project-access-row__permissions summary {
+  width: fit-content;
+  cursor: pointer;
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.workspace-project-access-row__permissions ul {
+  display: grid;
+  gap: 4px;
+  margin: 10px 0 0;
+  padding-left: 18px;
+}
+
+.workspace-member-card__header-actions {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.workspace-role-control {
+  display: grid;
+  gap: 5px;
+}
+
+.workspace-role-control > span {
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.workspace-role-control select {
+  width: auto;
+  min-width: 130px;
+}
+
+.workspace-project-access-row__controls {
+  display: grid;
+  justify-items: stretch;
+  gap: 7px;
+}
+
+.workspace-project-access-row__controls select,
+.workspace-project-access-row__controls .button {
+  width: 100%;
+  min-width: 0;
+}
+
+.workspace-project-access-row__controls .button {
+  min-height: 35px;
+  padding: 7px 10px;
+  font-size: 0.76rem;
+}
+
+.workspace-protected-access,
+.workspace-action-progress {
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.workspace-action-notice {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border: 1px solid #86efac;
+  border-radius: 10px;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.workspace-member-card__remove-button {
+  min-height: 38px;
+  white-space: nowrap;
+}
+
+.workspace-removal-protection {
+  max-width: 190px;
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: right;
+}
+
+.workspace-invitation-list {
+  display: grid;
+  gap: 12px;
+}
+
+.workspace-invitation-card {
+  display: grid;
+  grid-template-columns:
+    minmax(220px, 1.4fr)
+    minmax(220px, 1fr)
+    minmax(190px, auto);
+  align-items: center;
+  gap: 20px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.workspace-invitation-card__identity {
+  min-width: 0;
+}
+
+.workspace-invitation-card__identity h3 {
+  overflow-wrap: anywhere;
+  margin: 0 0 4px;
+  font-size: 0.96rem;
+}
+
+.workspace-invitation-card__identity p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.workspace-invitation-card__project {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.workspace-invitation-card__project strong {
+  overflow-wrap: anywhere;
+  font-size: 0.88rem;
+}
+
+.workspace-invitation-card__access {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
 @media (max-width: 850px) {
   .access-form-grid {
     grid-template-columns: 1fr;
@@ -180,6 +472,50 @@
     justify-items: start;
     text-align: left;
   }
+
+  .workspace-member-card__header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .workspace-member-card__summary {
+    justify-items: start;
+    text-align: left;
+  }
+
+  .workspace-project-access-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .workspace-member-card__header-actions {
+    width: 100%;
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+
+  .workspace-project-access-row__controls {
+    justify-items: start;
+  }
+
+  .workspace-project-access-row__controls select,
+  .workspace-project-access-row__controls .button {
+    width: min(100%, 280px);
+  }
+
+  .workspace-removal-protection {
+    max-width: none;
+    text-align: left;
+  }
+
+  .workspace-invitation-card {
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.workspace-invitation-card__access {
+  justify-content: flex-start;
+}
 }
 
 @media (max-width: 500px) {
@@ -205,5 +541,35 @@
   .board-header__actions .button {
     width: 100%;
   }
-}
 
+  .workspace-member-card__header,
+  .workspace-project-access-row {
+    padding: 16px;
+  }
+
+  .workspace-project-access-row__project {
+    flex-direction: column;
+  }
+
+  .workspace-member-card__header-actions {
+    flex-direction: column;
+  }
+
+  .workspace-role-control,
+  .workspace-role-control select {
+    width: 100%;
+  }
+
+  .workspace-project-access-row__controls {
+    width: 100%;
+  }
+
+  .workspace-project-access-row__controls select,
+  .workspace-project-access-row__controls .button {
+    width: 100%;
+  }
+
+  .workspace-member-card__remove-button {
+    width: 100%;
+  }
+}

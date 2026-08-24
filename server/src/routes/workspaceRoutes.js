@@ -3,7 +3,6 @@ import {
   createWorkspace,
   deleteWorkspace,
   getWorkspace,
-  getWorkspaceGuests,
   getWorkspaces,
   updateWorkspace,
 } from "../controllers/workspaceController.js";
@@ -11,23 +10,31 @@ import {
   createProject,
   getProjects,
 } from "../controllers/projectController.js";
+import {
+  getWorkspaceMembers,
+  removeWorkspaceMember,
+  removeWorkspaceMemberProjectAccess,
+  setWorkspaceMemberProjectAccess,
+  updateWorkspaceMemberRole,
+} from "../controllers/workspaceMemberController.js";
 
 const router = Router();
 
-router
-  .route("/")
-  .get(getWorkspaces)
-  .post(createWorkspace);
+router.route("/").get(getWorkspaces).post(createWorkspace);
+
+router.route("/:workspaceId/projects").get(getProjects).post(createProject);
+
+router.get("/:workspaceId/members", getWorkspaceMembers);
 
 router
-  .route("/:workspaceId/projects")
-  .get(getProjects)
-  .post(createProject);
+  .route("/:workspaceId/members/:userId")
+  .patch(updateWorkspaceMemberRole)
+  .delete(removeWorkspaceMember);
 
-router.get(
-  "/:workspaceId/guests",
-  getWorkspaceGuests,
-);
+router
+  .route("/:workspaceId/members/:userId/projects/:projectId")
+  .put(setWorkspaceMemberProjectAccess)
+  .delete(removeWorkspaceMemberProjectAccess);
 
 router
   .route("/:workspaceId")

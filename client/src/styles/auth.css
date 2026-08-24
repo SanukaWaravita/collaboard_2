@@ -24,8 +24,7 @@
   border: 1px solid rgb(11 87 122 / 8%);
   border-radius: 20px;
   background: var(--surface);
-  box-shadow:
-    0 24px 60px rgb(20 49 67 / 16%);
+  box-shadow: 0 24px 60px rgb(20 49 67 / 16%);
 }
 
 /* -------------------------------- */
@@ -38,12 +37,11 @@
   justify-content: space-between;
   padding: 42px;
   color: #ffffff;
-  background:
-    linear-gradient(
-      145deg,
-      var(--auth-primary-dark),
-      var(--auth-primary)
-    );
+  background: linear-gradient(
+    145deg,
+    var(--auth-primary-dark),
+    var(--auth-primary)
+  );
 }
 
 .auth-visual__brand {
@@ -195,8 +193,7 @@
 .auth-form__field input:focus-visible {
   border-color: var(--auth-primary);
   outline: none;
-  box-shadow:
-    0 0 0 3px var(--auth-focus-ring);
+  box-shadow: 0 0 0 3px var(--auth-focus-ring);
 }
 
 .auth-form__submit {
@@ -207,14 +204,12 @@
 .auth-page .button--primary {
   color: #ffffff;
   background: var(--auth-primary);
-  box-shadow:
-    0 4px 10px rgb(21 150 209 / 20%);
+  box-shadow: 0 4px 10px rgb(21 150 209 / 20%);
 }
 
 .auth-page .button--primary:hover:not(:disabled) {
   background: var(--auth-primary-hover);
-  box-shadow:
-    0 6px 14px rgb(11 87 122 / 24%);
+  box-shadow: 0 6px 14px rgb(11 87 122 / 24%);
 }
 
 .auth-page .button--primary:focus-visible {
@@ -251,8 +246,7 @@
 
 .auth-card a:focus-visible {
   border-radius: 3px;
-  outline:
-    3px solid var(--auth-focus-ring);
+  outline: 3px solid var(--auth-focus-ring);
   outline-offset: 3px;
 }
 

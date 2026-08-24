@@ -1,19 +1,9 @@
 import { useEffect, useState } from "react";
-import {
-  Link,
-  useNavigate,
-  useParams,
-} from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 import InviteMemberForm from "../components/InviteMemberForm";
 import ProjectMemberList from "../components/ProjectMemberList";
-import {
-  INVITATION_STATUS,
-  PROJECT_PERMISSIONS,
-} from "../constants/access";
-import {
-  apiRequest,
-  clearSession,
-} from "../services/api";
+import { INVITATION_STATUS, PROJECT_PERMISSIONS } from "../constants/access";
+import { apiRequest, clearSession } from "../services/api";
 
 function ProjectAccessPage() {
   const { workspaceId, projectId } = useParams();
@@ -22,27 +12,20 @@ function ProjectAccessPage() {
   const [project, setProject] = useState(null);
   const [members, setMembers] = useState([]);
   const [invitations, setInvitations] = useState([]);
-  const [canManageMembers, setCanManageMembers] =
-    useState(false);
+  const [canManageMembers, setCanManageMembers] = useState(false);
 
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
 
-  const [inviteFormKey, setInviteFormKey] =
-    useState(0);
-  const [isInviting, setIsInviting] =
-    useState(false);
+  const [inviteFormKey, setInviteFormKey] = useState(0);
+  const [isInviting, setIsInviting] = useState(false);
   const [inviteError, setInviteError] = useState("");
 
-  const [updatingMemberId, setUpdatingMemberId] =
-    useState(null);
-  const [removingMemberId, setRemovingMemberId] =
-    useState(null);
-  const [transferringUserId, setTransferringUserId] =
-    useState(null);
-  const [cancellingInvitationId, setCancellingInvitationId] =
-    useState(null);
+  const [updatingMemberId, setUpdatingMemberId] = useState(null);
+  const [removingMemberId, setRemovingMemberId] = useState(null);
+  const [transferringUserId, setTransferringUserId] = useState(null);
+  const [cancellingInvitationId, setCancellingInvitationId] = useState(null);
   const [actionError, setActionError] = useState("");
 
   useEffect(() => {
@@ -53,22 +36,15 @@ function ProjectAccessPage() {
       setLoadError("");
 
       try {
-        const projectData = await apiRequest(
-          `/projects/${projectId}`,
-        );
+        const projectData = await apiRequest(`/projects/${projectId}`);
 
-        if (
-          projectData.project.workspaceId !== workspaceId
-        ) {
-          throw new Error(
-            "Project does not belong to this workspace",
-          );
+        if (projectData.project.workspaceId !== workspaceId) {
+          throw new Error("Project does not belong to this workspace");
         }
 
-        const canManage =
-          projectData.project.permissions.includes(
-            PROJECT_PERMISSIONS.MANAGE_MEMBERS,
-          );
+        const canManage = projectData.project.permissions.includes(
+          PROJECT_PERMISSIONS.MANAGE_MEMBERS,
+        );
 
         if (!canManage) {
           throw new Error(
@@ -76,25 +52,16 @@ function ProjectAccessPage() {
           );
         }
 
-        const [memberData, invitationData] =
-          await Promise.all([
-            apiRequest(
-              `/projects/${projectId}/members`,
-            ),
-            apiRequest(
-              `/projects/${projectId}/invitations`,
-            ),
-          ]);
+        const [memberData, invitationData] = await Promise.all([
+          apiRequest(`/projects/${projectId}/members`),
+          apiRequest(`/projects/${projectId}/invitations`),
+        ]);
 
         if (!shouldIgnore) {
           setProject(projectData.project);
           setMembers(memberData.members);
-          setCanManageMembers(
-            memberData.canManageMembers,
-          );
-          setInvitations(
-            invitationData.invitations,
-          );
+          setCanManageMembers(memberData.canManageMembers);
+          setInvitations(invitationData.invitations);
         }
       } catch (requestError) {
         if (shouldIgnore) {
@@ -120,34 +87,24 @@ function ProjectAccessPage() {
     return () => {
       shouldIgnore = true;
     };
-  }, [
-    workspaceId,
-    projectId,
-    navigate,
-    reloadKey,
-  ]);
+  }, [workspaceId, projectId, navigate, reloadKey]);
 
   async function handleInvite(invitationData) {
     setInviteError("");
     setIsInviting(true);
 
     try {
-      const data = await apiRequest(
-        `/projects/${projectId}/invitations`,
-        {
-          method: "POST",
-          body: invitationData,
-        },
-      );
+      const data = await apiRequest(`/projects/${projectId}/invitations`, {
+        method: "POST",
+        body: invitationData,
+      });
 
       setInvitations((currentInvitations) => [
         data.invitation,
         ...currentInvitations,
       ]);
 
-      setInviteFormKey(
-        (currentKey) => currentKey + 1,
-      );
+      setInviteFormKey((currentKey) => currentKey + 1);
     } catch (requestError) {
       if (requestError.status === 401) {
         clearSession();
@@ -207,17 +164,13 @@ function ProjectAccessPage() {
     setRemovingMemberId(member.userId);
 
     try {
-      await apiRequest(
-        `/projects/${projectId}/members/${member.userId}`,
-        {
-          method: "DELETE",
-        },
-      );
+      await apiRequest(`/projects/${projectId}/members/${member.userId}`, {
+        method: "DELETE",
+      });
 
       setMembers((currentMembers) =>
         currentMembers.filter(
-          (currentMember) =>
-            currentMember.userId !== member.userId,
+          (currentMember) => currentMember.userId !== member.userId,
         ),
       );
     } catch (requestError) {
@@ -246,20 +199,16 @@ function ProjectAccessPage() {
     setTransferringUserId(member.userId);
 
     try {
-      await apiRequest(
-        `/projects/${projectId}/transfer-ownership`,
-        {
-          method: "POST",
-          body: {
-            userId: member.userId,
-          },
+      await apiRequest(`/projects/${projectId}/transfer-ownership`, {
+        method: "POST",
+        body: {
+          userId: member.userId,
         },
-      );
+      });
 
-      navigate(
-        `/workspaces/${workspaceId}/projects/${projectId}`,
-        { replace: true },
-      );
+      navigate(`/workspaces/${workspaceId}/projects/${projectId}`, {
+        replace: true,
+      });
     } catch (requestError) {
       if (requestError.status === 401) {
         clearSession();
@@ -293,12 +242,10 @@ function ProjectAccessPage() {
       );
 
       setInvitations((currentInvitations) =>
-        currentInvitations.map(
-          (currentInvitation) =>
-            currentInvitation.id ===
-            data.invitation.id
-              ? data.invitation
-              : currentInvitation,
+        currentInvitations.map((currentInvitation) =>
+          currentInvitation.id === data.invitation.id
+            ? data.invitation
+            : currentInvitation,
         ),
       );
     } catch (requestError) {
@@ -328,19 +275,13 @@ function ProjectAccessPage() {
     return (
       <main className="access-page">
         <section className="page-error">
-          <p role="alert">
-            {loadError || "Project not found"}
-          </p>
+          <p role="alert">{loadError || "Project not found"}</p>
 
           <div className="page-error__actions">
             <button
               type="button"
               className="button button--secondary"
-              onClick={() =>
-                setReloadKey(
-                  (currentKey) => currentKey + 1,
-                )
-              }
+              onClick={() => setReloadKey((currentKey) => currentKey + 1)}
             >
               Try Again
             </button>
@@ -349,9 +290,7 @@ function ProjectAccessPage() {
               type="button"
               className="button button--primary"
               onClick={() =>
-                navigate(
-                  `/workspaces/${workspaceId}/projects/${projectId}`,
-                )
+                navigate(`/workspaces/${workspaceId}/projects/${projectId}`)
               }
             >
               Project
@@ -363,13 +302,11 @@ function ProjectAccessPage() {
   }
 
   const pendingInvitations = invitations.filter(
-    (invitation) =>
-      invitation.status === INVITATION_STATUS.PENDING,
+    (invitation) => invitation.status === INVITATION_STATUS.PENDING,
   );
 
   const invitationHistory = invitations.filter(
-    (invitation) =>
-      invitation.status !== INVITATION_STATUS.PENDING,
+    (invitation) => invitation.status !== INVITATION_STATUS.PENDING,
   );
 
   return (
@@ -383,15 +320,11 @@ function ProjectAccessPage() {
             ← Back to project
           </Link>
 
-          <p className="board-header__eyebrow">
-            {project.projectKey}
-          </p>
+          <p className="board-header__eyebrow">{project.projectKey}</p>
 
           <h1>Project Access</h1>
 
-          <p>
-            Manage access to {project.name}.
-          </p>
+          <p>Manage access to {project.name}.</p>
         </div>
       </header>
 
@@ -417,33 +350,24 @@ function ProjectAccessPage() {
         transferringUserId={transferringUserId}
         onRoleChange={handleRoleChange}
         onRemove={handleRemoveMember}
-        onTransferOwnership={
-          handleTransferOwnership
-        }
+        onTransferOwnership={handleTransferOwnership}
       />
 
       <section className="access-panel">
         <header className="access-panel__header">
           <div>
-            <p className="task-form__eyebrow">
-              Invitations
-            </p>
+            <p className="task-form__eyebrow">Invitations</p>
 
             <h2>Pending invitations</h2>
           </div>
         </header>
 
         {pendingInvitations.length === 0 ? (
-          <p className="access-empty">
-            There are no pending invitations.
-          </p>
+          <p className="access-empty">There are no pending invitations.</p>
         ) : (
           <div className="invitation-list">
             {pendingInvitations.map((invitation) => (
-              <article
-                key={invitation.id}
-                className="invitation-card"
-              >
+              <article key={invitation.id} className="invitation-card">
                 <div>
                   <h3>{invitation.email}</h3>
 
@@ -457,16 +381,10 @@ function ProjectAccessPage() {
                 <button
                   type="button"
                   className="button button--danger"
-                  onClick={() =>
-                    handleCancelInvitation(invitation)
-                  }
-                  disabled={
-                    cancellingInvitationId ===
-                    invitation.id
-                  }
+                  onClick={() => handleCancelInvitation(invitation)}
+                  disabled={cancellingInvitationId === invitation.id}
                 >
-                  {cancellingInvitationId ===
-                  invitation.id
+                  {cancellingInvitationId === invitation.id
                     ? "Cancelling..."
                     : "Cancel Invitation"}
                 </button>
@@ -480,9 +398,7 @@ function ProjectAccessPage() {
         <section className="access-panel">
           <header className="access-panel__header">
             <div>
-              <p className="task-form__eyebrow">
-                Previous activity
-              </p>
+              <p className="task-form__eyebrow">Previous activity</p>
 
               <h2>Invitation history</h2>
             </div>
@@ -490,10 +406,7 @@ function ProjectAccessPage() {
 
           <div className="invitation-list">
             {invitationHistory.map((invitation) => (
-              <article
-                key={invitation.id}
-                className="invitation-card"
-              >
+              <article key={invitation.id} className="invitation-card">
                 <div>
                   <h3>{invitation.email}</h3>
 
@@ -504,9 +417,7 @@ function ProjectAccessPage() {
                   </p>
                 </div>
 
-                <span className="entity-badge">
-                  {invitation.status}
-                </span>
+                <span className="entity-badge">{invitation.status}</span>
               </article>
             ))}
           </div>

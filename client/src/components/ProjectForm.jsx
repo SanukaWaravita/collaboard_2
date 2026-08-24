@@ -16,17 +16,11 @@ function ProjectForm({
 
     const formData = new FormData(event.currentTarget);
 
-    const name = String(
-      formData.get("name") ?? "",
-    ).trim();
+    const name = String(formData.get("name") ?? "").trim();
 
-    const description = String(
-      formData.get("description") ?? "",
-    ).trim();
+    const description = String(formData.get("description") ?? "").trim();
 
-    const visibility = String(
-      formData.get("visibility") ?? "private",
-    );
+    const visibility = String(formData.get("visibility") ?? "private");
 
     if (!name) {
       return;
@@ -39,9 +33,7 @@ function ProjectForm({
     };
 
     if (!isEditing) {
-      const projectKey = String(
-        formData.get("projectKey") ?? "",
-      )
+      const projectKey = String(formData.get("projectKey") ?? "")
         .trim()
         .toUpperCase();
 
@@ -69,9 +61,7 @@ function ProjectForm({
             </p>
 
             <h2 id="project-form-title">
-              {isEditing
-                ? "Update project"
-                : "Create a project"}
+              {isEditing ? "Update project" : "Create a project"}
             </h2>
           </div>
 
@@ -87,9 +77,7 @@ function ProjectForm({
         </header>
 
         <div className="task-form__field">
-          <label htmlFor="project-name">
-            Project name
-          </label>
+          <label htmlFor="project-name">Project name</label>
 
           <input
             id="project-name"
@@ -105,9 +93,7 @@ function ProjectForm({
 
         {!isEditing && (
           <div className="task-form__field">
-            <label htmlFor="project-key">
-              Project key
-            </label>
+            <label htmlFor="project-key">Project key</label>
 
             <input
               id="project-key"
@@ -121,17 +107,15 @@ function ProjectForm({
             />
 
             <small>
-              Optional. It must contain 2–10 letters or
-              numbers and begin with a letter.
+              Optional. It must contain 2–10 letters or numbers and begin with a
+              letter.
             </small>
           </div>
         )}
 
         {isEditing && (
           <div className="task-form__field">
-            <label htmlFor="existing-project-key">
-              Project key
-            </label>
+            <label htmlFor="existing-project-key">Project key</label>
 
             <input
               id="existing-project-key"
@@ -140,17 +124,12 @@ function ProjectForm({
               disabled
             />
 
-            <small>
-              Project keys cannot be changed after
-              creation.
-            </small>
+            <small>Project keys cannot be changed after creation.</small>
           </div>
         )}
 
         <div className="task-form__field">
-          <label htmlFor="project-description">
-            Description
-          </label>
+          <label htmlFor="project-description">Description</label>
 
           <textarea
             id="project-description"
@@ -163,16 +142,12 @@ function ProjectForm({
         </div>
 
         <div className="task-form__field">
-          <label htmlFor="project-visibility">
-            Visibility
-          </label>
+          <label htmlFor="project-visibility">Visibility</label>
 
           <select
             id="project-visibility"
             name="visibility"
-            defaultValue={
-              initialProject?.visibility ?? "private"
-            }
+            defaultValue={initialProject?.visibility ?? "private"}
             disabled={isSubmitting}
           >
             <option value="private">Private</option>
@@ -180,9 +155,8 @@ function ProjectForm({
           </select>
 
           <small>
-            Open projects can be viewed by ordinary
-            workspace members. Private projects require
-            explicit membership.
+            Open projects can be viewed by ordinary workspace members. Private
+            projects require explicit membership.
           </small>
         </div>
 

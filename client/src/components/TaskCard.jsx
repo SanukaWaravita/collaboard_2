@@ -1,7 +1,4 @@
-import {
-  getDueDateLabel,
-  getDueDateState,
-} from "../utils/taskDueDate";
+import { getDueDateLabel, getDueDateState } from "../utils/taskDueDate";
 import { resolveTaskAssignees } from "../utils/taskAssignee";
 
 function TaskCard({
@@ -19,49 +16,27 @@ function TaskCard({
   isDragging = false,
   isMoving = false,
 }) {
-  const taskAssignees = resolveTaskAssignees(
-    task.assigneeIds,
-    projectMembers,
-  );
+  const taskAssignees = resolveTaskAssignees(task.assigneeIds, projectMembers);
 
-  const statusName =
-    workflowStatus?.name ?? "Unknown Status";
+  const statusName = workflowStatus?.name ?? "Unknown Status";
 
-  const statusColor =
-    workflowStatus?.color ?? "#64748b";
+  const statusColor = workflowStatus?.color ?? "#64748b";
 
-  const isCompleted =
-    workflowStatus?.isCompleted ?? false;
+  const isCompleted = workflowStatus?.isCompleted ?? false;
 
-  const dueDateState = getDueDateState(
-    task.dueDate,
-    isCompleted,
-  );
+  const dueDateState = getDueDateState(task.dueDate, isCompleted);
 
-  const dueDateLabel = getDueDateLabel(
-    task.dueDate,
-    isCompleted,
-  );
+  const dueDateLabel = getDueDateLabel(task.dueDate, isCompleted);
 
   const isBusy = isDeleting || isMoving;
 
-  const busyLabel = isDeleting
-    ? "Deleting..."
-    : isMoving
-      ? "Moving..."
-      : "";
+  const busyLabel = isDeleting ? "Deleting..." : isMoving ? "Moving..." : "";
 
   const taskCardClassName = [
     "task-card",
-    isDragging
-      ? "task-card--dragging"
-      : "",
-    isMoving
-      ? "task-card--moving"
-      : "",
-    isDeleting
-      ? "task-card--deleting"
-      : "",
+    isDragging ? "task-card--dragging" : "",
+    isMoving ? "task-card--moving" : "",
+    isDeleting ? "task-card--deleting" : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -70,17 +45,12 @@ function TaskCard({
     <article
       className={taskCardClassName}
       draggable={canDrag && !isBusy}
-      onDragStart={(event) =>
-        onDragStart?.(event, task)
-      }
+      onDragStart={(event) => onDragStart?.(event, task)}
       onDragEnd={onDragEnd}
       data-task-id={task.id}
     >
       {canDrag && !isBusy && (
-        <div
-          className="task-card__drag-handle"
-          aria-hidden="true"
-        >
+        <div className="task-card__drag-handle" aria-hidden="true">
           <svg viewBox="0 0 24 24">
             <circle cx="9" cy="7" r="1.5" />
 
@@ -104,19 +74,13 @@ function TaskCard({
             "--status-color": statusColor,
           }}
         >
-          <span
-            className="task-status__dot"
-            aria-hidden="true"
-          />
+          <span className="task-status__dot" aria-hidden="true" />
 
           {statusName}
         </span>
 
         {busyLabel && (
-          <span
-            className="task-card__moving-status"
-            role="status"
-          >
+          <span className="task-card__moving-status" role="status">
             {busyLabel}
           </span>
         )}
@@ -125,66 +89,40 @@ function TaskCard({
       <h3>{task.title}</h3>
 
       {task.description && (
-        <p className="task-card__description">
-          {task.description}
-        </p>
+        <p className="task-card__description">{task.description}</p>
       )}
 
       <div className="task-card__metadata">
         {task.dueDate && (
-          <span
-            className={
-              "task-due-date " +
-              `task-due-date--${dueDateState}`
-            }
-          >
+          <span className={"task-due-date " + `task-due-date--${dueDateState}`}>
             {dueDateLabel}
           </span>
         )}
 
-        <div
-          className="task-assignee-list"
-          aria-label="Task Assignees"
-        >
+        <div className="task-assignee-list" aria-label="Task Assignees">
           {taskAssignees.length === 0 ? (
             <div
-              className={
-                "task-assignee " +
-                "task-assignee--unassigned"
-              }
+              className={"task-assignee " + "task-assignee--unassigned"}
               title="Unassigned"
             >
-              <span
-                className="task-assignee__avatar"
-                aria-hidden="true"
-              >
+              <span className="task-assignee__avatar" aria-hidden="true">
                 —
               </span>
 
-              <span className="task-assignee__name">
-                Unassigned
-              </span>
+              <span className="task-assignee__name">Unassigned</span>
             </div>
           ) : (
             taskAssignees.map((assignee) => (
               <div
                 key={assignee.userId}
                 className="task-assignee"
-                title={
-                  assignee.email ??
-                  assignee.name
-                }
+                title={assignee.email ?? assignee.name}
               >
-                <span
-                  className="task-assignee__avatar"
-                  aria-hidden="true"
-                >
+                <span className="task-assignee__avatar" aria-hidden="true">
                   {assignee.initial}
                 </span>
 
-                <span className="task-assignee__name">
-                  {assignee.name}
-                </span>
+                <span className="task-assignee__name">{assignee.name}</span>
               </div>
             ))
           )}
@@ -221,21 +159,14 @@ function TaskCard({
               <button
                 type="button"
                 className={
-                  "task-card__icon-button " +
-                  "task-card__icon-button--danger"
+                  "task-card__icon-button " + "task-card__icon-button--danger"
                 }
                 onClick={() => onDelete(task)}
                 disabled={isBusy}
                 aria-label={
-                  isDeleting
-                    ? `Deleting ${task.title}`
-                    : `Delete ${task.title}`
+                  isDeleting ? `Deleting ${task.title}` : `Delete ${task.title}`
                 }
-                title={
-                  isDeleting
-                    ? "Deleting Task"
-                    : "Delete Task"
-                }
+                title={isDeleting ? "Deleting Task" : "Delete Task"}
               >
                 <svg
                   viewBox="0 0 24 24"

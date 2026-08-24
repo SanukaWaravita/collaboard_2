@@ -27,18 +27,11 @@ export async function apiRequest(
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers: {
-      ...(body !== undefined
-        ? { "Content-Type": "application/json" }
-        : {}),
-      ...(token
-        ? { Authorization: `Bearer ${token}` }
-        : {}),
+      ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...headers,
     },
-    body:
-      body === undefined
-        ? undefined
-        : JSON.stringify(body),
+    body: body === undefined ? undefined : JSON.stringify(body),
   });
 
   if (response.status === 204) {
