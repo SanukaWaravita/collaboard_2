@@ -2,7 +2,7 @@
 
 ## 1. Purpose
 
-This document defines the REST API used by the CollaBoard React client.
+This document declearnes the REST API used by the CollaBoard React client.
 
 CollaBoard currently stores users, Workspaces, Projects, workflow statuses, memberships, invitations, and Tasks in server memory.
 
@@ -236,21 +236,273 @@ Successful deletion returns:
 204 No Content
 ```
 
-### List Workspace guest users
+```markdown
+### List and manage Workspace members
 
 ```http
-GET /api/workspaces/:workspaceId/guests
+GET /api/workspaces/:workspaceId/members
 ```
 
-This endpoint requires Workspace member-management permission.
+Requires Workspace member-management permission.
 
-Response:
+The response includes:
+
+- the Workspace summary;
+- every Workspace member;
+- every Project in the Workspace;
+- each member's effective Project access;
+- pending internal and guest invitations;
+- the authenticated user's ID.
+
+Example response:
 
 ```json
 {
-  "guests": [],
-  "pendingGuestInvitations": []
+  "workspace": {
+    "id": "collaboard-workspace",
+    "name": "CollaBoard Workspace",
+    "slug": "collaboard-workspace",
+    "ownerId": "owner-user-id"
+  },
+  "members": [
+    {
+      "userId": "member-user-id",
+      "name": "Member Name",
+      "email": "member@example.com",
+      "workspaceRole": "MEMBER",
+      "memberType": "INTERNAL",
+      "workspacePermissions": [],
+      "isWorkspaceOwner": false,
+      "projectAccess": [
+        {
+          "projectId": "collabboard-development",
+          "projectKey": "CBD",
+          "name": "CollaBoard Development",
+          "visibility": "open",
+          "hasAccess": true,
+          "accessSource": "EXPLICIT",
+          "projectRole": "CONTRIBUTOR",
+          "permissions": [],
+          "isProjectMember": true,
+          "isProjectOwner": false
+        }
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "id": "collabboard-development",
+      "projectKey": "CBD",
+      "name": "CollaBoard Development",
+      "visibility": "open"
+    }
+  ],
+  "pendingInvitations": [],
+  "currentUserId": "owner-user-id",
+  "canManageMembers": true
 }
+```
+
+### Change a Workspace member's role
+
+```http
+PATCH /api/workspaces/:workspaceId/members/:userId
+```
+
+Request:
+
+```json
+{
+  "role": "MEMBER"
+}
+```
+
+Editable roles are:
+
+```text
+ADMIN
+MEMBER
+GUEST
+```
+
+Rules:
+
+- the Workspace Owner's role cannot be changed;
+- users cannot change their own Workspace role;
+- only the Workspace Owner can grant or remove `ADMIN`;
+- a Project Owner cannot become a guest until Project ownership is transferred;
+- changing between internal and guest access recalculates inherited open-Project access.
+
+### Grant or update explicit Project access
+
+```http
+PUT /api/workspaces/:workspaceId/members/:userId/projects/:projectId
+```
+
+Request:
+
+```json
+{
+  "role": "CONTRIBUTOR"
+}
+```
+
+Allowed roles:
+
+```text
+CONTRIBUTOR
+REVIEWER
+```
+
+The endpoint creates explicit Project membership when none exists and updates the role when membership already exists.
+
+Changing a contributor to a reviewer clears that user's affected Task assignments.
+
+### Remove explicit Project access
+
+```http
+DELETE /api/workspaces/:workspaceId/members/:userId/projects/:projectId
+```
+
+Removing explicit access:
+
+- preserves inherited Reviewer access to an open Project for internal members;
+- removes Task assignments in that Project;
+- removes an unused guest Workspace membership when the guest has no remaining Project membership;
+- cannot remove a Project Owner.
+
+Inherited access cannot be removed individually.
+
+### Remove a Workspace member
+
+```http
+DELETE /api/workspaces/:workspaceId/members/:userId
+```
+
+Removing a Workspace member also:
+
+- removes their Project memberships in the Workspace;
+- clears their Task assignments in those Projects;
+- cancels applicable pending invitations;
+- removes inherited access to open Projects.
+
+The Workspace Owner cannot be removed. Project ownership must be transferred before removing a Project Owner.
+
+### Create Workspace-level Project invitations
+
+```http
+POST /api/workspaces/:workspaceId/invitations
+```
+
+Requires Workspace member-management permission.
+
+The endpoint creates one Project invitation for every valid Project selection.
+
+Request:
+
+```json
+{
+  "email": "developer@example.com",
+  "memberType": "GUEST",
+  "projects": [
+    {
+      "projectId": "collabboard-development",
+      "role": "CONTRIBUTOR"
+    },
+    {
+      "projectId": "m1-planning",
+      "role": "REVIEWER"
+    }
+  ]
+}
+```
+
+Rules:
+
+- a valid email address is required;
+- the inviter cannot invite themselves;
+- `memberType` must be `INTERNAL` or `GUEST`;
+- at least one Project must be selected;
+- every selected Project must belong to the Workspace;
+- a Project cannot be selected more than once;
+- each role must be `CONTRIBUTOR` or `REVIEWER`;
+- Project ownership cannot be granted through an invitation;
+- existing Project members are skipped;
+- duplicate pending invitations are skipped;
+- valid selections are still created when another selection is skipped;
+- an existing non-guest Workspace member is treated as `INTERNAL`.
+
+Successful response:
+
+```http
+201 Created
+```
+
+Example:
+
+```json
+{
+  "message": "1 invitation created",
+  "invitations": [
+    {
+      "id": "generated-invitation-id",
+      "workspaceId": "collaboard-workspace",
+      "projectId": "collabboard-development",
+      "email": "developer@example.com",
+      "role": "CONTRIBUTOR",
+      "memberType": "GUEST",
+      "status": "PENDING",
+      "project": {
+        "id": "collabboard-development",
+        "projectKey": "CBD",
+        "name": "CollaBoard Development",
+        "visibility": "open"
+      }
+    }
+  ],
+  "skippedProjects": [
+    {
+      "projectId": "m1-planning",
+      "projectKey": "M1",
+      "projectName": "Milestone 1 Planning",
+      "reason": "PENDING_INVITATION_EXISTS",
+      "message": "A pending invitation already exists"
+    }
+  ]
+}
+```
+
+When every selection is skipped:
+
+```http
+409 Conflict
+```
+
+### Cancel a pending Workspace invitation
+
+```http
+DELETE /api/workspaces/:workspaceId/invitations/:invitationId
+```
+
+Requires Workspace member-management permission.
+
+The invitation must:
+
+- belong to the selected Workspace;
+- currently have `PENDING` status.
+
+Successful cancellation changes the status to:
+
+```text
+CANCELLED
+```
+
+and records the response time in `respondedAt`.
+
+Attempting to cancel an invitation that is no longer pending returns:
+
+```http
+404 Not Found
 ```
 
 ---

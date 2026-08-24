@@ -20,6 +20,8 @@ Implemented:
 - open and private Project visibility;
 - Project Owner, Contributor, and Reviewer roles;
 - Project invitations for internal users and guests;
+- Workspace-level bulk invitations across multiple Projects;
+- independent Contributor or Reviewer roles for each invited Project;
 - invitation acceptance, decline, and cancellation;
 - customizable Project workflow statuses;
 - Kanban and List task views;
@@ -94,7 +96,9 @@ Workspace Owners and Admins can open the **Members & Access** page to:
 - grant explicit Project access;
 - change a Project member between Contributor and Reviewer;
 - remove explicit Project access without removing inherited open-Project access;
-- review pending guest invitations;
+- invite internal members or guests to multiple Projects in one operation;
+- assign an independent Contributor or Reviewer role to every selected Project;
+- review and cancel pending internal and guest invitations;
 - remove a Workspace member, subject to ownership protections.
 
 Removing a Workspace member also removes that user from the Workspace's Projects, clears their Task assignments in those Projects, and cleans up applicable pending invitations. Workspace and Project owners must be reassigned before they can be removed or changed in a way that would leave owned resources without an owner.
@@ -341,6 +345,8 @@ Authorization: Bearer <token>
 | `DELETE` | `/api/workspaces/:workspaceId/members/:userId` | Remove a Workspace member and related access |
 | `PUT` | `/api/workspaces/:workspaceId/members/:userId/projects/:projectId` | Grant or update explicit Project access |
 | `DELETE` | `/api/workspaces/:workspaceId/members/:userId/projects/:projectId` | Remove explicit Project access |
+| `POST` | `/api/workspaces/:workspaceId/invitations` | Create invitations for one or more Workspace Projects |
+| `DELETE` | `/api/workspaces/:workspaceId/invitations/:invitationId` | Cancel a pending Workspace invitation |
 
 ### Project endpoints
 

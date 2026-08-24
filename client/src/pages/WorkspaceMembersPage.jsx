@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import WorkspaceMemberAccessCard from "../components/WorkspaceMemberAccessCard";
 import { apiRequest, clearSession } from "../services/api";
+import WorkspaceInvitationForm from "../components/WorkspaceInvitationForm";
 
 function formatInvitationDate(value) {
   if (!value) {
@@ -67,6 +68,18 @@ function WorkspaceMembersPage() {
 
   const [actionNotice, setActionNotice] = useState("");
 
+  const [projects, setProjects] = useState([]);
+
+  const [invitationFormKey, setInvitationFormKey] = useState(0);
+
+  const [isInviting, setIsInviting] = useState(false);
+
+  const [inviteError, setInviteError] = useState("");
+
+  const [inviteResult, setInviteResult] = useState(null);
+
+  const [cancellingInvitationId, setCancellingInvitationId] = useState(null);
+
   useEffect(() => {
     let shouldIgnore = false;
 
@@ -79,9 +92,12 @@ function WorkspaceMembersPage() {
 
         if (!shouldIgnore) {
           setWorkspace(data.workspace);
-          setMembers(data.members);
-          setPendingInvitations(data.pendingInvitations);
-          setCurrentUserId(data.currentUserId);
+          setMembers(data.members ?? []);
+          setProjects(data.projects ?? []);
+
+          setPendingInvitations(data.pendingInvitations ?? []);
+
+          setCurrentUserId(data.currentUserId ?? null);
         }
       } catch (requestError) {
         if (shouldIgnore) {
@@ -402,6 +418,94 @@ function WorkspaceMembersPage() {
     }
   }
 
+  async function handleInvite(invitationData) {
+    setInviteError("");
+    setInviteResult(null);
+    setIsInviting(true);
+
+    try {
+      const data = await apiRequest(`/workspaces/${workspaceId}/invitations`, {
+        method: "POST",
+        body: invitationData,
+      });
+
+      setPendingInvitations((currentInvitations) => [
+        ...data.invitations,
+        ...currentInvitations.filter(
+          (currentInvitation) =>
+            !data.invitations.some(
+              (newInvitation) => newInvitation.id === currentInvitation.id,
+            ),
+        ),
+      ]);
+
+      setInviteResult({
+        message: data.message,
+        skippedProjects: data.skippedProjects ?? [],
+      });
+
+      setInvitationFormKey((currentKey) => currentKey + 1);
+    } catch (requestError) {
+      if (requestError.status === 401) {
+        clearSession();
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      setInviteError(requestError.message);
+    } finally {
+      setIsInviting(false);
+    }
+  }
+
+  async function handleCancelInvitation(invitation) {
+    const projectName = invitation.project?.name ?? "the selected Project";
+
+    const shouldCancel = window.confirm(
+      `Cancel the invitation for ` +
+        `"${invitation.email}" to ` +
+        `"${projectName}"?`,
+    );
+
+    if (!shouldCancel) {
+      return;
+    }
+
+    setActionError("");
+    setActionNotice("");
+    setCancellingInvitationId(invitation.id);
+
+    try {
+      await apiRequest(
+        `/workspaces/${workspaceId}` + `/invitations/${invitation.id}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      setPendingInvitations((currentInvitations) =>
+        currentInvitations.filter(
+          (currentInvitation) => currentInvitation.id !== invitation.id,
+        ),
+      );
+
+      setActionNotice(
+        `The invitation for ${invitation.email} ` +
+          `to ${projectName} was cancelled.`,
+      );
+    } catch (requestError) {
+      if (requestError.status === 401) {
+        clearSession();
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      setActionError(requestError.message);
+    } finally {
+      setCancellingInvitationId(null);
+    }
+  }
+
   if (isLoading) {
     return (
       <main className="access-page">
@@ -479,6 +583,15 @@ function WorkspaceMembersPage() {
           {actionNotice}
         </p>
       )}
+
+      <WorkspaceInvitationForm
+        key={invitationFormKey}
+        projects={projects}
+        onSubmit={handleInvite}
+        isSubmitting={isInviting}
+        error={inviteError}
+        result={inviteResult}
+      />
 
       <section className="access-panel workspace-access-overview">
         <header className="access-panel__header">
@@ -595,6 +708,17 @@ function WorkspaceMembersPage() {
                   <span className="workspace-access-source workspace-access-source--inherited">
                     Pending
                   </span>
+
+                  <button
+                    type="button"
+                    className="button button--danger"
+                    onClick={() => handleCancelInvitation(invitation)}
+                    disabled={cancellingInvitationId === invitation.id}
+                  >
+                    {cancellingInvitationId === invitation.id
+                      ? "Cancelling..."
+                      : "Cancel Invitation"}
+                  </button>
                 </div>
               </article>
             ))}

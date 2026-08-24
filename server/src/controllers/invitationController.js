@@ -477,3 +477,305 @@ export function declineInvitation(
     invitation: presentInvitation(invitation),
   });
 }
+
+export function inviteWorkspaceProjectMembers(
+  request,
+  response,
+) {
+  const workspace = store.workspaces.find(
+    (item) =>
+      item.id === request.params.workspaceId,
+  );
+
+  if (!workspace) {
+    return response.status(404).json({
+      message: "Workspace not found",
+    });
+  }
+
+  if (
+    !hasWorkspacePermission(
+      workspace,
+      request.user.id,
+      WORKSPACE_PERMISSIONS.MANAGE_MEMBERS,
+    )
+  ) {
+    return response.status(403).json({
+      message:
+        "Workspace member management permission is required",
+    });
+  }
+
+  const {
+    email,
+    memberType = MEMBER_TYPES.INTERNAL,
+    projects = [],
+  } = request.body ?? {};
+
+  const normalizedEmail = String(email ?? "")
+    .trim()
+    .toLowerCase();
+
+  if (!isValidEmail(normalizedEmail)) {
+    return response.status(400).json({
+      message: "A valid email address is required",
+    });
+  }
+
+  if (normalizedEmail === request.user.email) {
+    return response.status(400).json({
+      message: "You cannot invite yourself",
+    });
+  }
+
+  if (
+    !Object.values(MEMBER_TYPES).includes(memberType)
+  ) {
+    return response.status(400).json({
+      message:
+        "Member type must be INTERNAL or GUEST",
+    });
+  }
+
+  if (!Array.isArray(projects) || projects.length === 0) {
+    return response.status(400).json({
+      message:
+        "At least one Project must be selected",
+    });
+  }
+
+  const normalizedSelections = projects.map(
+    (selection) => ({
+      projectId: String(
+        selection?.projectId ?? "",
+      ).trim(),
+
+      role: String(
+        selection?.role ??
+          PROJECT_ROLES.REVIEWER,
+      ).trim(),
+    }),
+  );
+
+  const selectedProjectIds = new Set();
+
+  for (const selection of normalizedSelections) {
+    if (!selection.projectId) {
+      return response.status(400).json({
+        message:
+          "Every Project selection requires a projectId",
+      });
+    }
+
+    if (
+      !allowedInvitationRoles.has(selection.role)
+    ) {
+      return response.status(400).json({
+        message:
+          "Every Project role must be CONTRIBUTOR or REVIEWER",
+      });
+    }
+
+    if (
+      selectedProjectIds.has(selection.projectId)
+    ) {
+      return response.status(400).json({
+        message:
+          "A Project cannot be selected more than once",
+      });
+    }
+
+    selectedProjectIds.add(selection.projectId);
+  }
+
+  const selectedProjects = normalizedSelections.map(
+    (selection) => {
+      const project = store.projects.find(
+        (item) =>
+          item.id === selection.projectId &&
+          item.workspaceId === workspace.id,
+      );
+
+      return {
+        ...selection,
+        project,
+      };
+    },
+  );
+
+  const missingSelection = selectedProjects.find(
+    (selection) => !selection.project,
+  );
+
+  if (missingSelection) {
+    return response.status(400).json({
+      message:
+        "Every selected Project must belong to this Workspace",
+    });
+  }
+
+  const invitedUser = store.users.find(
+    (user) => user.email === normalizedEmail,
+  );
+
+  const existingWorkspaceMembership = invitedUser
+    ? getWorkspaceMembership(
+        workspace.id,
+        invitedUser.id,
+      )
+    : null;
+
+  let effectiveMemberType = memberType;
+
+  if (
+    existingWorkspaceMembership &&
+    existingWorkspaceMembership.role !==
+      WORKSPACE_ROLES.GUEST
+  ) {
+    effectiveMemberType = MEMBER_TYPES.INTERNAL;
+  }
+
+  const createdInvitations = [];
+  const skippedProjects = [];
+
+  for (const selection of selectedProjects) {
+    const { project, role } = selection;
+
+    const existingProjectMembership = invitedUser
+      ? getProjectMembership(
+          project.id,
+          invitedUser.id,
+        )
+      : null;
+
+    if (existingProjectMembership) {
+      skippedProjects.push({
+        projectId: project.id,
+        projectKey: project.projectKey,
+        projectName: project.name,
+        reason: "ALREADY_MEMBER",
+        message:
+          "The user is already a member of this Project",
+      });
+
+      continue;
+    }
+
+    const existingInvitation =
+      store.projectInvitations.find(
+        (invitation) =>
+          invitation.projectId === project.id &&
+          invitation.email === normalizedEmail &&
+          invitation.status ===
+            INVITATION_STATUS.PENDING,
+      );
+
+    if (existingInvitation) {
+      skippedProjects.push({
+        projectId: project.id,
+        projectKey: project.projectKey,
+        projectName: project.name,
+        reason: "PENDING_INVITATION_EXISTS",
+        message:
+          "A pending invitation already exists",
+      });
+
+      continue;
+    }
+
+    const invitation = {
+      id: randomUUID(),
+      workspaceId: workspace.id,
+      projectId: project.id,
+      email: normalizedEmail,
+      role,
+      memberType: effectiveMemberType,
+      status: INVITATION_STATUS.PENDING,
+      invitedById: request.user.id,
+      createdAt: new Date().toISOString(),
+      respondedAt: null,
+    };
+
+    store.projectInvitations.push(invitation);
+    createdInvitations.push(invitation);
+  }
+
+  if (createdInvitations.length === 0) {
+    return response.status(409).json({
+      message:
+        "No invitations were created because every selected Project was skipped",
+      invitations: [],
+      skippedProjects,
+    });
+  }
+
+  return response.status(201).json({
+    message:
+      `${createdInvitations.length} ` +
+      `${
+        createdInvitations.length === 1
+          ? "invitation"
+          : "invitations"
+      } created`,
+
+    invitations: createdInvitations.map(
+      presentInvitation,
+    ),
+
+    skippedProjects,
+  });
+}
+
+export function cancelWorkspaceInvitation(
+  request,
+  response,
+) {
+  const workspace = store.workspaces.find(
+    (item) =>
+      item.id === request.params.workspaceId,
+  );
+
+  if (!workspace) {
+    return response.status(404).json({
+      message: "Workspace not found",
+    });
+  }
+
+  if (
+    !hasWorkspacePermission(
+      workspace,
+      request.user.id,
+      WORKSPACE_PERMISSIONS.MANAGE_MEMBERS,
+    )
+  ) {
+    return response.status(403).json({
+      message:
+        "Workspace member management permission is required",
+    });
+  }
+
+  const invitation =
+    store.projectInvitations.find(
+      (item) =>
+        item.id === request.params.invitationId &&
+        item.workspaceId === workspace.id &&
+        item.status === INVITATION_STATUS.PENDING,
+    );
+
+  if (!invitation) {
+    return response.status(404).json({
+      message:
+        "Pending Workspace invitation not found",
+    });
+  }
+
+  invitation.status =
+    INVITATION_STATUS.CANCELLED;
+
+  invitation.respondedAt =
+    new Date().toISOString();
+
+  return response.status(200).json({
+    invitation: presentInvitation(invitation),
+  });
+}
