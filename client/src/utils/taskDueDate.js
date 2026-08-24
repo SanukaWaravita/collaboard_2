@@ -17,11 +17,7 @@ export function formatDueDate(dueDate) {
     return "No due date";
   }
 
-  const [
-    yearText,
-    monthText,
-    dayText,
-  ] = dueDate.split("-");
+  const [yearText, monthText, dayText] = dueDate.split("-");
 
   const localDate = new Date(
     Number(yearText),
@@ -36,10 +32,7 @@ export function formatDueDate(dueDate) {
   }).format(localDate);
 }
 
-export function getDueDateState(
-  dueDate,
-  isCompleted = false,
-) {
+export function getDueDateState(dueDate, isCompleted = false) {
   if (!dueDate) {
     return "none";
   }
@@ -61,19 +54,13 @@ export function getDueDateState(
   return "upcoming";
 }
 
-export function getDueDateLabel(
-  dueDate,
-  isCompleted = false,
-) {
+export function getDueDateLabel(dueDate, isCompleted = false) {
   if (!dueDate) {
     return "No due date";
   }
 
   const formattedDate = formatDueDate(dueDate);
-  const dueDateState = getDueDateState(
-    dueDate,
-    isCompleted,
-  );
+  const dueDateState = getDueDateState(dueDate, isCompleted);
 
   if (dueDateState === "overdue") {
     return `Overdue · ${formattedDate}`;

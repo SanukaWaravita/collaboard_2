@@ -1,12 +1,7 @@
 import { Link } from "react-router";
 import { WORKSPACE_PERMISSIONS } from "../constants/access";
 
-function WorkspaceCard({
-  workspace,
-  onEdit,
-  onDelete,
-  isDeleting = false,
-}) {
+function WorkspaceCard({ workspace, onEdit, onDelete, isDeleting = false }) {
   const canEdit = workspace.permissions.includes(
     WORKSPACE_PERMISSIONS.UPDATE_WORKSPACE,
   );
@@ -18,84 +13,47 @@ function WorkspaceCard({
   return (
     <article className="entity-card entity-card--workspace">
       <div className="entity-card__body">
-        <div
-          className="entity-card__icon"
-          aria-hidden="true"
-        >
+        <div className="entity-card__icon" aria-hidden="true">
           <svg
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
             strokeWidth="1.8"
           >
-            <rect
-              x="3"
-              y="3"
-              width="7"
-              height="7"
-              rx="1.5"
-            />
+            <rect x="3" y="3" width="7" height="7" rx="1.5" />
 
-            <rect
-              x="14"
-              y="3"
-              width="7"
-              height="7"
-              rx="1.5"
-            />
+            <rect x="14" y="3" width="7" height="7" rx="1.5" />
 
-            <rect
-              x="3"
-              y="14"
-              width="7"
-              height="7"
-              rx="1.5"
-            />
+            <rect x="3" y="14" width="7" height="7" rx="1.5" />
 
-            <rect
-              x="14"
-              y="14"
-              width="7"
-              height="7"
-              rx="1.5"
-            />
+            <rect x="14" y="14" width="7" height="7" rx="1.5" />
           </svg>
         </div>
 
         <div className="entity-card__content">
           <div className="entity-card__heading">
             <div>
-              <span className="entity-card__type">
-                Workspace
-              </span>
+              <span className="entity-card__type">Workspace</span>
 
               <h2>{workspace.name}</h2>
             </div>
 
-            <span className="entity-badge">
-              {workspace.currentUserRole}
-            </span>
+            <span className="entity-badge">{workspace.currentUserRole}</span>
           </div>
 
-          <p className="entity-card__slug">
-            /{workspace.slug}
-          </p>
+          <p className="entity-card__slug">/{workspace.slug}</p>
 
           <div className="entity-card__metadata">
             <span>
               {workspace.projectCount}{" "}
-              {workspace.projectCount === 1
-                ? "project"
-                : "projects"}
+              {workspace.projectCount === 1 ? "project" : "projects"}
             </span>
 
             <span aria-hidden="true">•</span>
 
             <span>
               {workspace.memberCount}{" "}
-              {workspace.memberCount === 1
-                ? "member"
-                : "members"}
+              {workspace.memberCount === 1 ? "member" : "members"}
             </span>
           </div>
         </div>
@@ -127,10 +85,7 @@ function WorkspaceCard({
 
           <Link
             to={`/workspaces/${workspace.id}/projects`}
-            className={
-              `button button--primary ` +
-              `entity-card__open-link`
-            }
+            className={`button button--primary ` + `entity-card__open-link`}
             aria-disabled={isDeleting}
             onClick={(event) => {
               if (isDeleting) {
@@ -139,7 +94,6 @@ function WorkspaceCard({
             }}
           >
             Open Workspace
-
             <svg
               viewBox="0 0 24 24"
               fill="none"

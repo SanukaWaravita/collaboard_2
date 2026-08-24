@@ -1,7 +1,5 @@
 import { useState } from "react";
-import {
-  getAssigneeInitial,
-} from "../utils/taskAssignee";
+import { getAssigneeInitial } from "../utils/taskAssignee";
 
 function TaskForm({
   initialTask = null,
@@ -13,52 +11,38 @@ function TaskForm({
   isSubmitting = false,
   error = "",
 }) {
-  const [title, setTitle] = useState(
-    initialTask?.title ?? "",
-  );
+  const [title, setTitle] = useState(initialTask?.title ?? "");
 
   const [description, setDescription] = useState(
     initialTask?.description ?? "",
   );
 
-    const [status, setStatus] = useState(
-    initialTask?.status ??
-      initialStatusId ??
-      workflowStatuses[0]?.id ??
-      "",
+  const [status, setStatus] = useState(
+    initialTask?.status ?? initialStatusId ?? workflowStatuses[0]?.id ?? "",
   );
 
-  const [dueDate, setDueDate] = useState(
-  initialTask?.dueDate ?? "",
-  );
+  const [dueDate, setDueDate] = useState(initialTask?.dueDate ?? "");
 
-  const [assigneeIds, setAssigneeIds] =
-  useState(initialTask?.assigneeIds ?? []);
+  const [assigneeIds, setAssigneeIds] = useState(
+    initialTask?.assigneeIds ?? [],
+  );
 
   const isEditing = Boolean(initialTask);
-  const hasWorkflowStatuses =
-    workflowStatuses.length > 0;
+  const hasWorkflowStatuses = workflowStatuses.length > 0;
 
   function toggleAssignee(userId) {
-  setAssigneeIds((currentAssigneeIds) =>
-    currentAssigneeIds.includes(userId)
-      ? currentAssigneeIds.filter(
-          (currentUserId) =>
-            currentUserId !== userId,
-        )
-      : [...currentAssigneeIds, userId],
-  );
-}
-    function handleSubmit(event) {
+    setAssigneeIds((currentAssigneeIds) =>
+      currentAssigneeIds.includes(userId)
+        ? currentAssigneeIds.filter((currentUserId) => currentUserId !== userId)
+        : [...currentAssigneeIds, userId],
+    );
+  }
+  function handleSubmit(event) {
     event.preventDefault();
 
     const trimmedTitle = title.trim();
 
-    if (
-      !trimmedTitle ||
-      !status ||
-      isSubmitting
-    ) {
+    if (!trimmedTitle || !status || isSubmitting) {
       return;
     }
 
@@ -87,9 +71,7 @@ function TaskForm({
             </p>
 
             <h2 id="task-form-title">
-              {isEditing
-                ? "Update task"
-                : "Create a task"}
+              {isEditing ? "Update task" : "Create a task"}
             </h2>
           </div>
 
@@ -111,9 +93,7 @@ function TaskForm({
             id="task-title"
             type="text"
             value={title}
-            onChange={(event) =>
-              setTitle(event.target.value)
-            }
+            onChange={(event) => setTitle(event.target.value)}
             placeholder="Enter a task title"
             required
             autoFocus
@@ -122,151 +102,111 @@ function TaskForm({
         </div>
 
         <div className="task-form__field">
-          <label htmlFor="task-description">
-            Description
-          </label>
+          <label htmlFor="task-description">Description</label>
 
           <textarea
             id="task-description"
             value={description}
-            onChange={(event) =>
-              setDescription(event.target.value)
-            }
+            onChange={(event) => setDescription(event.target.value)}
             placeholder="Describe the task"
             rows="4"
             disabled={isSubmitting}
           />
         </div>
         <div className="task-form__field">
-          <label htmlFor="task-due-date">
-            Due date
-          </label>
+          <label htmlFor="task-due-date">Due date</label>
 
           <div className="task-form__due-date-control">
-  <input
-    id="task-due-date"
-    type="date"
-    value={dueDate}
-    onChange={(event) =>
-      setDueDate(event.target.value)
-    }
-    disabled={isSubmitting}
-  />
+            <input
+              id="task-due-date"
+              type="date"
+              value={dueDate}
+              onChange={(event) => setDueDate(event.target.value)}
+              disabled={isSubmitting}
+            />
 
-  <button
-    type="button"
-    className={
-      "button button--secondary " +
-      "task-form__clear-date"
-    }
-    onClick={() => setDueDate("")}
-    disabled={!dueDate || isSubmitting}
-  >
-    Clear
-  </button>
-</div>
+            <button
+              type="button"
+              className={"button button--secondary " + "task-form__clear-date"}
+              onClick={() => setDueDate("")}
+              disabled={!dueDate || isSubmitting}
+            >
+              Clear
+            </button>
+          </div>
 
-          <small>
-            Optional. Leave this empty if the Task has no
-            deadline.
-          </small>
+          <small>Optional. Leave this empty if the Task has no deadline.</small>
         </div>
 
         <fieldset
-  className={
-    "task-form__field " +
-    "task-form__assignees"
-  }
-  disabled={isSubmitting}
->
-  <legend>Assignees</legend>
+          className={"task-form__field " + "task-form__assignees"}
+          disabled={isSubmitting}
+        >
+          <legend>Assignees</legend>
 
-  {assignees.length === 0 ? (
-    <p className="task-form__assignees-empty">
-      No assignable Project members are available.
-    </p>
-  ) : (
-    <div
-      className="task-form__assignee-options"
-      role="group"
-      aria-label="Select Task Assignees"
-    >
-      {assignees.map((assignee) => {
-        const isSelected =
-          assigneeIds.includes(
-            assignee.userId,
-          );
-
-        return (
-          <label
-            key={assignee.userId}
-            className={
-              `task-form__assignee-option ` +
-              `${
-                isSelected
-                  ? "task-form__assignee-option--selected"
-                  : ""
-              }`
-            }
-          >
-            <input
-              type="checkbox"
-              checked={isSelected}
-              onChange={() =>
-                toggleAssignee(
-                  assignee.userId,
-                )
-              }
-            />
-
-            <span
-              className="task-assignee__avatar"
-              aria-hidden="true"
+          {assignees.length === 0 ? (
+            <p className="task-form__assignees-empty">
+              No assignable Project members are available.
+            </p>
+          ) : (
+            <div
+              className="task-form__assignee-options"
+              role="group"
+              aria-label="Select Task Assignees"
             >
-              {getAssigneeInitial(
-                assignee.name,
-              )}
-            </span>
+              {assignees.map((assignee) => {
+                const isSelected = assigneeIds.includes(assignee.userId);
 
-            <span className="task-form__assignee-details">
-              <strong>{assignee.name}</strong>
+                return (
+                  <label
+                    key={assignee.userId}
+                    className={
+                      `task-form__assignee-option ` +
+                      `${
+                        isSelected ? "task-form__assignee-option--selected" : ""
+                      }`
+                    }
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleAssignee(assignee.userId)}
+                    />
 
-              {assignee.email && (
-                <small>
-                  {assignee.email}
-                </small>
-              )}
-            </span>
-          </label>
-        );
-      })}
-    </div>
-  )}
+                    <span className="task-assignee__avatar" aria-hidden="true">
+                      {getAssigneeInitial(assignee.name)}
+                    </span>
 
-  <div className="task-form__assignee-summary">
-    <small>
-      {assigneeIds.length === 0
-        ? "No one is currently assigned."
-        : `${assigneeIds.length} ${
-            assigneeIds.length === 1
-              ? "person"
-              : "people"
-          } selected.`}
-    </small>
+                    <span className="task-form__assignee-details">
+                      <strong>{assignee.name}</strong>
 
-    <button
-      type="button"
-      className="button button--secondary"
-      onClick={() => setAssigneeIds([])}
-      disabled={
-        isSubmitting ||
-        assigneeIds.length === 0
-      }
-    >
-      Clear all
-    </button>
-  </div>
-</fieldset>
+                      {assignee.email && <small>{assignee.email}</small>}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="task-form__assignee-summary">
+            <small>
+              {assigneeIds.length === 0
+                ? "No one is currently assigned."
+                : `${assigneeIds.length} ${
+                    assigneeIds.length === 1 ? "person" : "people"
+                  } selected.`}
+            </small>
+
+            <button
+              type="button"
+              className="button button--secondary"
+              onClick={() => setAssigneeIds([])}
+              disabled={isSubmitting || assigneeIds.length === 0}
+            >
+              Clear all
+            </button>
+          </div>
+        </fieldset>
 
         <div className="task-form__field">
           <label htmlFor="task-status">Status</label>
@@ -274,38 +214,24 @@ function TaskForm({
           <select
             id="task-status"
             value={status}
-            onChange={(event) =>
-              setStatus(event.target.value)
-            }
-            disabled={
-              isSubmitting || !hasWorkflowStatuses
-            }
+            onChange={(event) => setStatus(event.target.value)}
+            disabled={isSubmitting || !hasWorkflowStatuses}
             required
           >
             {!hasWorkflowStatuses && (
-              <option value="">
-                No workflow statuses available
-              </option>
+              <option value="">No workflow statuses available</option>
             )}
 
-            {workflowStatuses.map(
-              (workflowStatus) => (
-                <option
-                  key={workflowStatus.id}
-                  value={workflowStatus.id}
-                >
-                  {workflowStatus.name}
-                </option>
-              ),
-            )}
+            {workflowStatuses.map((workflowStatus) => (
+              <option key={workflowStatus.id} value={workflowStatus.id}>
+                {workflowStatus.name}
+              </option>
+            ))}
           </select>
         </div>
 
         {error && (
-          <p
-            className="auth-form__error"
-            role="alert"
-          >
+          <p className="auth-form__error" role="alert">
             {error}
           </p>
         )}
@@ -323,9 +249,7 @@ function TaskForm({
           <button
             type="submit"
             className="button button--primary"
-            disabled={
-              isSubmitting || !hasWorkflowStatuses
-            }
+            disabled={isSubmitting || !hasWorkflowStatuses}
           >
             {isSubmitting
               ? "Saving..."

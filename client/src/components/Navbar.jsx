@@ -11,10 +11,7 @@ function Navbar() {
 
   return (
     <nav className="app-navbar">
-      <NavLink
-        to="/workspaces"
-        className="app-navbar__brand"
-      >
+      <NavLink to="/workspaces" className="app-navbar__brand">
         CollaBoard
       </NavLink>
 

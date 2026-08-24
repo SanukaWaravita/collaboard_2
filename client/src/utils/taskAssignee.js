@@ -5,24 +5,16 @@ export function getAssigneeInitial(name) {
 
   const trimmedName = name.trim();
 
-  return trimmedName
-    ? trimmedName.charAt(0).toUpperCase()
-    : "?";
+  return trimmedName ? trimmedName.charAt(0).toUpperCase() : "?";
 }
 
-export function resolveTaskAssignees(
-  assigneeIds = [],
-  projectMembers = [],
-) {
+export function resolveTaskAssignees(assigneeIds = [], projectMembers = []) {
   if (!Array.isArray(assigneeIds)) {
     return [];
   }
 
   const membersById = new Map(
-    projectMembers.map((member) => [
-      member.userId,
-      member,
-    ]),
+    projectMembers.map((member) => [member.userId, member]),
   );
 
   return assigneeIds.map((userId) => {
@@ -32,9 +24,7 @@ export function resolveTaskAssignees(
       userId,
       name: member?.name ?? "Unknown assignee",
       email: member?.email ?? null,
-      initial: member
-        ? getAssigneeInitial(member.name)
-        : "?",
+      initial: member ? getAssigneeInitial(member.name) : "?",
     };
   });
 }

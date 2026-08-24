@@ -1,9 +1,4 @@
-import {
-  Navigate,
-  Route,
-  Routes,
-  useLocation,
-} from "react-router";
+import { Navigate, Route, Routes, useLocation } from "react-router";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { getToken } from "./services/api";
@@ -14,7 +9,7 @@ import ProjectsPage from "./pages/ProjectsPage";
 import ProjectPage from "./pages/ProjectPage";
 import ProjectAccessPage from "./pages/ProjectAccessPage";
 import InvitationsPage from "./pages/InvitationsPage";
-import WorkspaceGuestsPage from "./pages/WorkspaceGuestsPage";
+import WorkspaceMembersPage from "./pages/WorkspaceMembersPage";
 
 function App() {
   const location = useLocation();
@@ -22,10 +17,8 @@ function App() {
 
   const shouldShowNavbar =
     isAuthenticated &&
-    (
-      location.pathname.startsWith("/workspaces") ||
-      location.pathname.startsWith("/invitations")
-    );
+    (location.pathname.startsWith("/workspaces") ||
+      location.pathname.startsWith("/invitations"));
 
   return (
     <>
@@ -35,28 +28,15 @@ function App() {
         <Route
           path="/"
           element={
-            <Navigate
-              to={
-                isAuthenticated
-                  ? "/workspaces"
-                  : "/login"
-              }
-              replace
-            />
+            <Navigate to={isAuthenticated ? "/workspaces" : "/login"} replace />
           }
         />
 
         <Route path="/login" element={<LoginPage />} />
-        <Route
-          path="/register"
-          element={<RegisterPage />}
-        />
+        <Route path="/register" element={<RegisterPage />} />
 
         <Route element={<ProtectedRoute />}>
-          <Route
-            path="/workspaces"
-            element={<WorkspacesPage />}
-          />
+          <Route path="/workspaces" element={<WorkspacesPage />} />
 
           <Route
             path="/workspaces/:workspaceId/projects"
@@ -64,8 +44,8 @@ function App() {
           />
 
           <Route
-            path="/workspaces/:workspaceId/guests"
-            element={<WorkspaceGuestsPage />}
+            path="/workspaces/:workspaceId/members"
+            element={<WorkspaceMembersPage />}
           />
 
           <Route
@@ -78,23 +58,13 @@ function App() {
             element={<ProjectAccessPage />}
           />
 
-          <Route
-            path="/invitations"
-            element={<InvitationsPage />}
-          />
+          <Route path="/invitations" element={<InvitationsPage />} />
         </Route>
 
         <Route
           path="*"
           element={
-            <Navigate
-              to={
-                isAuthenticated
-                  ? "/workspaces"
-                  : "/login"
-              }
-              replace
-            />
+            <Navigate to={isAuthenticated ? "/workspaces" : "/login"} replace />
           }
         />
       </Routes>
