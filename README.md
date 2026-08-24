@@ -101,6 +101,17 @@ Replace `replace-this-with-a-long-random-secret` with the generated value.
 
 Do not commit the real `.env` file. The required variable names are documented in `server/.env.example`.
 
+## Development seed data
+
+Because CollaBoard currently uses an in-memory store, optional development seed data is available for local testing.
+
+Enable it in the ignored `server/.env` file:
+
+```dotenv
+SEED_DEVELOPMENT_DATA=true
+DEVELOPMENT_SEED_PASSWORD=CollaBoard123!
+```
+
 ## Running the application
 
 The client and server run in separate terminals.
@@ -131,7 +142,7 @@ Open the URL displayed by Vite, normally:
 http://localhost:5173
 ```
 
-Because M2 currently uses server memory, restarting the server clears registered users, created boards, and task changes.
+Because CollaBoard currently uses server memory, runtime changes are not persistent. When development seeding is enabled, restarting the server restores the original seeded users, Workspaces, Projects, memberships, invitations, workflows, and Tasks.
 
 ## Available scripts
 
