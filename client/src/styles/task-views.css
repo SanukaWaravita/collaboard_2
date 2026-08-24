@@ -62,6 +62,25 @@
   color: var(--kanban-accent-dark);
 }
 
+.workspace-projects-page
+  .project-view-toggle__button:disabled {
+  cursor: not-allowed;
+  color: #9ca8ae;
+  opacity: 0.62;
+}
+
+.workspace-projects-page
+  .project-view-toggle__button:disabled:hover {
+  color: #9ca8ae;
+}
+
+.workspace-projects-page
+  .project-view-toggle__button:disabled
+  .project-view-toggle__indicator {
+  border-color: #c3ccd1;
+  background: #f4f6f7;
+}
+
 .project-view-toggle__indicator {
   width: 11px;
   height: 11px;

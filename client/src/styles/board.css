@@ -176,6 +176,81 @@
   line-height: 1;
 }
 
+.board-page.workspace-projects-page {
+  width: min(1480px, 100%);
+  min-height: calc(100vh - 68px);
+  padding: 24px;
+}
+
+.workspace-projects-page
+  .workspace-project-header__back {
+  display: grid;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--kanban-border);
+  border-radius: 6px;
+  color: var(--kanban-text-muted);
+  background: var(--surface);
+  text-decoration: none;
+  transition:
+    color 150ms ease,
+    border-color 150ms ease,
+    background-color 150ms ease;
+}
+
+.workspace-projects-page
+  .workspace-project-header__back:hover {
+  border-color: #9dd6ef;
+  color: var(--kanban-accent-dark);
+  background: var(--kanban-accent-soft);
+  text-decoration: none;
+}
+
+.workspace-projects-page
+  .workspace-project-header__back:focus-visible {
+  border-color: var(--kanban-accent);
+  outline: 3px solid rgb(21 150 209 / 20%);
+  outline-offset: 2px;
+}
+
+.workspace-projects-page
+  .workspace-project-header__back svg {
+  width: 17px;
+  height: 17px;
+}
+
+.workspace-projects-page
+  .workspace-project-header__access {
+  color: #526671;
+  background: var(--surface);
+}
+
+.workspace-projects-page
+  .workspace-project-header__access:hover {
+  border-color: #9dd6ef;
+  color: var(--kanban-accent-dark);
+  background: var(--kanban-accent-soft);
+}
+
+.workspace-projects-page
+  .workspace-project-header__create {
+  border-color: var(--kanban-accent);
+  color: #ffffff;
+  background: var(--kanban-accent);
+  box-shadow: 0 3px 8px rgb(21 150 209 / 18%);
+}
+
+.workspace-projects-page
+  .workspace-project-header__create:hover:not(:disabled) {
+  border-color: var(--kanban-accent-dark);
+  background: var(--kanban-accent-dark);
+  box-shadow: 0 5px 12px rgb(8 126 184 / 24%);
+}
+
 .button {
   display: inline-flex;
   align-items: center;
@@ -687,6 +762,10 @@
     padding: 16px;
   }
 
+  .board-page.workspace-projects-page {
+    padding: 16px;
+  }
+
   .task-board {
     grid-auto-columns: minmax(255px, 1fr);
   }
@@ -722,6 +801,10 @@
 
 @media (max-width: 500px) {
   .board-page {
+    padding: 10px;
+  }
+
+    .board-page.workspace-projects-page {
     padding: 10px;
   }
 
