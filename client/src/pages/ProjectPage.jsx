@@ -304,12 +304,9 @@ function ProjectPage() {
   }
 
   function openEditTaskForm(task) {
-  if (
-    !canUpdateTasks &&
-    !task.canAssignReporter
-  ) {
-    return;
-  }
+    if (!canUpdateTasks && !task.canAssignReporter) {
+      return;
+    }
 
     setEditingTask(task);
     setCreateTaskStatusId(null);
@@ -743,16 +740,10 @@ function ProjectPage() {
           initialStatusId={createTaskStatusId}
           workflowStatuses={workflowStatuses}
           assignees={assignableProjectMembers}
-reporters={projectMembers}
-currentUser={currentUser}
-canEditTaskFields={
-  !editingTask ||
-  canUpdateTasks
-}
-canAssignReporter={
-  !editingTask ||
-  editingTask.canAssignReporter
-}
+          reporters={projectMembers}
+          currentUser={currentUser}
+          canEditTaskFields={!editingTask || canUpdateTasks}
+          canAssignReporter={!editingTask || editingTask.canAssignReporter}
           onSubmit={handleSaveTask}
           onCancel={closeTaskForm}
           isSubmitting={isSavingTask}
