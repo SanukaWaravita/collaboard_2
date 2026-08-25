@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import CardListViewToggle from "../components/CardListViewToggle";
 import WorkspaceCard from "../components/WorkspaceCard";
+import WorkspaceList from "../components/WorkspaceList";
 import WorkspaceForm from "../components/WorkspaceForm";
 import WorkspacesHeader from "../components/WorkspacesHeader";
 import { apiRequest, clearSession } from "../services/api";
@@ -9,9 +10,9 @@ import { apiRequest, clearSession } from "../services/api";
 function WorkspacesPage() {
   const navigate = useNavigate();
 
-const [workspaces, setWorkspaces] = useState([]);
-const [activeView, setActiveView] = useState("cards");
-const [isLoading, setIsLoading] = useState(true);
+  const [workspaces, setWorkspaces] = useState([]);
+  const [activeView, setActiveView] = useState("cards");
+  const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
 
@@ -163,48 +164,39 @@ const [isLoading, setIsLoading] = useState(true);
   }
 
   return (
-  <main
-    className={
-      "board-page entity-page " +
-      "workspaces-page"
-    }
-  >
-    <WorkspacesHeader
-      workspaceCount={workspaces.length}
-      onCreateWorkspace={openCreateForm}
-    />
+    <main className={"board-page entity-page " + "workspaces-page"}>
+      <WorkspacesHeader
+        workspaceCount={workspaces.length}
+        onCreateWorkspace={openCreateForm}
+      />
 
-    <section
-      className={
-        "project-view-toolbar " +
-        "workspaces-view-toolbar"
-      }
-      aria-label="Workspace view controls"
-    >
-      <div className="project-view-toolbar__view">
-        <span className="project-view-toolbar__label">
-          View
-        </span>
+      <section
+        className={"project-view-toolbar " + "workspaces-view-toolbar"}
+        aria-label="Workspace view controls"
+      >
+        <div className="project-view-toolbar__view">
+          <span className="project-view-toolbar__label">View</span>
 
-        <CardListViewToggle
-          activeView={activeView}
-          onViewChange={setActiveView}
-          ariaLabel="Select Workspace view"
-        />
-      </div>
+          <CardListViewToggle
+            activeView={activeView}
+            onViewChange={setActiveView}
+            ariaLabel="Select Workspace view"
+            isListAvailable
+          />
+        </div>
 
-      <div className="project-view-toolbar__actions">
-        <span className="project-view-toolbar__summary">
-          {isLoading
-            ? "Loading Workspaces..."
-            : `${workspaces.length} ${
-                workspaces.length === 1
-                  ? "available Workspace"
-                  : "available Workspaces"
-              }`}
-        </span>
-      </div>
-    </section>
+        <div className="project-view-toolbar__actions">
+          <span className="project-view-toolbar__summary">
+            {isLoading
+              ? "Loading Workspaces..."
+              : `${workspaces.length} ${
+                  workspaces.length === 1
+                    ? "available Workspace"
+                    : "available Workspaces"
+                }`}
+          </span>
+        </div>
+      </section>
       {actionError && (
         <p className="board-action-error" role="alert">
           {actionError}
@@ -247,19 +239,29 @@ const [isLoading, setIsLoading] = useState(true);
         </section>
       )}
 
-      {!isLoading && !loadError && workspaces.length > 0 && (
-        <section className="entity-grid" aria-label="Available workspaces">
-          {workspaces.map((workspace) => (
-            <WorkspaceCard
-              key={workspace.id}
-              workspace={workspace}
-              onEdit={openEditForm}
-              onDelete={handleDeleteWorkspace}
-              isDeleting={deletingWorkspaceId === workspace.id}
-            />
-          ))}
-        </section>
-      )}
+      {!isLoading &&
+        !loadError &&
+        workspaces.length > 0 &&
+        (activeView === "cards" ? (
+          <section className="entity-grid" aria-label="Available Workspaces">
+            {workspaces.map((workspace) => (
+              <WorkspaceCard
+                key={workspace.id}
+                workspace={workspace}
+                onEdit={openEditForm}
+                onDelete={handleDeleteWorkspace}
+                isDeleting={deletingWorkspaceId === workspace.id}
+              />
+            ))}
+          </section>
+        ) : (
+          <WorkspaceList
+            workspaces={workspaces}
+            onEdit={openEditForm}
+            onDelete={handleDeleteWorkspace}
+            deletingWorkspaceId={deletingWorkspaceId}
+          />
+        ))}
 
       {isFormOpen && (
         <WorkspaceForm
