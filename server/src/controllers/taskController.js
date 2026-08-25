@@ -374,10 +374,6 @@ if (changesReporter) {
   task.reporterId = normalizedReporterId;
 }
 
-  if (changesReporter) {
-  task.reporterId = normalizedReporterId;
-}
-
   task.version += 1;
   task.updatedAt = new Date().toISOString();
 
