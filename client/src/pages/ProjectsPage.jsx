@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router";
 import ProjectCard from "../components/ProjectCard";
 import ProjectForm from "../components/ProjectForm";
 import WorkspaceHeader from "../components/WorkspaceHeader";
-import WorkspaceProjectViewToggle from "../components/WorkspaceProjectViewToggle";
+import CardListViewToggle from "../components/CardListViewToggle";
 import { WORKSPACE_PERMISSIONS } from "../constants/access";
 import { apiRequest, clearSession } from "../services/api";
 
@@ -251,10 +251,11 @@ const [isLoading, setIsLoading] = useState(true);
           View
         </span>
 
-        <WorkspaceProjectViewToggle
-          activeView={activeView}
-          onViewChange={setActiveView}
-        />
+        <CardListViewToggle
+  activeView={activeView}
+  onViewChange={setActiveView}
+  ariaLabel="Select Project view"
+/>
       </div>
 
       <div className="project-view-toolbar__actions">

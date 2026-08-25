@@ -63,6 +63,8 @@
 }
 
 .workspace-projects-page
+  .project-view-toggle__button:disabled,
+.workspaces-page
   .project-view-toggle__button:disabled {
   cursor: not-allowed;
   color: #9ca8ae;
@@ -70,11 +72,16 @@
 }
 
 .workspace-projects-page
+  .project-view-toggle__button:disabled:hover,
+.workspaces-page
   .project-view-toggle__button:disabled:hover {
   color: #9ca8ae;
 }
 
 .workspace-projects-page
+  .project-view-toggle__button:disabled
+  .project-view-toggle__indicator,
+.workspaces-page
   .project-view-toggle__button:disabled
   .project-view-toggle__indicator {
   border-color: #c3ccd1;

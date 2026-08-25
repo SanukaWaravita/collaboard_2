@@ -2,28 +2,32 @@ const VIEW_OPTIONS = [
   {
     value: "cards",
     label: "Cards",
-    isDisabled: false,
   },
   {
     value: "list",
     label: "List",
-    isDisabled: true,
   },
 ];
 
-function WorkspaceProjectViewToggle({
+function CardListViewToggle({
   activeView,
   onViewChange,
+  ariaLabel = "Select view",
+  isListAvailable = false,
 }) {
   return (
     <div
       className="project-view-toggle"
       role="group"
-      aria-label="Select Project view"
+      aria-label={ariaLabel}
     >
       {VIEW_OPTIONS.map((viewOption) => {
         const isActive =
           activeView === viewOption.value;
+
+        const isDisabled =
+          viewOption.value === "list" &&
+          !isListAvailable;
 
         return (
           <button
@@ -38,10 +42,10 @@ function WorkspaceProjectViewToggle({
             onClick={() =>
               onViewChange(viewOption.value)
             }
-            disabled={viewOption.isDisabled}
+            disabled={isDisabled}
             aria-pressed={isActive}
             title={
-              viewOption.isDisabled
+              isDisabled
                 ? "List view will be added later"
                 : undefined
             }
@@ -59,4 +63,4 @@ function WorkspaceProjectViewToggle({
   );
 }
 
-export default WorkspaceProjectViewToggle;
+export default CardListViewToggle;
