@@ -114,14 +114,14 @@ export async function registerUser(request, response) {
     });
 
     store.tasks.forEach((task) => {
-  if (task.createdById === "temporary-user") {
-    task.createdById = user.id;
-  }
+      if (task.createdById === "temporary-user") {
+        task.createdById = user.id;
+      }
 
-  if (task.reporterId === "temporary-user") {
-    task.reporterId = user.id;
-  }
-});
+      if (task.reporterId === "temporary-user") {
+        task.reporterId = user.id;
+      }
+    });
   }
 
   store.users.push(user);

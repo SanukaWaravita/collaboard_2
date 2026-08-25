@@ -225,12 +225,9 @@
   width: 100%;
 }
 
-.task-form__field
-  input:disabled,
-.task-form__field
-  textarea:disabled,
-.task-form__field
-  select:disabled {
+.task-form__field input:disabled,
+.task-form__field textarea:disabled,
+.task-form__field select:disabled {
   cursor: not-allowed;
   opacity: 0.72;
 }

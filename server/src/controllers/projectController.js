@@ -214,12 +214,8 @@ export function getProject(request, response) {
   }
 
   const tasks = store.tasks
-  .filter(
-    (task) => task.projectId === project.id,
-  )
-  .map((task) =>
-    presentTask(task, request.user.id),
-  );
+    .filter((task) => task.projectId === project.id)
+    .map((task) => presentTask(task, request.user.id));
 
   const presentedProject = presentProject(project, request.user.id);
 

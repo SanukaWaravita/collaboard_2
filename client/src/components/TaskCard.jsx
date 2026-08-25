@@ -162,7 +162,7 @@ function TaskCard({
                 onClick={() => onEdit(task)}
                 disabled={isBusy}
                 aria-label={`${editLabel}: ${task.title}`}
-title={editLabel}
+                title={editLabel}
               >
                 <svg
                   viewBox="0 0 24 24"

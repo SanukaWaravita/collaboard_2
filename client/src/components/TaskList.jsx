@@ -54,9 +54,7 @@ function TaskList({
             {tasks.map((task) => {
               const isDeleting = deletingTaskId === task.id;
 
-              const canOpenTaskForm =
-  canEditTasks ||
-  task.canAssignReporter;
+              const canOpenTaskForm = canEditTasks || task.canAssignReporter;
 
               const workflowStatus = statusesById.get(task.status);
 
@@ -190,9 +188,7 @@ function TaskList({
                             aria-label={`Edit ${task.title}`}
                             disabled={isDeleting}
                           >
-                            {canEditTasks
-  ? "Edit"
-  : "Change Reporter"}
+                            {canEditTasks ? "Edit" : "Change Reporter"}
                           </button>
                         )}
 
@@ -210,8 +206,7 @@ function TaskList({
                       </div>
                     )}
 
-                    {!canOpenTaskForm &&
-  !canDeleteTasks && (
+                    {!canOpenTaskForm && !canDeleteTasks && (
                       <span className="task-list__read-only">Read only</span>
                     )}
                   </td>

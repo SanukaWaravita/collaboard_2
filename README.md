@@ -61,20 +61,20 @@ A Workspace can represent a department, team, or other organizational unit. Proj
 
 ### Workspace roles
 
-| Role | Purpose |
-|---|---|
-| Owner | Full control of the Workspace and its access model |
-| Admin | Manages Workspace members and access, subject to owner protections |
-| Member | Internal Workspace user who may inherit access to open Projects |
-| Guest | External Workspace user who requires explicit Project access |
+| Role   | Purpose                                                            |
+| ------ | ------------------------------------------------------------------ |
+| Owner  | Full control of the Workspace and its access model                 |
+| Admin  | Manages Workspace members and access, subject to owner protections |
+| Member | Internal Workspace user who may inherit access to open Projects    |
+| Guest  | External Workspace user who requires explicit Project access       |
 
 ### Project roles
 
-| Role | Purpose |
-|---|---|
-| Owner | Full Project control, including access and workflow management |
-| Contributor | Creates, edits, moves, and completes Tasks |
-| Reviewer | Read-only Project access |
+| Role        | Purpose                                                        |
+| ----------- | -------------------------------------------------------------- |
+| Owner       | Full Project control, including access and workflow management |
+| Contributor | Creates, edits, moves, and completes Tasks                     |
+| Reviewer    | Read-only Project access                                       |
 
 ### Open and private Projects
 
@@ -105,21 +105,21 @@ Removing a Workspace member also removes that user from the Workspace's Projects
 
 ## Technology stack
 
-| Area | Technology |
-|---|---|
-| Client | React |
-| Build tool | Vite |
-| Routing | React Router |
-| Styling | CSS |
-| Server | Node.js and Express |
-| Authentication | JSON Web Tokens |
-| Password hashing | bcrypt.js |
-| Current data storage | Temporary in-memory store |
-| Client session persistence | `localStorage` |
-| Database | MongoDB and Mongoose — planned |
-| Testing | Jest, Supertest, and React Testing Library — planned |
-| Real-time updates | Socket.IO — planned |
-| Deployment | Docker Compose and public hosting — planned |
+| Area                       | Technology                                           |
+| -------------------------- | ---------------------------------------------------- |
+| Client                     | React                                                |
+| Build tool                 | Vite                                                 |
+| Routing                    | React Router                                         |
+| Styling                    | CSS                                                  |
+| Server                     | Node.js and Express                                  |
+| Authentication             | JSON Web Tokens                                      |
+| Password hashing           | bcrypt.js                                            |
+| Current data storage       | Temporary in-memory store                            |
+| Client session persistence | `localStorage`                                       |
+| Database                   | MongoDB and Mongoose — planned                       |
+| Testing                    | Jest, Supertest, and React Testing Library — planned |
+| Real-time updates          | Socket.IO — planned                                  |
+| Deployment                 | Docker Compose and public hosting — planned          |
 
 ## Prerequisites
 
@@ -204,16 +204,16 @@ CollaBoard123!
 
 ### Sample accounts
 
-| User | Email | Testing purpose |
-|---|---|---|
-| Olivia Owner | `owner@collaboard.dev` | Workspace and Project ownership |
-| Adrian Admin | `admin@collaboard.dev` | Workspace administration |
-| Casey Contributor | `internal.contributor@collaboard.dev` | Internal contribution and Task assignment |
-| Riley Reviewer | `internal.reviewer@collaboard.dev` | Explicit internal Reviewer restrictions |
-| Morgan Observer | `observer@collaboard.dev` | Inherited access to open Projects |
-| Jordan Guest Contributor | `guest.contributor@collaboard.dev` | Explicit guest Contributor access |
-| Taylor Guest Reviewer | `guest.reviewer@collaboard.dev` | Explicit guest Reviewer restrictions |
-| Avery Invitee | `invitee@collaboard.dev` | Pending invitation flow |
+| User                     | Email                                 | Testing purpose                           |
+| ------------------------ | ------------------------------------- | ----------------------------------------- |
+| Olivia Owner             | `owner@collaboard.dev`                | Workspace and Project ownership           |
+| Adrian Admin             | `admin@collaboard.dev`                | Workspace administration                  |
+| Casey Contributor        | `internal.contributor@collaboard.dev` | Internal contribution and Task assignment |
+| Riley Reviewer           | `internal.reviewer@collaboard.dev`    | Explicit internal Reviewer restrictions   |
+| Morgan Observer          | `observer@collaboard.dev`             | Inherited access to open Projects         |
+| Jordan Guest Contributor | `guest.contributor@collaboard.dev`    | Explicit guest Contributor access         |
+| Taylor Guest Reviewer    | `guest.reviewer@collaboard.dev`       | Explicit guest Reviewer restrictions      |
+| Avery Invitee            | `invitee@collaboard.dev`              | Pending invitation flow                   |
 
 The seed includes:
 
@@ -239,15 +239,15 @@ SEED_DEVELOPMENT_DATA=false
 
 The company demonstration data represents a fictional organization with departmental Workspaces.
 
-| User | Email | Testing purpose |
-|---|---|---|
-| Nadia Perera | `company.rep@aurora.example` | Company representative and Owner of every department Workspace |
-| Ashan Silva | `product.lead@aurora.example` | Product & Engineering administration |
-| Dinithi Jayasinghe | `marketing.lead@aurora.example` | Marketing & Growth administration |
-| Kavindu Fernando | `sales.lead@aurora.example` | Sales & Partnerships administration |
-| Malsha Wijeratne | `success.lead@aurora.example` | Customer Success administration |
-| Nethmi Karunaratne | `people.lead@aurora.example` | People & Culture administration |
-| Tharindu Senanayake | `operations.lead@aurora.example` | Finance & Operations administration |
+| User                | Email                            | Testing purpose                                                |
+| ------------------- | -------------------------------- | -------------------------------------------------------------- |
+| Nadia Perera        | `company.rep@aurora.example`     | Company representative and Owner of every department Workspace |
+| Ashan Silva         | `product.lead@aurora.example`    | Product & Engineering administration                           |
+| Dinithi Jayasinghe  | `marketing.lead@aurora.example`  | Marketing & Growth administration                              |
+| Kavindu Fernando    | `sales.lead@aurora.example`      | Sales & Partnerships administration                            |
+| Malsha Wijeratne    | `success.lead@aurora.example`    | Customer Success administration                                |
+| Nethmi Karunaratne  | `people.lead@aurora.example`     | People & Culture administration                                |
+| Tharindu Senanayake | `operations.lead@aurora.example` | Finance & Operations administration                            |
 
 Unless `DEVELOPMENT_SEED_PASSWORD` is changed, all company demo accounts use:
 
@@ -327,36 +327,36 @@ http://localhost:5173
 
 Run from `client`:
 
-| Command | Purpose |
-|---|---|
-| `npm run dev` | Start the Vite development server |
-| `npm run lint` | Check client code with ESLint |
-| `npm run build` | Create the production client build |
+| Command           | Purpose                              |
+| ----------------- | ------------------------------------ |
+| `npm run dev`     | Start the Vite development server    |
+| `npm run lint`    | Check client code with ESLint        |
+| `npm run build`   | Create the production client build   |
 | `npm run preview` | Preview the production build locally |
 
 ### Server scripts
 
 Run from `server`:
 
-| Command | Purpose |
-|---|---|
+| Command       | Purpose                    |
+| ------------- | -------------------------- |
 | `npm run dev` | Start the API with Nodemon |
-| `npm start` | Start the API with Node.js |
+| `npm start`   | Start the API with Node.js |
 
 Automated test scripts are planned but are not yet part of the current repository.
 
 ## Client routes
 
-| Route | Access | Screen |
-|---|---|---|
-| `/login` | Public | Login |
-| `/register` | Public | Registration |
-| `/workspaces` | Protected | Accessible Workspaces |
-| `/workspaces/:workspaceId/projects` | Protected | Workspace Projects |
-| `/workspaces/:workspaceId/members` | Workspace management permission | Members & Access |
-| `/workspaces/:workspaceId/projects/:projectId` | Project access required | Kanban/List Project view |
-| `/workspaces/:workspaceId/projects/:projectId/access` | Project access management permission | Project members and invitations |
-| `/invitations` | Protected | Current user's pending invitations |
+| Route                                                 | Access                               | Screen                             |
+| ----------------------------------------------------- | ------------------------------------ | ---------------------------------- |
+| `/login`                                              | Public                               | Login                              |
+| `/register`                                           | Public                               | Registration                       |
+| `/workspaces`                                         | Protected                            | Accessible Workspaces              |
+| `/workspaces/:workspaceId/projects`                   | Protected                            | Workspace Projects                 |
+| `/workspaces/:workspaceId/members`                    | Workspace management permission      | Members & Access                   |
+| `/workspaces/:workspaceId/projects/:projectId`        | Project access required              | Kanban/List Project view           |
+| `/workspaces/:workspaceId/projects/:projectId/access` | Project access management permission | Project members and invitations    |
+| `/invitations`                                        | Protected                            | Current user's pending invitations |
 
 ## API overview
 
@@ -374,78 +374,78 @@ Authorization: Bearer <token>
 
 ### Public endpoints
 
-| Method | Endpoint | Purpose |
-|---|---|---|
-| `POST` | `/api/auth/register` | Register a user |
-| `POST` | `/api/auth/login` | Log in |
-| `GET` | `/api/health` | Check API health |
+| Method | Endpoint             | Purpose          |
+| ------ | -------------------- | ---------------- |
+| `POST` | `/api/auth/register` | Register a user  |
+| `POST` | `/api/auth/login`    | Log in           |
+| `GET`  | `/api/health`        | Check API health |
 
 ### Workspace endpoints
 
-| Method | Endpoint | Purpose |
-|---|---|---|
-| `GET` | `/api/workspaces` | List accessible Workspaces |
-| `POST` | `/api/workspaces` | Create a Workspace |
-| `GET` | `/api/workspaces/:workspaceId` | Get a Workspace |
-| `PATCH` | `/api/workspaces/:workspaceId` | Update a Workspace |
-| `DELETE` | `/api/workspaces/:workspaceId` | Delete a Workspace and its related data |
-| `GET` | `/api/workspaces/:workspaceId/projects` | List accessible Projects in a Workspace |
-| `POST` | `/api/workspaces/:workspaceId/projects` | Create a Project |
+| Method   | Endpoint                                | Purpose                                 |
+| -------- | --------------------------------------- | --------------------------------------- |
+| `GET`    | `/api/workspaces`                       | List accessible Workspaces              |
+| `POST`   | `/api/workspaces`                       | Create a Workspace                      |
+| `GET`    | `/api/workspaces/:workspaceId`          | Get a Workspace                         |
+| `PATCH`  | `/api/workspaces/:workspaceId`          | Update a Workspace                      |
+| `DELETE` | `/api/workspaces/:workspaceId`          | Delete a Workspace and its related data |
+| `GET`    | `/api/workspaces/:workspaceId/projects` | List accessible Projects in a Workspace |
+| `POST`   | `/api/workspaces/:workspaceId/projects` | Create a Project                        |
 
 ### Workspace member and access endpoints
 
-| Method | Endpoint | Purpose |
-|---|---|---|
-| `GET` | `/api/workspaces/:workspaceId/members` | List Workspace members and effective Project access |
-| `PATCH` | `/api/workspaces/:workspaceId/members/:userId` | Change an eligible Workspace role |
-| `DELETE` | `/api/workspaces/:workspaceId/members/:userId` | Remove a Workspace member and related access |
-| `PUT` | `/api/workspaces/:workspaceId/members/:userId/projects/:projectId` | Grant or update explicit Project access |
-| `DELETE` | `/api/workspaces/:workspaceId/members/:userId/projects/:projectId` | Remove explicit Project access |
-| `POST` | `/api/workspaces/:workspaceId/invitations` | Create invitations for one or more Workspace Projects |
-| `DELETE` | `/api/workspaces/:workspaceId/invitations/:invitationId` | Cancel a pending Workspace invitation |
+| Method   | Endpoint                                                           | Purpose                                               |
+| -------- | ------------------------------------------------------------------ | ----------------------------------------------------- |
+| `GET`    | `/api/workspaces/:workspaceId/members`                             | List Workspace members and effective Project access   |
+| `PATCH`  | `/api/workspaces/:workspaceId/members/:userId`                     | Change an eligible Workspace role                     |
+| `DELETE` | `/api/workspaces/:workspaceId/members/:userId`                     | Remove a Workspace member and related access          |
+| `PUT`    | `/api/workspaces/:workspaceId/members/:userId/projects/:projectId` | Grant or update explicit Project access               |
+| `DELETE` | `/api/workspaces/:workspaceId/members/:userId/projects/:projectId` | Remove explicit Project access                        |
+| `POST`   | `/api/workspaces/:workspaceId/invitations`                         | Create invitations for one or more Workspace Projects |
+| `DELETE` | `/api/workspaces/:workspaceId/invitations/:invitationId`           | Cancel a pending Workspace invitation                 |
 
 ### Project endpoints
 
-| Method | Endpoint | Purpose |
-|---|---|---|
-| `GET` | `/api/projects` | List Projects accessible to the current user |
-| `GET` | `/api/projects/:projectId` | Get a Project, workflow, and Tasks |
-| `PATCH` | `/api/projects/:projectId` | Update a Project |
-| `DELETE` | `/api/projects/:projectId` | Delete a Project and its related data |
-| `GET` | `/api/projects/:projectId/members` | List explicit Project members |
-| `PATCH` | `/api/projects/:projectId/members/:userId` | Change a Project member's role |
-| `DELETE` | `/api/projects/:projectId/members/:userId` | Remove explicit Project membership |
-| `POST` | `/api/projects/:projectId/transfer-ownership` | Transfer Project ownership |
+| Method   | Endpoint                                      | Purpose                                      |
+| -------- | --------------------------------------------- | -------------------------------------------- |
+| `GET`    | `/api/projects`                               | List Projects accessible to the current user |
+| `GET`    | `/api/projects/:projectId`                    | Get a Project, workflow, and Tasks           |
+| `PATCH`  | `/api/projects/:projectId`                    | Update a Project                             |
+| `DELETE` | `/api/projects/:projectId`                    | Delete a Project and its related data        |
+| `GET`    | `/api/projects/:projectId/members`            | List explicit Project members                |
+| `PATCH`  | `/api/projects/:projectId/members/:userId`    | Change a Project member's role               |
+| `DELETE` | `/api/projects/:projectId/members/:userId`    | Remove explicit Project membership           |
+| `POST`   | `/api/projects/:projectId/transfer-ownership` | Transfer Project ownership                   |
 
 ### Invitation endpoints
 
-| Method | Endpoint | Purpose |
-|---|---|---|
-| `GET` | `/api/projects/:projectId/invitations` | List pending Project invitations |
-| `POST` | `/api/projects/:projectId/invitations` | Invite an internal user or guest |
-| `DELETE` | `/api/projects/:projectId/invitations/:invitationId` | Cancel an invitation |
-| `GET` | `/api/invitations` | List invitations for the current user |
-| `POST` | `/api/invitations/:invitationId/accept` | Accept an invitation |
-| `POST` | `/api/invitations/:invitationId/decline` | Decline an invitation |
+| Method   | Endpoint                                             | Purpose                               |
+| -------- | ---------------------------------------------------- | ------------------------------------- |
+| `GET`    | `/api/projects/:projectId/invitations`               | List pending Project invitations      |
+| `POST`   | `/api/projects/:projectId/invitations`               | Invite an internal user or guest      |
+| `DELETE` | `/api/projects/:projectId/invitations/:invitationId` | Cancel an invitation                  |
+| `GET`    | `/api/invitations`                                   | List invitations for the current user |
+| `POST`   | `/api/invitations/:invitationId/accept`              | Accept an invitation                  |
+| `POST`   | `/api/invitations/:invitationId/decline`             | Decline an invitation                 |
 
 ### Workflow status endpoints
 
-| Method | Endpoint | Purpose |
-|---|---|---|
-| `GET` | `/api/projects/:projectId/statuses` | List Project workflow statuses |
-| `POST` | `/api/projects/:projectId/statuses` | Create a workflow status |
-| `PATCH` | `/api/projects/:projectId/statuses/:statusId` | Update a workflow status |
+| Method   | Endpoint                                      | Purpose                            |
+| -------- | --------------------------------------------- | ---------------------------------- |
+| `GET`    | `/api/projects/:projectId/statuses`           | List Project workflow statuses     |
+| `POST`   | `/api/projects/:projectId/statuses`           | Create a workflow status           |
+| `PATCH`  | `/api/projects/:projectId/statuses/:statusId` | Update a workflow status           |
 | `DELETE` | `/api/projects/:projectId/statuses/:statusId` | Delete an eligible workflow status |
-| `PUT` | `/api/projects/:projectId/statuses/order` | Reorder workflow statuses |
+| `PUT`    | `/api/projects/:projectId/statuses/order`     | Reorder workflow statuses          |
 
 ### Task endpoints
 
-| Method | Endpoint | Purpose |
-|---|---|---|
-| `POST` | `/api/projects/:projectId/tasks` | Create a Task |
-| `GET` | `/api/tasks/:taskId` | Get a Task |
-| `PATCH` | `/api/tasks/:taskId` | Edit or move a Task |
-| `DELETE` | `/api/tasks/:taskId` | Delete a Task |
+| Method   | Endpoint                         | Purpose             |
+| -------- | -------------------------------- | ------------------- |
+| `POST`   | `/api/projects/:projectId/tasks` | Create a Task       |
+| `GET`    | `/api/tasks/:taskId`             | Get a Task          |
+| `PATCH`  | `/api/tasks/:taskId`             | Edit or move a Task |
+| `DELETE` | `/api/tasks/:taskId`             | Delete a Task       |
 
 See the [complete API contract](docs/api-contract.md) for request bodies, responses, permissions, status codes, and conflict behavior.
 

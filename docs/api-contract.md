@@ -144,11 +144,11 @@ Response:
 
 ## 6. Project roles
 
-| Role | Description | Assignable as Assignee | Eligible as Reporter |
-| --- | --- | ---: | ---: |
-| `OWNER` | Full Project, Task, workflow, and membership control | Yes | Yes |
-| `CONTRIBUTOR` | Can read the Project and manage Tasks | Yes | Yes |
-| `REVIEWER` | Read-only Project and Task access | No | Yes |
+| Role          | Description                                          | Assignable as Assignee | Eligible as Reporter |
+| ------------- | ---------------------------------------------------- | ---------------------: | -------------------: |
+| `OWNER`       | Full Project, Task, workflow, and membership control |                    Yes |                  Yes |
+| `CONTRIBUTOR` | Can read the Project and manage Tasks                |                    Yes |                  Yes |
+| `REVIEWER`    | Read-only Project and Task access                    |                     No |                  Yes |
 
 Assignee and Reporter eligibility are different. Reviewers cannot be Assignees, but an explicit Reviewer may be selected as a Reporter because Reporter assignment grants no additional permissions.
 
@@ -249,6 +249,7 @@ Successful deletion returns:
 ```http
 GET /api/workspaces/:workspaceId/members
 ```
+
 Requires Workspace member-management permission.
 
 The response includes:
@@ -1062,10 +1063,7 @@ A Task contains:
   "description": "Document all Project routes.",
   "status": "doing",
   "dueDate": "2026-08-30",
-  "assigneeIds": [
-    "owner-user-id",
-    "contributor-user-id"
-  ],
+  "assigneeIds": ["owner-user-id", "contributor-user-id"],
   "createdById": "creator-user-id",
   "reporterId": "reporter-user-id",
   "reporter": {
@@ -1080,22 +1078,22 @@ A Task contains:
 }
 ```
 
-| Property | Required | Purpose |
-| --- | ---: | --- |
-| `id` | Yes | Stable Task identifier |
-| `projectId` | Yes | Project containing the Task |
-| `title` | Yes | Task title |
-| `description` | Yes | Task description, which may be empty |
-| `status` | Yes | Workflow Status identifier belonging to the same Project |
-| `dueDate` | No | Optional `YYYY-MM-DD` deadline or `null` |
-| `assigneeIds` | Yes | Duplicate-free array of eligible Project-member user IDs |
-| `createdById` | Yes | Immutable user ID of the authenticated user who originally created the Task |
-| `reporterId` | Yes | User ID of the currently assigned Reporter |
-| `reporter` | API response | Display-ready Reporter identity containing `userId`, `name`, and `email` |
-| `canAssignReporter` | API response | Whether the authenticated user may reassign this Task’s Reporter |
-| `version` | Yes | Optimistic-concurrency version |
-| `createdAt` | Yes | Creation timestamp |
-| `updatedAt` | Yes | Last-update timestamp |
+| Property            |     Required | Purpose                                                                     |
+| ------------------- | -----------: | --------------------------------------------------------------------------- |
+| `id`                |          Yes | Stable Task identifier                                                      |
+| `projectId`         |          Yes | Project containing the Task                                                 |
+| `title`             |          Yes | Task title                                                                  |
+| `description`       |          Yes | Task description, which may be empty                                        |
+| `status`            |          Yes | Workflow Status identifier belonging to the same Project                    |
+| `dueDate`           |           No | Optional `YYYY-MM-DD` deadline or `null`                                    |
+| `assigneeIds`       |          Yes | Duplicate-free array of eligible Project-member user IDs                    |
+| `createdById`       |          Yes | Immutable user ID of the authenticated user who originally created the Task |
+| `reporterId`        |          Yes | User ID of the currently assigned Reporter                                  |
+| `reporter`          | API response | Display-ready Reporter identity containing `userId`, `name`, and `email`    |
+| `canAssignReporter` | API response | Whether the authenticated user may reassign this Task’s Reporter            |
+| `version`           |          Yes | Optimistic-concurrency version                                              |
+| `createdAt`         |          Yes | Creation timestamp                                                          |
+| `updatedAt`         |          Yes | Last-update timestamp                                                       |
 
 `createdById` is assigned automatically from the authenticated user and cannot be changed.
 
@@ -1138,9 +1136,7 @@ Request:
   "description": "Document all Project routes.",
   "status": "doing",
   "dueDate": "2026-08-30",
-  "assigneeIds": [
-    "owner-user-id"
-  ],
+  "assigneeIds": ["owner-user-id"],
   "reporterId": "reporter-user-id"
 }
 ```
@@ -1206,9 +1202,7 @@ Successful response:
     "description": "Document all Project routes.",
     "status": "doing",
     "dueDate": "2026-08-30",
-    "assigneeIds": [
-      "owner-user-id"
-    ],
+    "assigneeIds": ["owner-user-id"],
     "createdById": "authenticated-user-id",
     "reporterId": "reporter-user-id",
     "reporter": {
@@ -1297,10 +1291,7 @@ Ordinary Task-field update:
   "description": "Updated description",
   "status": "review-status-id",
   "dueDate": "2026-09-05",
-  "assigneeIds": [
-    "owner-user-id",
-    "another-contributor-id"
-  ],
+  "assigneeIds": ["owner-user-id", "another-contributor-id"],
   "version": 1
 }
 ```
@@ -1404,10 +1395,7 @@ For example, if the Task currently contains:
 
 ```json
 {
-  "assigneeIds": [
-    "user-one",
-    "user-two"
-  ]
+  "assigneeIds": ["user-one", "user-two"]
 }
 ```
 
@@ -1415,10 +1403,7 @@ and the update submits:
 
 ```json
 {
-  "assigneeIds": [
-    "user-two",
-    "user-three"
-  ],
+  "assigneeIds": ["user-two", "user-three"],
   "version": 2
 }
 ```
@@ -1427,10 +1412,7 @@ the final collection becomes:
 
 ```json
 {
-  "assigneeIds": [
-    "user-two",
-    "user-three"
-  ]
+  "assigneeIds": ["user-two", "user-three"]
 }
 ```
 
