@@ -57,6 +57,7 @@
 html {
   min-width: 320px;
   min-height: 100%;
+  scrollbar-gutter: stable;
 }
 
 body {
