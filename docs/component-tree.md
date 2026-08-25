@@ -72,20 +72,20 @@ Each `TaskColumn` will render the `TaskCard` components belonging to its respect
 
 ## 4. Component responsibilities
 
-| Component | Responsibility |
-|---|---|
-| `App` | Top-level application component |
-| `Navbar` | Displays navigation and login/logout actions |
-| `LoginPage` | Displays the login form |
-| `RegisterPage` | Displays the account-registration form |
-| `BoardsPage` | Displays the user's available boards |
-| `BoardCard` | Displays a summary of one board |
-| `CreateBoardForm` | Collects information for a new board |
-| `BoardPage` | Displays one Kanban board and its tasks |
-| `BoardHeader` | Displays the board name and board-level actions |
-| `TaskColumn` | Displays tasks belonging to one workflow status |
-| `TaskCard` | Displays one task and its available actions |
-| `TaskForm` | Collects information when creating or editing a task |
+| Component         | Responsibility                                       |
+| ----------------- | ---------------------------------------------------- |
+| `App`             | Top-level application component                      |
+| `Navbar`          | Displays navigation and login/logout actions         |
+| `LoginPage`       | Displays the login form                              |
+| `RegisterPage`    | Displays the account-registration form               |
+| `BoardsPage`      | Displays the user's available boards                 |
+| `BoardCard`       | Displays a summary of one board                      |
+| `CreateBoardForm` | Collects information for a new board                 |
+| `BoardPage`       | Displays one Kanban board and its tasks              |
+| `BoardHeader`     | Displays the board name and board-level actions      |
+| `TaskColumn`      | Displays tasks belonging to one workflow status      |
+| `TaskCard`        | Displays one task and its available actions          |
+| `TaskForm`        | Collects information when creating or editing a task |
 
 ## 5. Planned client structure
 

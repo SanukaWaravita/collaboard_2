@@ -56,7 +56,8 @@
   margin-bottom: 18px;
 }
 
-.task-form__field label {
+.task-form__field label,
+.task-form__field-label {
   font-size: 0.88rem;
   font-weight: 700;
 }
@@ -213,4 +214,23 @@
 .task-form__assignees:disabled .task-form__assignee-option {
   cursor: wait;
   opacity: 0.7;
+}
+
+.task-form__reporter-control {
+  display: grid;
+  gap: 10px;
+}
+
+.task-form__reporter-control select {
+  width: 100%;
+}
+
+.task-form__field
+  input:disabled,
+.task-form__field
+  textarea:disabled,
+.task-form__field
+  select:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
 }

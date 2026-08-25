@@ -1,5 +1,8 @@
 import { getDueDateLabel, getDueDateState } from "../utils/taskDueDate";
-import { resolveTaskAssignees } from "../utils/taskAssignee";
+import {
+  getAssigneeInitial,
+  resolveTaskAssignees,
+} from "../utils/taskAssignee";
 
 function TaskList({
   tasks,
@@ -41,6 +44,7 @@ function TaskList({
               <th scope="col">Description</th>
               <th scope="col">Status</th>
               <th scope="col">Assignee</th>
+              <th scope="col">Reporter</th>
               <th scope="col">Due date</th>
               <th scope="col">Actions</th>
             </tr>
@@ -49,6 +53,10 @@ function TaskList({
           <tbody>
             {tasks.map((task) => {
               const isDeleting = deletingTaskId === task.id;
+
+              const canOpenTaskForm =
+  canEditTasks ||
+  task.canAssignReporter;
 
               const workflowStatus = statusesById.get(task.status);
 
@@ -65,6 +73,10 @@ function TaskList({
                 task.assigneeIds,
                 projectMembers,
               );
+
+              const reporterName = task.reporter?.name ?? "Unknown reporter";
+
+              const reporterEmail = task.reporter?.email ?? null;
 
               const dueDateLabel = getDueDateLabel(
                 task.dueDate,
@@ -136,6 +148,27 @@ function TaskList({
                     </div>
                   </td>
 
+                  <td className="task-list__reporter">
+                    <div
+                      className="task-reporter"
+                      title={reporterEmail ?? reporterName}
+                      aria-label={`Reporter: ${reporterName}`}
+                    >
+                      <span
+                        className="task-reporter__avatar"
+                        aria-hidden="true"
+                      >
+                        {getAssigneeInitial(reporterName)}
+                      </span>
+
+                      <span className="task-reporter__identity">
+                        <span className="task-reporter__name">
+                          {reporterName}
+                        </span>
+                      </span>
+                    </div>
+                  </td>
+
                   <td className="task-list__due-date">
                     <span
                       className={
@@ -147,9 +180,9 @@ function TaskList({
                   </td>
 
                   <td>
-                    {(canEditTasks || canDeleteTasks) && (
+                    {(canOpenTaskForm || canDeleteTasks) && (
                       <div className="task-list__actions">
-                        {canEditTasks && (
+                        {canOpenTaskForm && (
                           <button
                             type="button"
                             className="button button--secondary"
@@ -157,7 +190,9 @@ function TaskList({
                             aria-label={`Edit ${task.title}`}
                             disabled={isDeleting}
                           >
-                            Edit
+                            {canEditTasks
+  ? "Edit"
+  : "Change Reporter"}
                           </button>
                         )}
 
@@ -175,7 +210,8 @@ function TaskList({
                       </div>
                     )}
 
-                    {!canEditTasks && !canDeleteTasks && (
+                    {!canOpenTaskForm &&
+  !canDeleteTasks && (
                       <span className="task-list__read-only">Read only</span>
                     )}
                   </td>

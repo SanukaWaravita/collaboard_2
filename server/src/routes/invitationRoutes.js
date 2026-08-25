@@ -9,14 +9,8 @@ const router = Router();
 
 router.get("/", getMyInvitations);
 
-router.post(
-  "/:invitationId/accept",
-  acceptInvitation,
-);
+router.post("/:invitationId/accept", acceptInvitation);
 
-router.post(
-  "/:invitationId/decline",
-  declineInvitation,
-);
+router.post("/:invitationId/decline", declineInvitation);
 
 export default router;

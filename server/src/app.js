@@ -17,21 +17,9 @@ app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/health", healthRoutes);
-app.use(
-  "/api/workspaces",
-  authenticateUser,
-  workspaceRoutes,
-);
-app.use(
-  "/api/projects",
-  authenticateUser,
-  projectRoutes,
-);
-app.use(
-  "/api/invitations",
-  authenticateUser,
-  invitationRoutes,
-);
+app.use("/api/workspaces", authenticateUser, workspaceRoutes);
+app.use("/api/projects", authenticateUser, projectRoutes);
+app.use("/api/invitations", authenticateUser, invitationRoutes);
 
 app.use("/api/tasks", authenticateUser, taskRoutes);
 

@@ -28,50 +28,29 @@ import {
 
 const router = Router();
 
-router
-  .route("/")
-  .get(getProjects)
-  .post(createProject);
+router.route("/").get(getProjects).post(createProject);
 
-router.get(
-  "/:projectId/members",
-  getProjectMembers,
-);
+router.get("/:projectId/members", getProjectMembers);
 
-router.patch(
-  "/:projectId/members/:userId",
-  updateProjectMember,
-);
+router.patch("/:projectId/members/:userId", updateProjectMember);
 
-router.delete(
-  "/:projectId/members/:userId",
-  removeProjectMember,
-);
+router.delete("/:projectId/members/:userId", removeProjectMember);
 
-router.post(
-  "/:projectId/transfer-ownership",
-  transferProjectOwnership,
-);
+router.post("/:projectId/transfer-ownership", transferProjectOwnership);
 
 router
   .route("/:projectId/invitations")
   .get(getProjectInvitations)
   .post(inviteProjectMember);
 
-router.delete(
-  "/:projectId/invitations/:invitationId",
-  cancelProjectInvitation,
-);
+router.delete("/:projectId/invitations/:invitationId", cancelProjectInvitation);
 
 router
   .route("/:projectId/statuses")
   .get(getWorkflowStatuses)
   .post(createWorkflowStatus);
 
-router.put(
-  "/:projectId/statuses/order",
-  reorderWorkflowStatuses,
-);
+router.put("/:projectId/statuses/order", reorderWorkflowStatuses);
 
 router
   .route("/:projectId/statuses/:statusId")

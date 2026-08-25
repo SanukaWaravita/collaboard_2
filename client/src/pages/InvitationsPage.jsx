@@ -1,38 +1,23 @@
 import { useEffect, useState } from "react";
-import {
-  useLocation,
-  useNavigate,
-} from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import AccessPageHeader from "../components/AccessPageHeader";
 import { apiRequest, clearSession } from "../services/api";
 
-function resolveInvitationReturnTo(
-  search,
-) {
-  const requestedReturnTo =
-    new URLSearchParams(search).get(
-      "returnTo",
-    );
+function resolveInvitationReturnTo(search) {
+  const requestedReturnTo = new URLSearchParams(search).get("returnTo");
 
   const isValidWorkspacePath =
     requestedReturnTo === "/workspaces" ||
-    requestedReturnTo?.startsWith(
-      "/workspaces/",
-    );
+    requestedReturnTo?.startsWith("/workspaces/");
 
-  return isValidWorkspacePath
-    ? requestedReturnTo
-    : "/workspaces";
+  return isValidWorkspacePath ? requestedReturnTo : "/workspaces";
 }
 
 function InvitationsPage() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const returnTo =
-    resolveInvitationReturnTo(
-      location.search,
-    );
+  const returnTo = resolveInvitationReturnTo(location.search);
 
   const [invitations, setInvitations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -139,32 +124,28 @@ function InvitationsPage() {
   }
 
   return (
-  <main className="board-page access-page">
+    <main className="board-page access-page">
       <AccessPageHeader
-  title="My Invitations"
-  countLabel={
-    isLoading
-      ? "Loading"
-      : `${invitations.length} ${
-          invitations.length === 1
-            ? "Invitation"
-            : "Invitations"
-        }`
-  }
-  backTo={returnTo}
-  backLabel="Back to previous CollaBoard page"
-  metadata={[
-    {
-      label: "Project invitations",
-      className: "project-header__key",
-    },
-    {
-      label:
-        "Accept or decline invitations " +
-        "sent to your account",
-    },
-  ]}
-/>
+        title="My Invitations"
+        countLabel={
+          isLoading
+            ? "Loading"
+            : `${invitations.length} ${
+                invitations.length === 1 ? "Invitation" : "Invitations"
+              }`
+        }
+        backTo={returnTo}
+        backLabel="Back to previous CollaBoard page"
+        metadata={[
+          {
+            label: "Project invitations",
+            className: "project-header__key",
+          },
+          {
+            label: "Accept or decline invitations " + "sent to your account",
+          },
+        ]}
+      />
 
       {actionError && (
         <p className="board-action-error" role="alert">

@@ -1,17 +1,10 @@
 import jwt from "jsonwebtoken";
 import { store } from "../data/inMemoryStore.js";
 
-export function authenticateUser(
-  request,
-  response,
-  next,
-) {
+export function authenticateUser(request, response, next) {
   const authorizationHeader = request.get("Authorization");
 
-  if (
-    !authorizationHeader ||
-    !authorizationHeader.startsWith("Bearer ")
-  ) {
+  if (!authorizationHeader || !authorizationHeader.startsWith("Bearer ")) {
     return response.status(401).json({
       message: "Authentication required",
     });

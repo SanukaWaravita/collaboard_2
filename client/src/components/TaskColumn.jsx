@@ -86,7 +86,15 @@ function TaskColumn({
               onDelete={onDeleteTask}
               onDragStart={onTaskDragStart}
               onDragEnd={onTaskDragEnd}
-              canEdit={canEditTasks}
+              canEdit={
+  canEditTasks ||
+  task.canAssignReporter
+}
+editLabel={
+  canEditTasks
+    ? "Edit Task"
+    : "Change Reporter"
+}
               canDelete={canDeleteTasks}
               canDrag={canEditTasks && movingTaskId === null}
               isDeleting={deletingTaskId === task.id}

@@ -7,11 +7,12 @@ import TaskForm from "../components/TaskForm";
 import TaskList from "../components/TaskList";
 import WorkflowStatusManager from "../components/WorkflowStatusManager";
 import { PROJECT_PERMISSIONS } from "../constants/access";
-import { apiRequest, clearSession } from "../services/api";
+import { apiRequest, clearSession, getCurrentUser } from "../services/api";
 
 function ProjectPage() {
   const { workspaceId, projectId } = useParams();
   const navigate = useNavigate();
+  const currentUser = getCurrentUser();
 
   const [project, setProject] = useState(null);
   const [tasks, setTasks] = useState([]);
@@ -303,9 +304,12 @@ function ProjectPage() {
   }
 
   function openEditTaskForm(task) {
-    if (!canUpdateTasks) {
-      return;
-    }
+  if (
+    !canUpdateTasks &&
+    !task.canAssignReporter
+  ) {
+    return;
+  }
 
     setEditingTask(task);
     setCreateTaskStatusId(null);
@@ -739,6 +743,16 @@ function ProjectPage() {
           initialStatusId={createTaskStatusId}
           workflowStatuses={workflowStatuses}
           assignees={assignableProjectMembers}
+reporters={projectMembers}
+currentUser={currentUser}
+canEditTaskFields={
+  !editingTask ||
+  canUpdateTasks
+}
+canAssignReporter={
+  !editingTask ||
+  editingTask.canAssignReporter
+}
           onSubmit={handleSaveTask}
           onCancel={closeTaskForm}
           isSubmitting={isSavingTask}
