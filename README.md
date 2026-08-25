@@ -235,6 +235,62 @@ To run with an empty development store instead, set:
 SEED_DEVELOPMENT_DATA=false
 ```
 
+### Aurora Digital Solutions demo accounts
+
+The company demonstration data represents a fictional organization with departmental Workspaces.
+
+| User | Email | Testing purpose |
+|---|---|---|
+| Nadia Perera | `company.rep@aurora.example` | Company representative and Owner of every department Workspace |
+| Ashan Silva | `product.lead@aurora.example` | Product & Engineering administration |
+| Dinithi Jayasinghe | `marketing.lead@aurora.example` | Marketing & Growth administration |
+| Kavindu Fernando | `sales.lead@aurora.example` | Sales & Partnerships administration |
+| Malsha Wijeratne | `success.lead@aurora.example` | Customer Success administration |
+| Nethmi Karunaratne | `people.lead@aurora.example` | People & Culture administration |
+| Tharindu Senanayake | `operations.lead@aurora.example` | Finance & Operations administration |
+
+Unless `DEVELOPMENT_SEED_PASSWORD` is changed, all company demo accounts use:
+
+```text
+CollaBoard123!
+```
+
+The Aurora company demonstration includes:
+
+- one company-representative account;
+- six department-lead accounts;
+- six department Workspaces;
+- two members per Workspace;
+- three Projects per department;
+- 18 Projects altogether;
+- open and private Project visibility;
+- default To Do, Doing and Done workflows;
+- five Tasks per Project;
+- 90 realistic Tasks altogether;
+- completed, overdue, current, upcoming and unset Due Dates;
+- unassigned, singly assigned and multiply assigned Tasks;
+- explicit Workspace and Project memberships.
+
+### Validate the company demo seed
+
+Ensure development seed data is enabled, then run:
+
+```bash
+cd server
+npm run validate:company-seed
+```
+
+The validator checks:
+
+- expected company data totals;
+- duplicate identifiers;
+- Workspace ownership and memberships;
+- Project ownership and memberships;
+- Project workflow statuses;
+- Task-to-Project relationships;
+- Task assignee memberships;
+- Task status, version and Due Date values.
+
 ## Running the application
 
 The client and server run in separate terminals.

@@ -1,5 +1,8 @@
 import bcrypt from "bcryptjs";
 import {
+  createCompanyDemoSeed,
+} from "./companyDemoSeed.js";
+import {
   INVITATION_STATUS,
   MEMBER_TYPES,
   PROJECT_ROLES,
@@ -148,6 +151,13 @@ export function createDevelopmentSeed() {
     inFiveDays: getRelativeDateValue(5),
     nextWeek: getRelativeDateValue(7),
   };
+
+      const companyDemoSeed =
+    createCompanyDemoSeed({
+      passwordHash,
+      timestamp,
+      dueDates,
+    });
 
   const users = [
     createUser(
@@ -738,13 +748,40 @@ export function createDevelopmentSeed() {
     ),
   ];
 
-  return {
-    users,
-    workspaces,
-    workspaceMembers,
-    projects,
-    projectMembers,
-    projectInvitations,
-    tasks,
+return {
+    users: [
+      ...users,
+      ...companyDemoSeed.users,
+    ],
+
+    workspaces: [
+      ...workspaces,
+      ...companyDemoSeed.workspaces,
+    ],
+
+    workspaceMembers: [
+      ...workspaceMembers,
+      ...companyDemoSeed.workspaceMembers,
+    ],
+
+    projects: [
+      ...projects,
+      ...companyDemoSeed.projects,
+    ],
+
+    projectMembers: [
+      ...projectMembers,
+      ...companyDemoSeed.projectMembers,
+    ],
+
+    projectInvitations: [
+      ...projectInvitations,
+      ...companyDemoSeed.projectInvitations,
+    ],
+
+    tasks: [
+      ...tasks,
+      ...companyDemoSeed.tasks,
+    ],
   };
 }
