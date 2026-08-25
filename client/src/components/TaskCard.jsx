@@ -13,6 +13,7 @@ function TaskCard({
   onDragStart,
   onDragEnd,
   canEdit = false,
+  editLabel = "Edit Task",
   canDelete = false,
   canDrag = false,
   isDeleting = false,
@@ -160,8 +161,8 @@ function TaskCard({
                 className="task-card__icon-button"
                 onClick={() => onEdit(task)}
                 disabled={isBusy}
-                aria-label={`Edit ${task.title}`}
-                title="Edit Task"
+                aria-label={`${editLabel}: ${task.title}`}
+title={editLabel}
               >
                 <svg
                   viewBox="0 0 24 24"

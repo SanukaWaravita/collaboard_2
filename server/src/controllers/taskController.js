@@ -15,7 +15,11 @@ import {
   isValidAssigneeIdsValue,
   normalizeAssigneeIds,
 } from "../utils/taskAssignee.js";
-import { presentTask } from "../utils/taskReporter.js";
+import {
+  canAssignTaskReporter,
+  findEligibleTaskReporter,
+  presentTask,
+} from "../utils/taskReporter.js";
 
 function findTaskAndProject(taskId) {
   const task = store.tasks.find((currentTask) => currentTask.id === taskId);
@@ -55,19 +59,21 @@ export function createTask(request, response) {
   }
 
   const {
-    title,
-    description = "",
-    status,
-    dueDate = null,
-    assigneeIds = [],
-    reporterId,
-  } = request.body ?? {};
+  title,
+  description = "",
+  status,
+  dueDate = null,
+  assigneeIds = [],
+  reporterId,
+  createdById,
+} = request.body ?? {};
 
-  if (reporterId !== undefined) {
-    return response.status(400).json({
-      message: "Reporter is assigned automatically from the authenticated user",
-    });
-  }
+if (createdById !== undefined) {
+  return response.status(400).json({
+    message:
+      "Task creator is assigned automatically from the authenticated user",
+  });
+}
 
   if (typeof title !== "string" || !title.trim()) {
     return response.status(400).json({
@@ -107,6 +113,19 @@ export function createTask(request, response) {
     });
   }
 
+  const selectedReporter =
+  findEligibleTaskReporter(
+    project.id,
+    reporterId ?? request.user.id,
+  );
+
+if (!selectedReporter) {
+  return response.status(400).json({
+    message:
+      "Reporter must be a current Project member",
+  });
+}
+
   const selectedStatus =
     status === undefined
       ? getInitialWorkflowStatus(project)
@@ -124,23 +143,24 @@ export function createTask(request, response) {
   const timestamp = new Date().toISOString();
 
   const task = {
-    id: randomUUID(),
-    projectId: project.id,
-    title: title.trim(),
-    description: description.trim(),
-    status: selectedStatus.id,
-    dueDate: normalizeDueDate(dueDate),
-    assigneeIds: normalizedAssigneeIds,
-    reporterId: request.user.id,
-    version: 1,
-    createdAt: timestamp,
-    updatedAt: timestamp,
-  };
+  id: randomUUID(),
+  projectId: project.id,
+  title: title.trim(),
+  description: description.trim(),
+  status: selectedStatus.id,
+  dueDate: normalizeDueDate(dueDate),
+  assigneeIds: normalizedAssigneeIds,
+  createdById: request.user.id,
+  reporterId: selectedReporter.user.id,
+  version: 1,
+  createdAt: timestamp,
+  updatedAt: timestamp,
+};
 
   store.tasks.push(task);
 
   return response.status(201).json({
-    task: presentTask(task),
+    task: presentTask(task, request.user.id),
   });
 }
 
@@ -161,7 +181,10 @@ export function getTask(request, response) {
   }
 
   return response.status(200).json({
-    task: presentTask(result.task),
+    task: presentTask(
+  result.task,
+  request.user.id,
+),
   });
 }
 
@@ -176,47 +199,91 @@ export function updateTask(request, response) {
 
   const { task, project } = result;
 
-  if (
-    !hasProjectPermission(
-      project,
-      request.user.id,
-      PROJECT_PERMISSIONS.UPDATE_TASK,
-    )
-  ) {
-    return response.status(403).json({
-      message: "You cannot edit tasks in this project",
-    });
-  }
+const {
+  title,
+  description,
+  status,
+  dueDate,
+  assigneeIds,
+  reporterId,
+  createdById,
+  version,
+} = request.body ?? {};
 
-  const {
-    title,
-    description,
-    status,
-    dueDate,
-    assigneeIds,
-    reporterId,
-    version,
-  } = request.body ?? {};
+if (createdById !== undefined) {
+  return response.status(400).json({
+    message: "A Task creator cannot be changed",
+  });
+}
 
-  if (reporterId !== undefined) {
-    return response.status(400).json({
-      message: "A Task Reporter cannot be changed",
-    });
-  }
+const containsTaskFieldUpdate =
+  title !== undefined ||
+  description !== undefined ||
+  status !== undefined ||
+  dueDate !== undefined ||
+  assigneeIds !== undefined;
 
-  const containsUpdate =
-    title !== undefined ||
-    description !== undefined ||
-    status !== undefined ||
-    dueDate !== undefined ||
-    assigneeIds !== undefined;
+if (
+  containsTaskFieldUpdate &&
+  !hasProjectPermission(
+    project,
+    request.user.id,
+    PROJECT_PERMISSIONS.UPDATE_TASK,
+  )
+) {
+  return response.status(403).json({
+    message: "You cannot edit tasks in this project",
+  });
+}
 
-  if (!containsUpdate) {
+let normalizedReporterId;
+
+if (reporterId !== undefined) {
+  const selectedReporter =
+    findEligibleTaskReporter(
+      project.id,
+      reporterId,
+    );
+
+  if (!selectedReporter) {
     return response.status(400).json({
       message:
-        "Provide a title, description, status, Due Date, or Assignees to update",
+        "Reporter must be a current Project member",
     });
   }
+
+  normalizedReporterId =
+    selectedReporter.user.id;
+}
+
+const changesReporter =
+  normalizedReporterId !== undefined &&
+  normalizedReporterId !== task.reporterId;
+
+if (
+  changesReporter &&
+  !canAssignTaskReporter(
+    task,
+    project,
+    request.user.id,
+  )
+) {
+  return response.status(403).json({
+    message:
+      "You cannot assign the Reporter for this Task",
+  });
+}
+
+const containsUpdate =
+  containsTaskFieldUpdate ||
+  changesReporter;
+
+if (!containsUpdate) {
+  return response.status(400).json({
+    message:
+      "Provide a title, description, status, Due Date, Assignees, or a different Reporter to update",
+  });
+}
 
   if (!Number.isInteger(version) || version < 1) {
     return response.status(400).json({
@@ -227,7 +294,10 @@ export function updateTask(request, response) {
   if (version !== task.version) {
     return response.status(409).json({
       message: "Task was modified by another request",
-      task: presentTask(task),
+      task: presentTask(
+  result.task,
+  request.user.id,
+),
     });
   }
 
@@ -297,14 +367,25 @@ export function updateTask(request, response) {
   }
 
   if (assigneeIds !== undefined) {
-    task.assigneeIds = normalizedAssigneeIds;
-  }
+  task.assigneeIds = normalizedAssigneeIds;
+}
+
+if (changesReporter) {
+  task.reporterId = normalizedReporterId;
+}
+
+  if (changesReporter) {
+  task.reporterId = normalizedReporterId;
+}
 
   task.version += 1;
   task.updatedAt = new Date().toISOString();
 
   return response.status(200).json({
-    task: presentTask(task),
+    task: presentTask(
+  result.task,
+  request.user.id,
+),
   });
 }
 

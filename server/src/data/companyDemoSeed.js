@@ -1292,8 +1292,9 @@ function createCompanyTask(
     status,
     dueDate: dueDateKey === null ? null : dueDates[dueDateKey],
     assigneeIds: resolveCompanyTaskAssignees(assignees, departmentLeadId),
-    reporterId: projectDefinition.ownerId,
-    version: 1,
+    createdById: projectDefinition.ownerId,
+reporterId: projectDefinition.ownerId,
+version: 1,
     createdAt: timestamp,
     updatedAt: timestamp,
   };

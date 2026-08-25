@@ -2,7 +2,7 @@
 
 ## 1. Purpose
 
-This document declearnes the REST API used by the CollaBoard React client.
+This document declares the REST API used by the CollaBoard React client.
 
 CollaBoard currently stores users, Workspaces, Projects, workflow statuses, memberships, invitations, and Tasks in server memory.
 
@@ -21,6 +21,8 @@ Workspace
     ├── Project Member
     └── Task
         ├── References one Workflow Status
+        ├── References one immutable creator
+        ├── References one assignable Reporter
         └── Optionally references multiple Assignees
 ```
 
@@ -37,6 +39,10 @@ Every Assignee must:
 - have the `OWNER` or `CONTRIBUTOR` Project role.
 
 Project reviewers, implicit viewers of open Projects, and users without Project access cannot be assigned.
+
+A Task’s `createdById` property records the authenticated user who originally created it. This value is immutable.
+
+A Task’s `reporterId` property identifies its current Reporter. The Reporter must be an explicit member of the same Project when selected, but may have the `OWNER`, `CONTRIBUTOR`, or `REVIEWER` Project role. Reporter assignment does not grant Task-editing permissions and is independent of `assigneeIds`.
 
 A Project is displayed using Kanban and List views in the React interface. It is not a separate Board entity.
 
@@ -93,7 +99,7 @@ Response:
 }
 ```
 
-The first registered user becomes the owner of the seeded Workspace and seeded Projects.
+The first registered user becomes the owner of the starter Workspace and starter Projects. The starter Tasks are also updated so that this user replaces the temporary creator and Reporter references.
 
 ### Login
 
@@ -138,15 +144,17 @@ Response:
 
 ## 6. Project roles
 
-| Role          | Description                                          | Assignable to Tasks |
-| ------------- | ---------------------------------------------------- | ------------------: |
-| `OWNER`       | Full Project, Task, workflow, and membership control |                 Yes |
-| `CONTRIBUTOR` | Can read the Project and manage Tasks                |                 Yes |
-| `REVIEWER`    | Read-only Project and Task access                    |                  No |
+| Role | Description | Assignable as Assignee | Eligible as Reporter |
+| --- | --- | ---: | ---: |
+| `OWNER` | Full Project, Task, workflow, and membership control | Yes | Yes |
+| `CONTRIBUTOR` | Can read the Project and manage Tasks | Yes | Yes |
+| `REVIEWER` | Read-only Project and Task access | No | Yes |
 
-An internal Workspace member with implicit access to an open Project is treated as a non-member reviewer and cannot be assigned.
+Assignee and Reporter eligibility are different. Reviewers cannot be Assignees, but an explicit Reviewer may be selected as a Reporter because Reporter assignment grants no additional permissions.
 
-A guest with explicit `CONTRIBUTOR` Project membership can be assigned.
+An internal Workspace member with only implicit access to an open Project is treated as a non-member reviewer and cannot be selected as an Assignee or Reporter.
+
+A guest with explicit `CONTRIBUTOR` membership may be selected as either an Assignee or Reporter. A guest with explicit `REVIEWER` membership may be selected only as a Reporter.
 
 ---
 
@@ -236,14 +244,11 @@ Successful deletion returns:
 204 No Content
 ```
 
-````markdown
 ### List and manage Workspace members
 
 ```http
 GET /api/workspaces/:workspaceId/members
 ```
-````
-
 Requires Workspace member-management permission.
 
 The response includes:
@@ -357,7 +362,7 @@ REVIEWER
 
 The endpoint creates explicit Project membership when none exists and updates the role when membership already exists.
 
-Changing a contributor to a reviewer clears that user's affected Task assignments.
+Changing a contributor to a reviewer clears that user's affected Task assignments. It does not change any Task’s immutable creator or current Reporter.
 
 ### Remove explicit Project access
 
@@ -369,6 +374,7 @@ Removing explicit access:
 
 - preserves inherited Reviewer access to an open Project for internal members;
 - removes Task assignments in that Project;
+- preserves Task `createdById` and `reporterId` references;
 - removes an unused guest Workspace membership when the guest has no remaining Project membership;
 - cannot remove a Project Owner.
 
@@ -384,6 +390,7 @@ Removing a Workspace member also:
 
 - removes their Project memberships in the Workspace;
 - clears their Task assignments in those Projects;
+- preserves historical Task creator and Reporter references;
 - cancels applicable pending invitations;
 - removes inherited access to open Projects.
 
@@ -695,9 +702,7 @@ Response:
 }
 ```
 
-The `canBeAssigned` property is calculated by the server.
-
-It is `true` only for Project owners and contributors.
+The `canBeAssigned` property is calculated by the server and describes Assignee eligibility only. It is `true` only for Project Owners and Contributors. Reporter selection uses explicit Project membership instead, so an explicit Reviewer may still be offered as a Reporter.
 
 ### Change a Project member’s role
 
@@ -740,6 +745,7 @@ Changing a contributor to a reviewer automatically:
 
 - removes that user’s ID from every assigned Task;
 - preserves other Assignees on those Tasks;
+- preserves Task creator and Reporter references;
 - increments each affected Task version;
 - updates each affected Task’s `updatedAt` timestamp.
 
@@ -768,6 +774,7 @@ Removing a Project member:
 
 - removes that user’s ID from every assigned Task;
 - preserves other Assignees;
+- preserves Task `createdById` and `reporterId` references;
 - increments each affected Task version.
 
 Removing a guest from their final assigned Project also removes their Workspace guest membership.
@@ -1055,39 +1062,55 @@ A Task contains:
   "description": "Document all Project routes.",
   "status": "doing",
   "dueDate": "2026-08-30",
-  "assigneeIds": ["owner-user-id", "contributor-user-id"],
+  "assigneeIds": [
+    "owner-user-id",
+    "contributor-user-id"
+  ],
+  "createdById": "creator-user-id",
   "reporterId": "reporter-user-id",
   "reporter": {
     "userId": "reporter-user-id",
-    "name": "Casey Contributor",
-    "email": "internal.contributor@collaboard.dev"
+    "name": "Riley Reviewer",
+    "email": "internal.reviewer@collaboard.dev"
   },
+  "canAssignReporter": true,
   "version": 3,
   "createdAt": "2026-08-21T00:00:00.000Z",
   "updatedAt": "2026-08-21T02:00:00.000Z"
 }
 ```
 
-| Property      |     Required | Purpose                                                                  |
-| ------------- | -----------: | ------------------------------------------------------------------------ |
-| `id`          |          Yes | Stable Task identifier                                                   |
-| `projectId`   |          Yes | Project containing the Task                                              |
-| `title`       |          Yes | Task title                                                               |
-| `description` |          Yes | Task description, which may be empty                                     |
-| `status`      |          Yes | Workflow Status identifier                                               |
-| `dueDate`     |           No | Optional `YYYY-MM-DD` deadline or `null`                                 |
-| `assigneeIds` |          Yes | Duplicate-free array of eligible Project-member user IDs                 |
-| `version`     |          Yes | Optimistic concurrency version                                           |
-| `createdAt`   |          Yes | Creation timestamp                                                       |
-| `updatedAt`   |          Yes | Last update timestamp                                                    |
-| `reporterId`  |          Yes | Registered user who originally created the Task                          |
-| `reporter`    | API response | Display-ready Reporter identity containing `userId`, `name`, and `email` |
+| Property | Required | Purpose |
+| --- | ---: | --- |
+| `id` | Yes | Stable Task identifier |
+| `projectId` | Yes | Project containing the Task |
+| `title` | Yes | Task title |
+| `description` | Yes | Task description, which may be empty |
+| `status` | Yes | Workflow Status identifier belonging to the same Project |
+| `dueDate` | No | Optional `YYYY-MM-DD` deadline or `null` |
+| `assigneeIds` | Yes | Duplicate-free array of eligible Project-member user IDs |
+| `createdById` | Yes | Immutable user ID of the authenticated user who originally created the Task |
+| `reporterId` | Yes | User ID of the currently assigned Reporter |
+| `reporter` | API response | Display-ready Reporter identity containing `userId`, `name`, and `email` |
+| `canAssignReporter` | API response | Whether the authenticated user may reassign this Task’s Reporter |
+| `version` | Yes | Optimistic-concurrency version |
+| `createdAt` | Yes | Creation timestamp |
+| `updatedAt` | Yes | Last-update timestamp |
 
-`reporterId` is stored with the Task.
+`createdById` is assigned automatically from the authenticated user and cannot be changed.
 
-`reporter` is generated for API responses by resolving `reporterId` against the user collection. It is not separately stored and must not be supplied by clients.
+`reporterId` identifies the currently assigned Reporter. It is independent of both the original Task creator and the Task’s Assignees.
 
-The Reporter is the authenticated user who created the Task. It is independent of the Task’s Assignees and cannot be changed through Task updates.
+`reporter` is generated for API responses by resolving `reporterId` against the user collection. It is not separately stored or supplied by clients.
+
+`canAssignReporter` is calculated for the authenticated user and is not stored with the Task.
+
+Changing a Reporter does not:
+
+- change `createdById`;
+- add the Reporter to `assigneeIds`;
+- grant the Reporter additional permissions;
+- change the title, description, status, Due Date, or Assignees.
 
 An unassigned Task stores:
 
@@ -1115,31 +1138,64 @@ Request:
   "description": "Document all Project routes.",
   "status": "doing",
   "dueDate": "2026-08-30",
-  "assigneeIds": ["owner-user-id", "contributor-user-id"]
+  "assigneeIds": [
+    "owner-user-id"
+  ],
+  "reporterId": "reporter-user-id"
 }
 ```
 
-Only `title` is always required.
+Only `title` is always required.
 
-If `description` is omitted, it defaults to an empty string.
+If `description` is omitted, it defaults to an empty string.
 
-If `status` is omitted, the server selects the first non-completed Workflow Status according to its position.
+If `status` is omitted, the server selects the first non-completed Workflow Status according to its position.
 
-If `dueDate` is omitted, empty, or `null`, it is stored as `null`.
+If `dueDate` is omitted, empty, or `null`, it is stored as `null`.
 
-If `assigneeIds` is omitted or `null`, it is stored as:
+If `assigneeIds` is omitted or `null`, it is stored as an empty array.
 
-```json
-{
-  "assigneeIds": []
-}
-```
+`reporterId` is optional. If it is omitted, the authenticated creator becomes the Reporter.
 
-The supplied `status` must belong to the same Project.
+The supplied `status` must belong to the same Project.
 
 Every supplied Assignee ID must identify an explicit owner or contributor in the same Project.
 
-Response:
+The supplied Reporter must be a registered, explicit member of the same Project. Project Owners, Contributors, and Reviewers may be selected as Reporters. Implicit viewers of open Projects and users from other Projects are not eligible.
+
+The server always sets:
+
+```json
+{
+  "createdById": "authenticated-user-id"
+}
+```
+
+Clients must not supply `createdById`. Attempts return:
+
+```http
+400 Bad Request
+```
+
+```json
+{
+  "message": "Task creator is assigned automatically from the authenticated user"
+}
+```
+
+An invalid, removed, or non-member Reporter returns:
+
+```http
+400 Bad Request
+```
+
+```json
+{
+  "message": "Reporter must be a current Project member"
+}
+```
+
+Successful response:
 
 ```json
 {
@@ -1150,7 +1206,17 @@ Response:
     "description": "Document all Project routes.",
     "status": "doing",
     "dueDate": "2026-08-30",
-    "assigneeIds": ["owner-user-id", "contributor-user-id"],
+    "assigneeIds": [
+      "owner-user-id"
+    ],
+    "createdById": "authenticated-user-id",
+    "reporterId": "reporter-user-id",
+    "reporter": {
+      "userId": "reporter-user-id",
+      "name": "Riley Reviewer",
+      "email": "internal.reviewer@collaboard.dev"
+    },
+    "canAssignReporter": true,
     "version": 1,
     "createdAt": "2026-08-21T00:00:00.000Z",
     "updatedAt": "2026-08-21T00:00:00.000Z"
@@ -1158,41 +1224,14 @@ Response:
 }
 ```
 
-The client must not supply `reporterId`.
-
-The server automatically assigns the authenticated user as the Task Reporter:
-
-````json
-{
-  "reporterId": "authenticated-user-id"
-}
-
-A client-supplied reporterId is rejected with:
-
-400 Bad Request
-{
-  "message": "Reporter is assigned automatically from the authenticated user"
-}
-
-In the successful creation response, add:
-
-```json
-"reporterId": "authenticated-user-id",
-"reporter": {
-  "userId": "authenticated-user-id",
-  "name": "Casey Contributor",
-  "email": "internal.contributor@collaboard.dev"
-},
-````
-
 ### Due Date validation
 
 A non-empty Due Date must:
 
 - be a string;
-- use exact `YYYY-MM-DD` format;
+- use exact `YYYY-MM-DD` format;
 - represent a real calendar date;
-- use a four-digit year of at least `1000`.
+- use a four-digit year of at least `1000`.
 
 Invalid Due Dates return:
 
@@ -1202,7 +1241,7 @@ Invalid Due Dates return:
 
 ### Multiple-Assignee validation
 
-`assigneeIds` may be:
+`assigneeIds` may be:
 
 - an empty array;
 - an array containing one eligible user ID;
@@ -1242,13 +1281,15 @@ Example invalid response:
 GET /api/tasks/:taskId
 ```
 
+The response includes the resolved `reporter` and the authenticated user’s `canAssignReporter` capability.
+
 ### Update a Task
 
 ```http
 PATCH /api/tasks/:taskId
 ```
 
-Request:
+Ordinary Task-field update:
 
 ```json
 {
@@ -1256,12 +1297,24 @@ Request:
   "description": "Updated description",
   "status": "review-status-id",
   "dueDate": "2026-09-05",
-  "assigneeIds": ["owner-user-id", "another-contributor-id"],
+  "assigneeIds": [
+    "owner-user-id",
+    "another-contributor-id"
+  ],
   "version": 1
 }
 ```
 
-At least one editable property must be provided:
+Reporter-only update:
+
+```json
+{
+  "reporterId": "new-reporter-user-id",
+  "version": 1
+}
+```
+
+At least one editable property or a different Reporter must be provided:
 
 ```text
 title
@@ -1269,40 +1322,92 @@ description
 status
 dueDate
 assigneeIds
+reporterId
 ```
 
-`reporterId` is not an editable Task property.
+A valid current `version` is required for every update.
 
-The Reporter remains unchanged when:
+The ordinary `UPDATE_TASK` permission controls changes to `title`, `description`, `status`, `dueDate`, and `assigneeIds`.
 
-- the title or description changes;
-- the status changes;
-- the Due Date changes or is removed;
-- Assignees are added or removed;
-- the Task is moved through drag and drop;
-- the original Reporter is later removed from Project membership.
+The Reporter may be reassigned by:
 
-Attempts to submit `reporterId` return:
+- the original Task creator, while still an explicit Project member;
+- the Project Owner;
+- the Workspace Owner;
+- a Workspace Admin.
+
+Other Contributors may edit ordinary Task fields but cannot reassign the Reporter on a Task created by someone else.
+
+A user who can reassign only the Reporter may submit `reporterId` and `version`, but cannot use that authorization to change ordinary Task fields.
+
+The replacement Reporter must be a current explicit member of the same Project. Owners, Contributors, and Reviewers are eligible.
+
+Unauthorized Reporter reassignment returns:
+
+```http
+403 Forbidden
+```
+
+```json
+{
+  "message": "You cannot assign the Reporter for this Task"
+}
+```
+
+An invalid Reporter returns:
 
 ```http
 400 Bad Request
 ```
 
-```JSON
+```json
 {
-  "message": "A Task Reporter cannot be changed"
+  "message": "Reporter must be a current Project member"
 }
 ```
 
-Reporter removal from Project membership must not trigger Assignee cleanup against `reporterId`.
+Clients must not supply `createdById`. Attempts return:
 
-Updating `assigneeIds` replaces the complete Assignee collection.
+```http
+400 Bad Request
+```
+
+```json
+{
+  "message": "A Task creator cannot be changed"
+}
+```
+
+Submitting the existing Reporter without another update returns:
+
+```http
+400 Bad Request
+```
+
+```json
+{
+  "message": "Provide a title, description, status, Due Date, Assignees, or a different Reporter to update"
+}
+```
+
+Changing the Reporter:
+
+- leaves `createdById` unchanged;
+- leaves `assigneeIds` unchanged;
+- increments `version` once;
+- updates `updatedAt`;
+- returns the resolved new `reporter` and recalculated `canAssignReporter` capability.
+
+Updating `assigneeIds` replaces the complete Assignee collection.
 
 For example, if the Task currently contains:
 
 ```json
 {
-  "assigneeIds": ["user-one", "user-two"]
+  "assigneeIds": [
+    "user-one",
+    "user-two"
+  ]
 }
 ```
 
@@ -1310,7 +1415,10 @@ and the update submits:
 
 ```json
 {
-  "assigneeIds": ["user-two", "user-three"],
+  "assigneeIds": [
+    "user-two",
+    "user-three"
+  ],
   "version": 2
 }
 ```
@@ -1319,17 +1427,18 @@ the final collection becomes:
 
 ```json
 {
-  "assigneeIds": ["user-two", "user-three"]
+  "assigneeIds": [
+    "user-two",
+    "user-three"
+  ]
 }
 ```
 
-A valid current `version` is required for every update.
-
-After a successful update, the Task version increments once, regardless of how many Assignees changed.
+After any successful update, the Task version increments once regardless of how many fields, Assignees, or Reporter values changed.
 
 ### Removing a Due Date
 
-A Due Date can be removed using `null` or an empty string:
+A Due Date can be removed using `null` or an empty string:
 
 ```json
 {
@@ -1358,13 +1467,7 @@ The API also accepts:
 }
 ```
 
-`null` is normalized to:
-
-```json
-{
-  "assigneeIds": []
-}
-```
+`null` is normalized to an empty array.
 
 ### Task version conflict
 
@@ -1381,6 +1484,14 @@ Response:
   "message": "Task was modified by another request",
   "task": {
     "id": "task-id",
+    "createdById": "creator-user-id",
+    "reporterId": "reporter-user-id",
+    "reporter": {
+      "userId": "reporter-user-id",
+      "name": "Riley Reviewer",
+      "email": "internal.reviewer@collaboard.dev"
+    },
+    "canAssignReporter": true,
     "version": 2
   }
 }
@@ -1454,7 +1565,13 @@ Automatic Assignee cleanup does not:
 - change the title;
 - change the description;
 - change the workflow status;
-- change the Due Date.
+- change the Due Date;
+- change `createdById`;
+- automatically change or clear `reporterId`.
+
+If the current Reporter is removed from Project membership, the Task retains that historical Reporter reference and continues resolving the user’s display identity. An authorized user may later reassign the Task to a current Project member.
+
+If the original creator is removed from Project membership, `createdById` remains unchanged for audit history. The removed creator no longer qualifies for creator-based Reporter reassignment unless they become an explicit Project member again.
 
 ---
 
@@ -1507,6 +1624,7 @@ Restarting the Express server removes:
 - Task updates;
 - Task Due Dates;
 - Task Assignees;
+- Task creator and Reporter changes;
 - created, renamed, recoloured, reordered, and deleted Workflow Statuses.
 
 Seeded Tasks use:
@@ -1515,6 +1633,8 @@ Seeded Tasks use:
 {
   "dueDate": null,
   "assigneeIds": [],
+  "createdById": "seed-creator-user-id",
+  "reporterId": "seed-reporter-user-id",
   "version": 1
 }
 ```

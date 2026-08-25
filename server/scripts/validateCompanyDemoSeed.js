@@ -240,6 +240,16 @@ companyTasks.forEach((task) => {
       .map((membership) => membership.userId),
   );
 
+  check(
+  userIds.has(task.createdById),
+  `${task.title} has an unknown Task creator`,
+);
+
+check(
+  memberIds.has(task.createdById),
+  `${task.title} has a Task creator who is not a Project member`,
+);
+
   check(userIds.has(task.reporterId), `${task.title} has an unknown Reporter`);
 
   check(

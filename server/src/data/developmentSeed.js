@@ -117,10 +117,19 @@ function getDefaultTaskReporterId(projectId) {
 }
 
 function createTask(definition, timestamp) {
+  const defaultCreatorId =
+    getDefaultTaskReporterId(
+      definition.projectId,
+    );
+
   return {
     ...definition,
+    createdById:
+      definition.createdById ??
+      defaultCreatorId,
     reporterId:
-      definition.reporterId ?? getDefaultTaskReporterId(definition.projectId),
+      definition.reporterId ??
+      defaultCreatorId,
     version: 1,
     createdAt: timestamp,
     updatedAt: timestamp,
