@@ -6,6 +6,7 @@ function TaskForm({
   initialStatusId = null,
   workflowStatuses = [],
   assignees = [],
+  currentUser = null,
   onSubmit,
   onCancel,
   isSubmitting = false,
@@ -28,6 +29,9 @@ function TaskForm({
   );
 
   const isEditing = Boolean(initialTask);
+
+  const reporter = isEditing ? (initialTask?.reporter ?? null) : currentUser;
+
   const hasWorkflowStatuses = workflowStatuses.length > 0;
 
   function toggleAssignee(userId) {
@@ -137,7 +141,40 @@ function TaskForm({
 
           <small>Optional. Leave this empty if the Task has no deadline.</small>
         </div>
+        <div className="task-form__field">
+          <span className="task-form__field-label">Reporter</span>
 
+          {reporter ? (
+            <div
+              className={"task-reporter " + "task-reporter--form"}
+              title={reporter.email ?? reporter.name}
+            >
+              <span className="task-reporter__avatar" aria-hidden="true">
+                {getAssigneeInitial(reporter.name)}
+              </span>
+
+              <span className="task-reporter__identity">
+                <strong className="task-reporter__name">{reporter.name}</strong>
+
+                {reporter.email && (
+                  <small className="task-reporter__email">
+                    {reporter.email}
+                  </small>
+                )}
+              </span>
+            </div>
+          ) : (
+            <p className="task-reporter__unavailable">
+              Reporter information is unavailable.
+            </p>
+          )}
+
+          <small>
+            {isEditing
+              ? "The Reporter is the person who created this Task and cannot be changed."
+              : "You will automatically become the Reporter when this Task is created."}
+          </small>
+        </div>
         <fieldset
           className={"task-form__field " + "task-form__assignees"}
           disabled={isSubmitting}

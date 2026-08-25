@@ -10,35 +10,23 @@ export function normalizeProjectKey(value) {
 }
 
 export function validateProjectKey(value) {
-  return PROJECT_KEY_PATTERN.test(
-    normalizeProjectKey(value),
-  );
+  return PROJECT_KEY_PATTERN.test(normalizeProjectKey(value));
 }
 
-export function projectKeyExists(
-  workspaceId,
-  projectKey,
-) {
+export function projectKeyExists(workspaceId, projectKey) {
   return store.projects.some(
     (project) =>
-      project.workspaceId === workspaceId &&
-      project.projectKey === projectKey,
+      project.workspaceId === workspaceId && project.projectKey === projectKey,
   );
 }
 
-export function generateProjectKey(
-  workspaceId,
-  projectName,
-) {
-  const words = String(projectName)
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean);
+export function generateProjectKey(workspaceId, projectName) {
+  const words = String(projectName).trim().split(/\s+/).filter(Boolean);
 
   let base =
     words.length > 1
       ? words.map((word) => word[0]).join("")
-      : words[0]?.slice(0, 4) ?? "PRJ";
+      : (words[0]?.slice(0, 4) ?? "PRJ");
 
   base = normalizeProjectKey(base).slice(0, 10);
 
@@ -53,8 +41,7 @@ export function generateProjectKey(
     const suffixText = String(suffix);
     const availableLength = 10 - suffixText.length;
 
-    candidate =
-      `${base.slice(0, availableLength)}${suffixText}`;
+    candidate = `${base.slice(0, availableLength)}${suffixText}`;
 
     suffix += 1;
   }

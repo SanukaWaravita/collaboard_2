@@ -7,11 +7,12 @@ import TaskForm from "../components/TaskForm";
 import TaskList from "../components/TaskList";
 import WorkflowStatusManager from "../components/WorkflowStatusManager";
 import { PROJECT_PERMISSIONS } from "../constants/access";
-import { apiRequest, clearSession } from "../services/api";
+import { apiRequest, clearSession, getCurrentUser } from "../services/api";
 
 function ProjectPage() {
   const { workspaceId, projectId } = useParams();
   const navigate = useNavigate();
+  const currentUser = getCurrentUser();
 
   const [project, setProject] = useState(null);
   const [tasks, setTasks] = useState([]);
@@ -739,6 +740,7 @@ function ProjectPage() {
           initialStatusId={createTaskStatusId}
           workflowStatuses={workflowStatuses}
           assignees={assignableProjectMembers}
+          currentUser={currentUser}
           onSubmit={handleSaveTask}
           onCancel={closeTaskForm}
           isSubmitting={isSavingTask}

@@ -1,7 +1,5 @@
 import bcrypt from "bcryptjs";
-import {
-  createCompanyDemoSeed,
-} from "./companyDemoSeed.js";
+import { createCompanyDemoSeed } from "./companyDemoSeed.js";
 import {
   INVITATION_STATUS,
   MEMBER_TYPES,
@@ -112,9 +110,17 @@ function createProjectMember(id, projectId, userId, role, timestamp) {
   };
 }
 
+function getDefaultTaskReporterId(projectId) {
+  return projectId === PROJECT_IDS.USER_RESEARCH
+    ? USER_IDS.ADMIN
+    : USER_IDS.OWNER;
+}
+
 function createTask(definition, timestamp) {
   return {
     ...definition,
+    reporterId:
+      definition.reporterId ?? getDefaultTaskReporterId(definition.projectId),
     version: 1,
     createdAt: timestamp,
     updatedAt: timestamp,
@@ -129,11 +135,11 @@ export function createDevelopmentSeed() {
   const developmentPassword =
     configuredPassword || DEFAULT_DEVELOPMENT_PASSWORD;
 
-    if (developmentPassword.length < 8) {
-  throw new Error(
-    "DEVELOPMENT_SEED_PASSWORD must contain at least 8 characters",
-  );
-}
+  if (developmentPassword.length < 8) {
+    throw new Error(
+      "DEVELOPMENT_SEED_PASSWORD must contain at least 8 characters",
+    );
+  }
 
   const passwordHash = bcrypt.hashSync(developmentPassword, 10);
 
@@ -152,12 +158,11 @@ export function createDevelopmentSeed() {
     nextWeek: getRelativeDateValue(7),
   };
 
-      const companyDemoSeed =
-    createCompanyDemoSeed({
-      passwordHash,
-      timestamp,
-      dueDates,
-    });
+  const companyDemoSeed = createCompanyDemoSeed({
+    passwordHash,
+    timestamp,
+    dueDates,
+  });
 
   const users = [
     createUser(
@@ -531,6 +536,7 @@ export function createDevelopmentSeed() {
         status: "done",
         dueDate: dueDates.twoWeeksAgo,
         assigneeIds: [USER_IDS.OWNER],
+        reporterId: USER_IDS.OWNER,
       },
       timestamp,
     ),
@@ -545,6 +551,7 @@ export function createDevelopmentSeed() {
         status: "done",
         dueDate: dueDates.oneWeekAgo,
         assigneeIds: [USER_IDS.INTERNAL_CONTRIBUTOR],
+        reporterId: USER_IDS.INTERNAL_CONTRIBUTOR,
       },
       timestamp,
     ),
@@ -559,6 +566,7 @@ export function createDevelopmentSeed() {
         status: "doing",
         dueDate: dueDates.today,
         assigneeIds: [USER_IDS.OWNER, USER_IDS.ADMIN],
+        reporterId: USER_IDS.ADMIN,
       },
       timestamp,
     ),
@@ -576,6 +584,7 @@ export function createDevelopmentSeed() {
           USER_IDS.INTERNAL_CONTRIBUTOR,
           USER_IDS.GUEST_CONTRIBUTOR,
         ],
+        reporterId: USER_IDS.GUEST_CONTRIBUTOR,
       },
       timestamp,
     ),
@@ -590,6 +599,7 @@ export function createDevelopmentSeed() {
         status: "todo",
         dueDate: dueDates.overdue,
         assigneeIds: [USER_IDS.GUEST_CONTRIBUTOR],
+        reporterId: USER_IDS.OWNER,
       },
       timestamp,
     ),
@@ -607,6 +617,7 @@ export function createDevelopmentSeed() {
           USER_IDS.INTERNAL_CONTRIBUTOR,
           USER_IDS.GUEST_CONTRIBUTOR,
         ],
+        reporterId: USER_IDS.OWNER,
       },
       timestamp,
     ),
@@ -621,6 +632,7 @@ export function createDevelopmentSeed() {
         status: "todo",
         dueDate: null,
         assigneeIds: [USER_IDS.ADMIN],
+        reporterId: USER_IDS.INTERNAL_CONTRIBUTOR,
       },
       timestamp,
     ),
@@ -635,6 +647,7 @@ export function createDevelopmentSeed() {
         status: "todo",
         dueDate: null,
         assigneeIds: [],
+        reporterId: USER_IDS.GUEST_CONTRIBUTOR,
       },
       timestamp,
     ),
@@ -649,6 +662,7 @@ export function createDevelopmentSeed() {
         status: "done",
         dueDate: dueDates.tenDaysAgo,
         assigneeIds: [USER_IDS.INTERNAL_CONTRIBUTOR],
+        reporterId: USER_IDS.OWNER,
       },
       timestamp,
     ),
@@ -663,6 +677,7 @@ export function createDevelopmentSeed() {
         status: "doing",
         dueDate: dueDates.tomorrow,
         assigneeIds: [USER_IDS.INTERNAL_CONTRIBUTOR],
+        reporterId: USER_IDS.INTERNAL_CONTRIBUTOR,
       },
       timestamp,
     ),
@@ -676,6 +691,7 @@ export function createDevelopmentSeed() {
         status: "todo",
         dueDate: dueDates.inFiveDays,
         assigneeIds: [USER_IDS.OWNER, USER_IDS.INTERNAL_CONTRIBUTOR],
+        reporterId: USER_IDS.OWNER,
       },
       timestamp,
     ),
@@ -690,6 +706,7 @@ export function createDevelopmentSeed() {
         status: "todo",
         dueDate: dueDates.inFourDays,
         assigneeIds: [],
+        reporterId: USER_IDS.INTERNAL_CONTRIBUTOR,
       },
       timestamp,
     ),
@@ -703,6 +720,7 @@ export function createDevelopmentSeed() {
         status: "backlog",
         dueDate: dueDates.inTwoDays,
         assigneeIds: [USER_IDS.ADMIN, USER_IDS.OWNER],
+        reporterId: USER_IDS.ADMIN,
       },
       timestamp,
     ),
@@ -716,6 +734,7 @@ export function createDevelopmentSeed() {
         status: "interviews",
         dueDate: dueDates.today,
         assigneeIds: [USER_IDS.ADMIN],
+        reporterId: USER_IDS.OWNER,
       },
       timestamp,
     ),
@@ -730,6 +749,7 @@ export function createDevelopmentSeed() {
         status: "synthesis",
         dueDate: dueDates.inFourDays,
         assigneeIds: [USER_IDS.OWNER],
+        reporterId: USER_IDS.ADMIN,
       },
       timestamp,
     ),
@@ -743,45 +763,31 @@ export function createDevelopmentSeed() {
         status: "complete",
         dueDate: dueDates.yesterday,
         assigneeIds: [USER_IDS.ADMIN],
+        reporterId: USER_IDS.OWNER,
       },
       timestamp,
     ),
   ];
 
-return {
-    users: [
-      ...users,
-      ...companyDemoSeed.users,
-    ],
+  return {
+    users: [...users, ...companyDemoSeed.users],
 
-    workspaces: [
-      ...workspaces,
-      ...companyDemoSeed.workspaces,
-    ],
+    workspaces: [...workspaces, ...companyDemoSeed.workspaces],
 
     workspaceMembers: [
       ...workspaceMembers,
       ...companyDemoSeed.workspaceMembers,
     ],
 
-    projects: [
-      ...projects,
-      ...companyDemoSeed.projects,
-    ],
+    projects: [...projects, ...companyDemoSeed.projects],
 
-    projectMembers: [
-      ...projectMembers,
-      ...companyDemoSeed.projectMembers,
-    ],
+    projectMembers: [...projectMembers, ...companyDemoSeed.projectMembers],
 
     projectInvitations: [
       ...projectInvitations,
       ...companyDemoSeed.projectInvitations,
     ],
 
-    tasks: [
-      ...tasks,
-      ...companyDemoSeed.tasks,
-    ],
+    tasks: [...tasks, ...companyDemoSeed.tasks],
   };
 }

@@ -15,6 +15,7 @@ import {
   isValidAssigneeIdsValue,
   normalizeAssigneeIds,
 } from "../utils/taskAssignee.js";
+import { presentTask } from "../utils/taskReporter.js";
 
 function findTaskAndProject(taskId) {
   const task = store.tasks.find((currentTask) => currentTask.id === taskId);
@@ -59,7 +60,14 @@ export function createTask(request, response) {
     status,
     dueDate = null,
     assigneeIds = [],
+    reporterId,
   } = request.body ?? {};
+
+  if (reporterId !== undefined) {
+    return response.status(400).json({
+      message: "Reporter is assigned automatically from the authenticated user",
+    });
+  }
 
   if (typeof title !== "string" || !title.trim()) {
     return response.status(400).json({
@@ -123,6 +131,7 @@ export function createTask(request, response) {
     status: selectedStatus.id,
     dueDate: normalizeDueDate(dueDate),
     assigneeIds: normalizedAssigneeIds,
+    reporterId: request.user.id,
     version: 1,
     createdAt: timestamp,
     updatedAt: timestamp,
@@ -130,7 +139,9 @@ export function createTask(request, response) {
 
   store.tasks.push(task);
 
-  return response.status(201).json({ task });
+  return response.status(201).json({
+    task: presentTask(task),
+  });
 }
 
 export function getTask(request, response) {
@@ -150,7 +161,7 @@ export function getTask(request, response) {
   }
 
   return response.status(200).json({
-    task: result.task,
+    task: presentTask(result.task),
   });
 }
 
@@ -177,8 +188,21 @@ export function updateTask(request, response) {
     });
   }
 
-  const { title, description, status, dueDate, assigneeIds, version } =
-    request.body ?? {};
+  const {
+    title,
+    description,
+    status,
+    dueDate,
+    assigneeIds,
+    reporterId,
+    version,
+  } = request.body ?? {};
+
+  if (reporterId !== undefined) {
+    return response.status(400).json({
+      message: "A Task Reporter cannot be changed",
+    });
+  }
 
   const containsUpdate =
     title !== undefined ||
@@ -203,7 +227,7 @@ export function updateTask(request, response) {
   if (version !== task.version) {
     return response.status(409).json({
       message: "Task was modified by another request",
-      task,
+      task: presentTask(task),
     });
   }
 
@@ -279,7 +303,9 @@ export function updateTask(request, response) {
   task.version += 1;
   task.updatedAt = new Date().toISOString();
 
-  return response.status(200).json({ task });
+  return response.status(200).json({
+    task: presentTask(task),
+  });
 }
 
 export function deleteTask(request, response) {

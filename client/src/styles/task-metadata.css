@@ -178,6 +178,130 @@
 }
 
 /* -------------------------------- */
+/* Shared Reporter structure        */
+/* -------------------------------- */
+
+.task-reporter {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+}
+
+.task-reporter__avatar {
+  display: grid;
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border: 1px solid #bae6fd;
+  border-radius: 50%;
+  color: #075985;
+  background: #e0f2fe;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.task-reporter__identity {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
+}
+
+.task-reporter__label {
+  color: var(--text-muted);
+  font-size: 0.62rem;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.task-reporter__name {
+  min-width: 0;
+  max-width: 170px;
+  overflow: hidden;
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-reporter__email {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-reporter--card {
+  max-width: 100%;
+  padding-top: 2px;
+}
+
+.task-reporter--card .task-reporter__avatar {
+  flex-basis: 22px;
+  width: 22px;
+  height: 22px;
+  border: 2px solid #ffffff;
+  color: #ffffff;
+  background: linear-gradient(135deg, #0ea5e9, #075985);
+  box-shadow: 0 1px 4px rgb(20 49 67 / 16%);
+  font-size: 0.6rem;
+}
+
+.task-reporter--card .task-reporter__name {
+  max-width: 125px;
+  color: #50626b;
+  font-size: 0.68rem;
+}
+
+.task-list__reporter {
+  min-width: 180px;
+}
+
+.task-list__reporter .task-reporter__name {
+  max-width: 130px;
+}
+
+.task-reporter--form {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 11px 12px;
+  background: var(--surface-subtle);
+}
+
+.task-reporter--form .task-reporter__avatar {
+  flex-basis: 34px;
+  width: 34px;
+  height: 34px;
+  font-size: 0.78rem;
+}
+
+.task-reporter--form .task-reporter__name {
+  max-width: 360px;
+  font-size: 0.84rem;
+}
+
+.task-reporter--form .task-reporter__email {
+  max-width: 360px;
+}
+
+.task-reporter__unavailable {
+  margin: 0;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  color: var(--text-muted);
+  background: var(--surface-muted);
+  font-size: 0.82rem;
+}
+
+/* -------------------------------- */
 /* Responsive metadata              */
 /* -------------------------------- */
 

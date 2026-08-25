@@ -24,45 +24,31 @@ const rolePermissions = Object.freeze({
     PROJECT_PERMISSIONS.DELETE_TASK,
   ],
 
-  [PROJECT_ROLES.REVIEWER]: [
-    PROJECT_PERMISSIONS.READ_PROJECT,
-  ],
+  [PROJECT_ROLES.REVIEWER]: [PROJECT_PERMISSIONS.READ_PROJECT],
 });
 
-export function getWorkspaceMembership(
-  workspaceId,
-  userId,
-) {
+export function getWorkspaceMembership(workspaceId, userId) {
   return store.workspaceMembers.find(
     (membership) =>
-      membership.workspaceId === workspaceId &&
-      membership.userId === userId,
+      membership.workspaceId === workspaceId && membership.userId === userId,
   );
 }
 
-export function getProjectMembership(
-  projectId,
-  userId,
-) {
+export function getProjectMembership(projectId, userId) {
   return store.projectMembers.find(
     (membership) =>
-      membership.projectId === projectId &&
-      membership.userId === userId,
+      membership.projectId === projectId && membership.userId === userId,
   );
 }
 
 export function getProjectAccess(project, userId) {
-  const projectMembership = getProjectMembership(
-    project.id,
-    userId,
-  );
+  const projectMembership = getProjectMembership(project.id, userId);
 
   if (projectMembership) {
     return {
       role: projectMembership.role,
       isMember: true,
-      permissions:
-        rolePermissions[projectMembership.role] ?? [],
+      permissions: rolePermissions[projectMembership.role] ?? [],
     };
   }
 
@@ -80,19 +66,14 @@ export function getProjectAccess(project, userId) {
     return {
       role: PROJECT_ROLES.REVIEWER,
       isMember: false,
-      permissions:
-        rolePermissions[PROJECT_ROLES.REVIEWER],
+      permissions: rolePermissions[PROJECT_ROLES.REVIEWER],
     };
   }
 
   return null;
 }
 
-export function hasProjectPermission(
-  project,
-  userId,
-  permission,
-) {
+export function hasProjectPermission(project, userId, permission) {
   const access = getProjectAccess(project, userId);
 
   return Boolean(access?.permissions.includes(permission));

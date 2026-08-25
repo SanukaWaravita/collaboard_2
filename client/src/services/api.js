@@ -8,6 +8,22 @@ export function getToken() {
   return localStorage.getItem(TOKEN_KEY);
 }
 
+export function getCurrentUser() {
+  const storedUser = localStorage.getItem(USER_KEY);
+
+  if (!storedUser) {
+    return null;
+  }
+
+  try {
+    const user = JSON.parse(storedUser);
+
+    return user && typeof user === "object" ? user : null;
+  } catch {
+    return null;
+  }
+}
+
 export function saveSession({ token, user }) {
   localStorage.setItem(TOKEN_KEY, token);
   localStorage.setItem(USER_KEY, JSON.stringify(user));

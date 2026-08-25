@@ -1,5 +1,8 @@
 import { getDueDateLabel, getDueDateState } from "../utils/taskDueDate";
-import { resolveTaskAssignees } from "../utils/taskAssignee";
+import {
+  getAssigneeInitial,
+  resolveTaskAssignees,
+} from "../utils/taskAssignee";
 
 function TaskList({
   tasks,
@@ -41,6 +44,7 @@ function TaskList({
               <th scope="col">Description</th>
               <th scope="col">Status</th>
               <th scope="col">Assignee</th>
+              <th scope="col">Reporter</th>
               <th scope="col">Due date</th>
               <th scope="col">Actions</th>
             </tr>
@@ -65,6 +69,10 @@ function TaskList({
                 task.assigneeIds,
                 projectMembers,
               );
+
+              const reporterName = task.reporter?.name ?? "Unknown reporter";
+
+              const reporterEmail = task.reporter?.email ?? null;
 
               const dueDateLabel = getDueDateLabel(
                 task.dueDate,
@@ -133,6 +141,27 @@ function TaskList({
                           </div>
                         ))
                       )}
+                    </div>
+                  </td>
+
+                  <td className="task-list__reporter">
+                    <div
+                      className="task-reporter"
+                      title={reporterEmail ?? reporterName}
+                      aria-label={`Reporter: ${reporterName}`}
+                    >
+                      <span
+                        className="task-reporter__avatar"
+                        aria-hidden="true"
+                      >
+                        {getAssigneeInitial(reporterName)}
+                      </span>
+
+                      <span className="task-reporter__identity">
+                        <span className="task-reporter__name">
+                          {reporterName}
+                        </span>
+                      </span>
                     </div>
                   </td>
 

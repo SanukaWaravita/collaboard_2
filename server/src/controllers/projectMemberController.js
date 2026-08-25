@@ -22,46 +22,37 @@ const editableProjectRoles = new Set([
 ]);
 
 function findProject(projectId) {
-  return store.projects.find(
-    (project) => project.id === projectId,
-  );
+  return store.projects.find((project) => project.id === projectId);
 }
 
 function findProjectMembership(projectId, userId) {
   return store.projectMembers.find(
     (membership) =>
-      membership.projectId === projectId &&
-      membership.userId === userId,
+      membership.projectId === projectId && membership.userId === userId,
   );
 }
 
 function findWorkspaceMembership(workspaceId, userId) {
   return store.workspaceMembers.find(
     (membership) =>
-      membership.workspaceId === workspaceId &&
-      membership.userId === userId,
+      membership.workspaceId === workspaceId && membership.userId === userId,
   );
 }
 
 function canManageProjectMembers(userId, project) {
   const workspace = store.workspaces.find(
-    (currentWorkspace) =>
-      currentWorkspace.id === project.workspaceId,
+    (currentWorkspace) => currentWorkspace.id === project.workspaceId,
   );
 
   return (
-    hasProjectPermission(
-      project,
-      userId,
-      PROJECT_PERMISSIONS.MANAGE_MEMBERS,
-    ) ||
+    hasProjectPermission(project, userId, PROJECT_PERMISSIONS.MANAGE_MEMBERS) ||
     Boolean(
       workspace &&
-        hasWorkspacePermission(
-          workspace,
-          userId,
-          WORKSPACE_PERMISSIONS.MANAGE_MEMBERS,
-        ),
+      hasWorkspacePermission(
+        workspace,
+        userId,
+        WORKSPACE_PERMISSIONS.MANAGE_MEMBERS,
+      ),
     )
   );
 }
@@ -81,59 +72,45 @@ function presentProjectMember(membership, project) {
     name: user?.name ?? "Unknown user",
     email: user?.email ?? null,
     projectRole: membership.role,
-canBeAssigned: isAssignableProjectRole(
-  membership.role,
-),
-workspaceRole: workspaceMembership?.role ?? null,
+    canBeAssigned: isAssignableProjectRole(membership.role),
+    workspaceRole: workspaceMembership?.role ?? null,
     memberType:
       workspaceMembership?.role === WORKSPACE_ROLES.GUEST
         ? MEMBER_TYPES.GUEST
         : MEMBER_TYPES.INTERNAL,
-    joinedAt:
-      membership.joinedAt ??
-      membership.createdAt ??
-      null,
+    joinedAt: membership.joinedAt ?? membership.createdAt ?? null,
   };
 }
 
-function removeUnusedGuestWorkspaceMembership(
-  workspaceId,
-  userId,
-) {
-  const workspaceMembershipIndex =
-    store.workspaceMembers.findIndex(
-      (membership) =>
-        membership.workspaceId === workspaceId &&
-        membership.userId === userId &&
-        membership.role === WORKSPACE_ROLES.GUEST,
-    );
+function removeUnusedGuestWorkspaceMembership(workspaceId, userId) {
+  const workspaceMembershipIndex = store.workspaceMembers.findIndex(
+    (membership) =>
+      membership.workspaceId === workspaceId &&
+      membership.userId === userId &&
+      membership.role === WORKSPACE_ROLES.GUEST,
+  );
 
   if (workspaceMembershipIndex === -1) {
     return false;
   }
 
-  const hasAnotherProject = store.projectMembers.some(
-    (membership) => {
-      if (membership.userId !== userId) {
-        return false;
-      }
+  const hasAnotherProject = store.projectMembers.some((membership) => {
+    if (membership.userId !== userId) {
+      return false;
+    }
 
-      const membershipProject = store.projects.find(
-        (project) => project.id === membership.projectId,
-      );
+    const membershipProject = store.projects.find(
+      (project) => project.id === membership.projectId,
+    );
 
-      return membershipProject?.workspaceId === workspaceId;
-    },
-  );
+    return membershipProject?.workspaceId === workspaceId;
+  });
 
   if (hasAnotherProject) {
     return false;
   }
 
-  store.workspaceMembers.splice(
-    workspaceMembershipIndex,
-    1,
-  );
+  store.workspaceMembers.splice(workspaceMembershipIndex, 1);
 
   return true;
 }
@@ -147,15 +124,9 @@ export function getProjectMembers(request, response) {
     });
   }
 
-  const projectAccess = getProjectAccess(
-    project,
-    request.user.id,
-  );
+  const projectAccess = getProjectAccess(project, request.user.id);
 
-  const canManage = canManageProjectMembers(
-    request.user.id,
-    project,
-  );
+  const canManage = canManageProjectMembers(request.user.id, project);
 
   if (!projectAccess && !canManage) {
     return response.status(403).json({
@@ -164,29 +135,18 @@ export function getProjectMembers(request, response) {
   }
 
   const members = store.projectMembers
-    .filter(
-      (membership) =>
-        membership.projectId === project.id,
-    )
-    .map((membership) =>
-      presentProjectMember(membership, project),
-    )
+    .filter((membership) => membership.projectId === project.id)
+    .map((membership) => presentProjectMember(membership, project))
     .sort((firstMember, secondMember) => {
-      if (
-        firstMember.projectRole === PROJECT_ROLES.OWNER
-      ) {
+      if (firstMember.projectRole === PROJECT_ROLES.OWNER) {
         return -1;
       }
 
-      if (
-        secondMember.projectRole === PROJECT_ROLES.OWNER
-      ) {
+      if (secondMember.projectRole === PROJECT_ROLES.OWNER) {
         return 1;
       }
 
-      return firstMember.name.localeCompare(
-        secondMember.name,
-      );
+      return firstMember.name.localeCompare(secondMember.name);
     });
 
   return response.status(200).json({
@@ -204,12 +164,9 @@ export function updateProjectMember(request, response) {
     });
   }
 
-  if (
-    !canManageProjectMembers(request.user.id, project)
-  ) {
+  if (!canManageProjectMembers(request.user.id, project)) {
     return response.status(403).json({
-      message:
-        "You do not have permission to manage project members",
+      message: "You do not have permission to manage project members",
     });
   }
 
@@ -217,15 +174,11 @@ export function updateProjectMember(request, response) {
 
   if (!editableProjectRoles.has(role)) {
     return response.status(400).json({
-      message:
-        "Project role must be CONTRIBUTOR or REVIEWER",
+      message: "Project role must be CONTRIBUTOR or REVIEWER",
     });
   }
 
-  const membership = findProjectMembership(
-    project.id,
-    request.params.userId,
-  );
+  const membership = findProjectMembership(project.id, request.params.userId);
 
   if (!membership) {
     return response.status(404).json({
@@ -238,29 +191,24 @@ export function updateProjectMember(request, response) {
     membership.userId === project.ownerId
   ) {
     return response.status(409).json({
-      message:
-        "Transfer project ownership before changing the owner's role",
+      message: "Transfer project ownership before changing the owner's role",
     });
   }
 
   const timestamp = new Date().toISOString();
 
-membership.role = role;
-membership.updatedAt = timestamp;
-project.updatedAt = timestamp;
+  membership.role = role;
+  membership.updatedAt = timestamp;
+  project.updatedAt = timestamp;
 
-const unassignedTaskCount =
-  isAssignableProjectRole(role)
+  const unassignedTaskCount = isAssignableProjectRole(role)
     ? 0
-    : removeUserFromTaskAssignments(
-  project.id,
-  membership.userId,
-);
+    : removeUserFromTaskAssignments(project.id, membership.userId);
 
-return response.status(200).json({
-  member: presentProjectMember(membership, project),
-  unassignedTaskCount,
-});
+  return response.status(200).json({
+    member: presentProjectMember(membership, project),
+    unassignedTaskCount,
+  });
 }
 
 export function removeProjectMember(request, response) {
@@ -272,12 +220,9 @@ export function removeProjectMember(request, response) {
     });
   }
 
-  if (
-    !canManageProjectMembers(request.user.id, project)
-  ) {
+  if (!canManageProjectMembers(request.user.id, project)) {
     return response.status(403).json({
-      message:
-        "You do not have permission to manage project members",
+      message: "You do not have permission to manage project members",
     });
   }
 
@@ -300,39 +245,33 @@ export function removeProjectMember(request, response) {
     membership.userId === project.ownerId
   ) {
     return response.status(409).json({
-      message:
-        "Project owners cannot be removed. Transfer ownership first.",
+      message: "Project owners cannot be removed. Transfer ownership first.",
     });
   }
 
   store.projectMembers.splice(membershipIndex, 1);
 
-const unassignedTaskCount =
-  removeUserFromTaskAssignments(
-  project.id,
-  membership.userId,
-);
+  const unassignedTaskCount = removeUserFromTaskAssignments(
+    project.id,
+    membership.userId,
+  );
 
-const workspaceGuestRemoved =
-  removeUnusedGuestWorkspaceMembership(
+  const workspaceGuestRemoved = removeUnusedGuestWorkspaceMembership(
     project.workspaceId,
     membership.userId,
   );
 
-project.updatedAt = new Date().toISOString();
+  project.updatedAt = new Date().toISOString();
 
-return response.status(200).json({
-  message: "Project member removed",
-  userId: membership.userId,
-  unassignedTaskCount,
-  workspaceGuestRemoved,
-});
+  return response.status(200).json({
+    message: "Project member removed",
+    userId: membership.userId,
+    unassignedTaskCount,
+    workspaceGuestRemoved,
+  });
 }
 
-export function transferProjectOwnership(
-  request,
-  response,
-) {
+export function transferProjectOwnership(request, response) {
   const project = findProject(request.params.projectId);
 
   if (!project) {
@@ -343,8 +282,7 @@ export function transferProjectOwnership(
 
   if (project.ownerId !== request.user.id) {
     return response.status(403).json({
-      message:
-        "Only the current project owner can transfer ownership",
+      message: "Only the current project owner can transfer ownership",
     });
   }
 
@@ -362,35 +300,26 @@ export function transferProjectOwnership(
     });
   }
 
-  const newOwnerMembership = findProjectMembership(
-    project.id,
-    userId,
-  );
+  const newOwnerMembership = findProjectMembership(project.id, userId);
 
   if (!newOwnerMembership) {
     return response.status(400).json({
-      message:
-        "The new owner must already be a project member",
+      message: "The new owner must already be a project member",
     });
   }
 
-  const newOwnerWorkspaceMembership =
-    findWorkspaceMembership(
-      project.workspaceId,
-      userId,
-    );
+  const newOwnerWorkspaceMembership = findWorkspaceMembership(
+    project.workspaceId,
+    userId,
+  );
 
   if (!newOwnerWorkspaceMembership) {
     return response.status(400).json({
-      message:
-        "The new owner must belong to the workspace",
+      message: "The new owner must belong to the workspace",
     });
   }
 
-  if (
-    newOwnerWorkspaceMembership.role ===
-    WORKSPACE_ROLES.GUEST
-  ) {
+  if (newOwnerWorkspaceMembership.role === WORKSPACE_ROLES.GUEST) {
     return response.status(400).json({
       message: "Guest users cannot own projects",
     });
@@ -428,8 +357,7 @@ export function transferProjectOwnership(
   newOwnerMembership.role = PROJECT_ROLES.OWNER;
   newOwnerMembership.updatedAt = timestamp;
 
-  previousOwnerMembership.role =
-    PROJECT_ROLES.CONTRIBUTOR;
+  previousOwnerMembership.role = PROJECT_ROLES.CONTRIBUTOR;
   previousOwnerMembership.updatedAt = timestamp;
 
   project.ownerId = userId;
@@ -438,13 +366,7 @@ export function transferProjectOwnership(
   return response.status(200).json({
     message: "Project ownership transferred",
     project,
-    previousOwner: presentProjectMember(
-      previousOwnerMembership,
-      project,
-    ),
-    newOwner: presentProjectMember(
-      newOwnerMembership,
-      project,
-    ),
+    previousOwner: presentProjectMember(previousOwnerMembership, project),
+    newOwner: presentProjectMember(newOwnerMembership, project),
   });
 }

@@ -2,10 +2,7 @@ import { randomUUID } from "node:crypto";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { store } from "../data/inMemoryStore.js";
-import {
-  PROJECT_ROLES,
-  WORKSPACE_ROLES,
-} from "../constants/access.js";
+import { PROJECT_ROLES, WORKSPACE_ROLES } from "../constants/access.js";
 
 function createToken(userId) {
   const secret = process.env.JWT_SECRET;
@@ -43,19 +40,13 @@ export async function registerUser(request, response) {
     });
   }
 
-  if (
-    typeof email !== "string" ||
-    !isValidEmail(email.trim())
-  ) {
+  if (typeof email !== "string" || !isValidEmail(email.trim())) {
     return response.status(400).json({
       message: "A valid email address is required",
     });
   }
 
-  if (
-    typeof password !== "string" ||
-    password.length < 8
-  ) {
+  if (typeof password !== "string" || password.length < 8) {
     return response.status(400).json({
       message: "Password must contain at least 8 characters",
     });
@@ -86,42 +77,48 @@ export async function registerUser(request, response) {
   };
 
   if (store.users.length === 0) {
-  const joinedAt = new Date().toISOString();
+    const joinedAt = new Date().toISOString();
 
-  store.workspaces.forEach((workspace) => {
-    if (workspace.ownerId !== "temporary-user") {
-      return;
-    }
+    store.workspaces.forEach((workspace) => {
+      if (workspace.ownerId !== "temporary-user") {
+        return;
+      }
 
-    workspace.ownerId = user.id;
-    workspace.updatedAt = joinedAt;
+      workspace.ownerId = user.id;
+      workspace.updatedAt = joinedAt;
 
-    store.workspaceMembers.push({
-      id: randomUUID(),
-      workspaceId: workspace.id,
-      userId: user.id,
-      role: WORKSPACE_ROLES.OWNER,
-      joinedAt,
+      store.workspaceMembers.push({
+        id: randomUUID(),
+        workspaceId: workspace.id,
+        userId: user.id,
+        role: WORKSPACE_ROLES.OWNER,
+        joinedAt,
+      });
     });
-  });
 
-  store.projects.forEach((project) => {
-    if (project.ownerId !== "temporary-user") {
-      return;
-    }
+    store.projects.forEach((project) => {
+      if (project.ownerId !== "temporary-user") {
+        return;
+      }
 
-    project.ownerId = user.id;
-    project.updatedAt = joinedAt;
+      project.ownerId = user.id;
+      project.updatedAt = joinedAt;
 
-    store.projectMembers.push({
-      id: randomUUID(),
-      projectId: project.id,
-      userId: user.id,
-      role: PROJECT_ROLES.OWNER,
-      joinedAt,
+      store.projectMembers.push({
+        id: randomUUID(),
+        projectId: project.id,
+        userId: user.id,
+        role: PROJECT_ROLES.OWNER,
+        joinedAt,
+      });
     });
-  });
-}
+
+    store.tasks.forEach((task) => {
+      if (task.reporterId === "temporary-user") {
+        task.reporterId = user.id;
+      }
+    });
+  }
 
   store.users.push(user);
 
@@ -134,10 +131,7 @@ export async function registerUser(request, response) {
 export async function loginUser(request, response) {
   const { email, password } = request.body ?? {};
 
-  if (
-    typeof email !== "string" ||
-    typeof password !== "string"
-  ) {
+  if (typeof email !== "string" || typeof password !== "string") {
     return response.status(400).json({
       message: "Email and password are required",
     });
@@ -155,10 +149,7 @@ export async function loginUser(request, response) {
     });
   }
 
-  const passwordMatches = await bcrypt.compare(
-    password,
-    user.passwordHash,
-  );
+  const passwordMatches = await bcrypt.compare(password, user.passwordHash);
 
   if (!passwordMatches) {
     return response.status(401).json({

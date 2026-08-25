@@ -40,10 +40,7 @@ router
   .put(setWorkspaceMemberProjectAccess)
   .delete(removeWorkspaceMemberProjectAccess);
 
-router.post(
-  "/:workspaceId/invitations",
-  inviteWorkspaceProjectMembers,
-);
+router.post("/:workspaceId/invitations", inviteWorkspaceProjectMembers);
 
 router.delete(
   "/:workspaceId/invitations/:invitationId",

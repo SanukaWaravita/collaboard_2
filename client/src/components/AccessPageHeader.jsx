@@ -9,11 +9,7 @@ function AccessPageHeader({
   metadata = [],
 }) {
   return (
-    <header
-      className={
-        "board-header access-page-header"
-      }
-    >
+    <header className={"board-header access-page-header"}>
       <div className="board-header__identity">
         <Link
           to={backTo}
@@ -37,9 +33,7 @@ function AccessPageHeader({
             <h1>{title}</h1>
 
             {countLabel && (
-              <span className="project-task-count">
-                {countLabel}
-              </span>
+              <span className="project-task-count">{countLabel}</span>
             )}
           </div>
 
@@ -48,30 +42,15 @@ function AccessPageHeader({
               className="project-header__metadata"
               aria-label={`${title} information`}
             >
-              {metadata.map(
-                (metadataItem, index) => (
-                  <Fragment
-                    key={
-                      `${metadataItem.label}-` +
-                      `${index}`
-                    }
-                  >
-                    {index > 0 && (
-                      <span aria-hidden="true">
-                        ·
-                      </span>
-                    )}
+              {metadata.map((metadataItem, index) => (
+                <Fragment key={`${metadataItem.label}-` + `${index}`}>
+                  {index > 0 && <span aria-hidden="true">·</span>}
 
-                    <span
-                      className={
-                        metadataItem.className
-                      }
-                    >
-                      {metadataItem.label}
-                    </span>
-                  </Fragment>
-                ),
-              )}
+                  <span className={metadataItem.className}>
+                    {metadataItem.label}
+                  </span>
+                </Fragment>
+              ))}
             </div>
           )}
         </div>

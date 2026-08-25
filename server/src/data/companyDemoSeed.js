@@ -765,8 +765,7 @@ const COMPANY_TASK_GROUPS = [
   // Customer Success
 
   {
-    projectId:
-      COMPANY_PROJECT_IDS.CLIENT_ONBOARDING,
+    projectId: COMPANY_PROJECT_IDS.CLIENT_ONBOARDING,
 
     tasks: [
       defineCompanyTask(
@@ -817,8 +816,7 @@ const COMPANY_TASK_GROUPS = [
   },
 
   {
-    projectId:
-      COMPANY_PROJECT_IDS.HELP_CENTRE,
+    projectId: COMPANY_PROJECT_IDS.HELP_CENTRE,
 
     tasks: [
       defineCompanyTask(
@@ -869,8 +867,7 @@ const COMPANY_TASK_GROUPS = [
   },
 
   {
-    projectId:
-      COMPANY_PROJECT_IDS.RENEWAL_HEALTH,
+    projectId: COMPANY_PROJECT_IDS.RENEWAL_HEALTH,
 
     tasks: [
       defineCompanyTask(
@@ -920,8 +917,7 @@ const COMPANY_TASK_GROUPS = [
     ],
   },
   {
-    projectId:
-      COMPANY_PROJECT_IDS.GRADUATE_RECRUITMENT,
+    projectId: COMPANY_PROJECT_IDS.GRADUATE_RECRUITMENT,
 
     tasks: [
       defineCompanyTask(
@@ -972,8 +968,7 @@ const COMPANY_TASK_GROUPS = [
   },
 
   {
-    projectId:
-      COMPANY_PROJECT_IDS.MANAGER_DEVELOPMENT,
+    projectId: COMPANY_PROJECT_IDS.MANAGER_DEVELOPMENT,
 
     tasks: [
       defineCompanyTask(
@@ -1024,8 +1019,7 @@ const COMPANY_TASK_GROUPS = [
   },
 
   {
-    projectId:
-      COMPANY_PROJECT_IDS.HYBRID_WORK,
+    projectId: COMPANY_PROJECT_IDS.HYBRID_WORK,
 
     tasks: [
       defineCompanyTask(
@@ -1075,8 +1069,7 @@ const COMPANY_TASK_GROUPS = [
     ],
   },
   {
-    projectId:
-      COMPANY_PROJECT_IDS.BUDGET_PLANNING,
+    projectId: COMPANY_PROJECT_IDS.BUDGET_PLANNING,
 
     tasks: [
       defineCompanyTask(
@@ -1127,8 +1120,7 @@ const COMPANY_TASK_GROUPS = [
   },
 
   {
-    projectId:
-      COMPANY_PROJECT_IDS.PROCUREMENT_REVIEW,
+    projectId: COMPANY_PROJECT_IDS.PROCUREMENT_REVIEW,
 
     tasks: [
       defineCompanyTask(
@@ -1179,8 +1171,7 @@ const COMPANY_TASK_GROUPS = [
   },
 
   {
-    projectId:
-      COMPANY_PROJECT_IDS.OFFICE_EXPANSION,
+    projectId: COMPANY_PROJECT_IDS.OFFICE_EXPANSION,
 
     tasks: [
       defineCompanyTask(
@@ -1301,6 +1292,7 @@ function createCompanyTask(
     status,
     dueDate: dueDateKey === null ? null : dueDates[dueDateKey],
     assigneeIds: resolveCompanyTaskAssignees(assignees, departmentLeadId),
+    reporterId: projectDefinition.ownerId,
     version: 1,
     createdAt: timestamp,
     updatedAt: timestamp,
@@ -1444,56 +1436,41 @@ export function createCompanyDemoSeed({ passwordHash, timestamp, dueDates }) {
     },
   );
 
-    const projectDefinitionsById = new Map(
-    COMPANY_PROJECT_DEFINITIONS.map(
-      (projectDefinition) => [
-        projectDefinition.id,
-        projectDefinition,
-      ],
-    ),
+  const projectDefinitionsById = new Map(
+    projects.map((project) => [project.id, project]),
   );
 
-  const tasks =
-    COMPANY_TASK_GROUPS.flatMap(
-      (taskGroup) => {
-        const projectDefinition =
-          projectDefinitionsById.get(
-            taskGroup.projectId,
-          );
+  const tasks = COMPANY_TASK_GROUPS.flatMap((taskGroup) => {
+    const projectDefinition = projectDefinitionsById.get(taskGroup.projectId);
 
-        if (!projectDefinition) {
-          throw new Error(
-            "Company Task group is not connected " +
-              "to a valid Project",
-          );
-        }
+    if (!projectDefinition) {
+      throw new Error(
+        "Company Task group is not connected " + "to a valid Project",
+      );
+    }
 
-        const departmentLeadId =
-          workspaceLeadIds.get(
-            projectDefinition.workspaceId,
-          );
-
-        if (!departmentLeadId) {
-          throw new Error(
-            "Company Task group is not connected " +
-              "to a department lead",
-          );
-        }
-
-        return taskGroup.tasks.map(
-          (taskDefinition) =>
-            createCompanyTask(
-              taskDefinition,
-              projectDefinition,
-              departmentLeadId,
-              dueDates,
-              timestamp,
-            ),
-        );
-      },
+    const departmentLeadId = workspaceLeadIds.get(
+      projectDefinition.workspaceId,
     );
 
-    return {
+    if (!departmentLeadId) {
+      throw new Error(
+        "Company Task group is not connected " + "to a department lead",
+      );
+    }
+
+    return taskGroup.tasks.map((taskDefinition) =>
+      createCompanyTask(
+        taskDefinition,
+        projectDefinition,
+        departmentLeadId,
+        dueDates,
+        timestamp,
+      ),
+    );
+  });
+
+  return {
     users,
     workspaces,
     workspaceMembers,

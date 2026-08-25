@@ -22,20 +22,14 @@ export function isValidAssigneeIdsValue(value) {
   const normalizedIds = [];
 
   for (const userId of value) {
-    if (
-      typeof userId !== "string" ||
-      !userId.trim()
-    ) {
+    if (typeof userId !== "string" || !userId.trim()) {
       return false;
     }
 
     normalizedIds.push(userId.trim());
   }
 
-  return (
-    new Set(normalizedIds).size ===
-    normalizedIds.length
-  );
+  return new Set(normalizedIds).size === normalizedIds.length;
 }
 
 export function normalizeAssigneeIds(value) {
@@ -50,14 +44,8 @@ export function normalizeAssigneeIds(value) {
   return value.map((userId) => userId.trim());
 }
 
-export function findAssignableProjectMember(
-  projectId,
-  userId,
-) {
-  if (
-    typeof userId !== "string" ||
-    !userId.trim()
-  ) {
+export function findAssignableProjectMember(projectId, userId) {
+  if (typeof userId !== "string" || !userId.trim()) {
     return null;
   }
 
@@ -67,9 +55,7 @@ export function findAssignableProjectMember(
     (currentMembership) =>
       currentMembership.projectId === projectId &&
       currentMembership.userId === normalizedUserId &&
-      isAssignableProjectRole(
-        currentMembership.role,
-      ),
+      isAssignableProjectRole(currentMembership.role),
   );
 
   if (!membership) {
@@ -77,8 +63,7 @@ export function findAssignableProjectMember(
   }
 
   const user = store.users.find(
-    (currentUser) =>
-      currentUser.id === normalizedUserId,
+    (currentUser) => currentUser.id === normalizedUserId,
   );
 
   if (!user) {
@@ -91,40 +76,26 @@ export function findAssignableProjectMember(
   };
 }
 
-export function findInvalidAssigneeId(
-  projectId,
-  assigneeIds,
-) {
+export function findInvalidAssigneeId(projectId, assigneeIds) {
   return (
     assigneeIds.find(
-      (userId) =>
-        !findAssignableProjectMember(
-          projectId,
-          userId,
-        ),
+      (userId) => !findAssignableProjectMember(projectId, userId),
     ) ?? null
   );
 }
 
-export function removeUserFromTaskAssignments(
-  projectId,
-  userId,
-) {
+export function removeUserFromTaskAssignments(projectId, userId) {
   const timestamp = new Date().toISOString();
   let unassignedTaskCount = 0;
 
   for (const task of store.tasks) {
-    if (
-      task.projectId !== projectId ||
-      !task.assigneeIds.includes(userId)
-    ) {
+    if (task.projectId !== projectId || !task.assigneeIds.includes(userId)) {
       continue;
     }
 
     task.assigneeIds = task.assigneeIds.filter(
-  (currentAssigneeId) =>
-    currentAssigneeId !== userId,
-);
+      (currentAssigneeId) => currentAssigneeId !== userId,
+    );
 
     task.version = (task.version ?? 0) + 1;
     task.updatedAt = timestamp;

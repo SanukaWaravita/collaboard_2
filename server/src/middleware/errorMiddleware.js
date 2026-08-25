@@ -1,9 +1,4 @@
-export function errorMiddleware(
-  error,
-  request,
-  response,
-  next,
-) {
+export function errorMiddleware(error, request, response, next) {
   if (response.headersSent) {
     return next(error);
   }
@@ -15,9 +10,7 @@ export function errorMiddleware(
   }
 
   const statusCode =
-    Number.isInteger(error.status) && error.status >= 400
-      ? error.status
-      : 500;
+    Number.isInteger(error.status) && error.status >= 400 ? error.status : 500;
 
   if (statusCode >= 500) {
     console.error(error);

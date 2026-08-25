@@ -1,5 +1,8 @@
 import { getDueDateLabel, getDueDateState } from "../utils/taskDueDate";
-import { resolveTaskAssignees } from "../utils/taskAssignee";
+import {
+  getAssigneeInitial,
+  resolveTaskAssignees,
+} from "../utils/taskAssignee";
 
 function TaskCard({
   task,
@@ -17,6 +20,10 @@ function TaskCard({
   isMoving = false,
 }) {
   const taskAssignees = resolveTaskAssignees(task.assigneeIds, projectMembers);
+
+  const reporterName = task.reporter?.name ?? "Unknown reporter";
+
+  const reporterEmail = task.reporter?.email ?? null;
 
   const statusName = workflowStatus?.name ?? "Unknown Status";
 
@@ -126,6 +133,21 @@ function TaskCard({
               </div>
             ))
           )}
+        </div>
+        <div
+          className={"task-reporter " + "task-reporter--card"}
+          title={reporterEmail ?? reporterName}
+          aria-label={`Reported by ${reporterName}`}
+        >
+          <span className="task-reporter__avatar" aria-hidden="true">
+            {getAssigneeInitial(reporterName)}
+          </span>
+
+          <span className="task-reporter__identity">
+            <small className="task-reporter__label">Reported by</small>
+
+            <span className="task-reporter__name">{reporterName}</span>
+          </span>
         </div>
       </div>
 

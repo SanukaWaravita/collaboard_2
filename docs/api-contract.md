@@ -127,22 +127,22 @@ Response:
 
 ## 5. Workspace roles
 
-|Role|Description|
-|---|---|
-|`OWNER`|Full Workspace control, including deletion|
-|`ADMIN`|Workspace and member administration|
-|`MEMBER`|Ordinary internal Workspace member|
-|`GUEST`|Can access only explicitly assigned Projects|
+| Role     | Description                                  |
+| -------- | -------------------------------------------- |
+| `OWNER`  | Full Workspace control, including deletion   |
+| `ADMIN`  | Workspace and member administration          |
+| `MEMBER` | Ordinary internal Workspace member           |
+| `GUEST`  | Can access only explicitly assigned Projects |
 
 ---
 
 ## 6. Project roles
 
-|Role|Description|Assignable to Tasks|
-|---|---|--:|
-|`OWNER`|Full Project, Task, workflow, and membership control|Yes|
-|`CONTRIBUTOR`|Can read the Project and manage Tasks|Yes|
-|`REVIEWER`|Read-only Project and Task access|No|
+| Role          | Description                                          | Assignable to Tasks |
+| ------------- | ---------------------------------------------------- | ------------------: |
+| `OWNER`       | Full Project, Task, workflow, and membership control |                 Yes |
+| `CONTRIBUTOR` | Can read the Project and manage Tasks                |                 Yes |
+| `REVIEWER`    | Read-only Project and Task access                    |                  No |
 
 An internal Workspace member with implicit access to an open Project is treated as a non-member reviewer and cannot be assigned.
 
@@ -152,10 +152,10 @@ A guest with explicit `CONTRIBUTOR` Project membership can be assigned.
 
 ## 7. Project visibility
 
-|Visibility|Behaviour|
-|---|---|
-|`open`|Ordinary internal Workspace members receive implicit reviewer access|
-|`private`|Explicit Project membership is required|
+| Visibility | Behaviour                                                            |
+| ---------- | -------------------------------------------------------------------- |
+| `open`     | Ordinary internal Workspace members receive implicit reviewer access |
+| `private`  | Explicit Project membership is required                              |
 
 Guest users do not automatically receive access to open Projects.
 
@@ -236,12 +236,13 @@ Successful deletion returns:
 204 No Content
 ```
 
-```markdown
+````markdown
 ### List and manage Workspace members
 
 ```http
 GET /api/workspaces/:workspaceId/members
 ```
+````
 
 Requires Workspace member-management permission.
 
@@ -889,13 +890,13 @@ POST /api/invitations/:invitationId/decline
 
 Each Workflow Status contains:
 
-|Property|Purpose|
-|---|---|
-|`id`|Stable identifier stored by Tasks|
-|`name`|User-facing status and column name|
-|`color`|Six-digit hexadecimal display colour|
-|`position`|Current position in the Project workflow|
-|`isCompleted`|Indicates whether Tasks in the status are completed|
+| Property      | Purpose                                             |
+| ------------- | --------------------------------------------------- |
+| `id`          | Stable identifier stored by Tasks                   |
+| `name`        | User-facing status and column name                  |
+| `color`       | Six-digit hexadecimal display colour                |
+| `position`    | Current position in the Project workflow            |
+| `isCompleted` | Indicates whether Tasks in the status are completed |
 
 All users with Project read access can retrieve Workflow Statuses.
 
@@ -994,12 +995,7 @@ Request:
 
 ```json
 {
-  "statusIds": [
-    "todo",
-    "review-status-id",
-    "doing",
-    "done"
-  ]
+  "statusIds": ["todo", "review-status-id", "doing", "done"]
 }
 ```
 
@@ -1059,28 +1055,39 @@ A Task contains:
   "description": "Document all Project routes.",
   "status": "doing",
   "dueDate": "2026-08-30",
-  "assigneeIds": [
-    "owner-user-id",
-    "contributor-user-id"
-  ],
+  "assigneeIds": ["owner-user-id", "contributor-user-id"],
+  "reporterId": "reporter-user-id",
+  "reporter": {
+    "userId": "reporter-user-id",
+    "name": "Casey Contributor",
+    "email": "internal.contributor@collaboard.dev"
+  },
   "version": 3,
   "createdAt": "2026-08-21T00:00:00.000Z",
   "updatedAt": "2026-08-21T02:00:00.000Z"
 }
 ```
 
-|Property|Required|Purpose|
-|---|--:|---|
-|`id`|Yes|Stable Task identifier|
-|`projectId`|Yes|Project containing the Task|
-|`title`|Yes|Task title|
-|`description`|Yes|Task description, which may be empty|
-|`status`|Yes|Workflow Status identifier|
-|`dueDate`|No|Optional `YYYY-MM-DD` deadline or `null`|
-|`assigneeIds`|Yes|Duplicate-free array of eligible Project-member user IDs|
-|`version`|Yes|Optimistic concurrency version|
-|`createdAt`|Yes|Creation timestamp|
-|`updatedAt`|Yes|Last update timestamp|
+| Property      |     Required | Purpose                                                                  |
+| ------------- | -----------: | ------------------------------------------------------------------------ |
+| `id`          |          Yes | Stable Task identifier                                                   |
+| `projectId`   |          Yes | Project containing the Task                                              |
+| `title`       |          Yes | Task title                                                               |
+| `description` |          Yes | Task description, which may be empty                                     |
+| `status`      |          Yes | Workflow Status identifier                                               |
+| `dueDate`     |           No | Optional `YYYY-MM-DD` deadline or `null`                                 |
+| `assigneeIds` |          Yes | Duplicate-free array of eligible Project-member user IDs                 |
+| `version`     |          Yes | Optimistic concurrency version                                           |
+| `createdAt`   |          Yes | Creation timestamp                                                       |
+| `updatedAt`   |          Yes | Last update timestamp                                                    |
+| `reporterId`  |          Yes | Registered user who originally created the Task                          |
+| `reporter`    | API response | Display-ready Reporter identity containing `userId`, `name`, and `email` |
+
+`reporterId` is stored with the Task.
+
+`reporter` is generated for API responses by resolving `reporterId` against the user collection. It is not separately stored and must not be supplied by clients.
+
+The Reporter is the authenticated user who created the Task. It is independent of the Task’s Assignees and cannot be changed through Task updates.
 
 An unassigned Task stores:
 
@@ -1108,10 +1115,7 @@ Request:
   "description": "Document all Project routes.",
   "status": "doing",
   "dueDate": "2026-08-30",
-  "assigneeIds": [
-    "owner-user-id",
-    "contributor-user-id"
-  ]
+  "assigneeIds": ["owner-user-id", "contributor-user-id"]
 }
 ```
 
@@ -1146,16 +1150,40 @@ Response:
     "description": "Document all Project routes.",
     "status": "doing",
     "dueDate": "2026-08-30",
-    "assigneeIds": [
-      "owner-user-id",
-      "contributor-user-id"
-    ],
+    "assigneeIds": ["owner-user-id", "contributor-user-id"],
     "version": 1,
     "createdAt": "2026-08-21T00:00:00.000Z",
     "updatedAt": "2026-08-21T00:00:00.000Z"
   }
 }
 ```
+
+The client must not supply `reporterId`.
+
+The server automatically assigns the authenticated user as the Task Reporter:
+
+````json
+{
+  "reporterId": "authenticated-user-id"
+}
+
+A client-supplied reporterId is rejected with:
+
+400 Bad Request
+{
+  "message": "Reporter is assigned automatically from the authenticated user"
+}
+
+In the successful creation response, add:
+
+```json
+"reporterId": "authenticated-user-id",
+"reporter": {
+  "userId": "authenticated-user-id",
+  "name": "Casey Contributor",
+  "email": "internal.contributor@collaboard.dev"
+},
+````
 
 ### Due Date validation
 
@@ -1228,10 +1256,7 @@ Request:
   "description": "Updated description",
   "status": "review-status-id",
   "dueDate": "2026-09-05",
-  "assigneeIds": [
-    "owner-user-id",
-    "another-contributor-id"
-  ],
+  "assigneeIds": ["owner-user-id", "another-contributor-id"],
   "version": 1
 }
 ```
@@ -1246,16 +1271,38 @@ dueDate
 assigneeIds
 ```
 
+`reporterId` is not an editable Task property.
+
+The Reporter remains unchanged when:
+
+- the title or description changes;
+- the status changes;
+- the Due Date changes or is removed;
+- Assignees are added or removed;
+- the Task is moved through drag and drop;
+- the original Reporter is later removed from Project membership.
+
+Attempts to submit `reporterId` return:
+
+```http
+400 Bad Request
+```
+
+```JSON
+{
+  "message": "A Task Reporter cannot be changed"
+}
+```
+
+Reporter removal from Project membership must not trigger Assignee cleanup against `reporterId`.
+
 Updating `assigneeIds` replaces the complete Assignee collection.
 
 For example, if the Task currently contains:
 
 ```json
 {
-  "assigneeIds": [
-    "user-one",
-    "user-two"
-  ]
+  "assigneeIds": ["user-one", "user-two"]
 }
 ```
 
@@ -1263,10 +1310,7 @@ and the update submits:
 
 ```json
 {
-  "assigneeIds": [
-    "user-two",
-    "user-three"
-  ],
+  "assigneeIds": ["user-two", "user-three"],
   "version": 2
 }
 ```
@@ -1275,10 +1319,7 @@ the final collection becomes:
 
 ```json
 {
-  "assigneeIds": [
-    "user-two",
-    "user-three"
-  ]
+  "assigneeIds": ["user-two", "user-three"]
 }
 ```
 
@@ -1378,10 +1419,7 @@ Example:
 
 ```json
 {
-  "assigneeIds": [
-    "owner-id",
-    "contributor-id"
-  ]
+  "assigneeIds": ["owner-id", "contributor-id"]
 }
 ```
 
@@ -1389,9 +1427,7 @@ becomes:
 
 ```json
 {
-  "assigneeIds": [
-    "owner-id"
-  ]
+  "assigneeIds": ["owner-id"]
 }
 ```
 
@@ -1435,16 +1471,16 @@ CANCELLED
 
 ## 18. Common HTTP responses
 
-|Status|Meaning|
-|---|---|
-|`200 OK`|Successful read or update|
-|`201 Created`|Resource created|
-|`204 No Content`|Resource deleted|
-|`400 Bad Request`|Invalid request data|
-|`401 Unauthorized`|Missing, invalid, or expired token|
-|`403 Forbidden`|Authenticated but insufficient permission|
-|`404 Not Found`|Resource or accessible resource not found|
-|`409 Conflict`|Duplicate resource, invalid transition, or Task version conflict|
+| Status             | Meaning                                                          |
+| ------------------ | ---------------------------------------------------------------- |
+| `200 OK`           | Successful read or update                                        |
+| `201 Created`      | Resource created                                                 |
+| `204 No Content`   | Resource deleted                                                 |
+| `400 Bad Request`  | Invalid request data                                             |
+| `401 Unauthorized` | Missing, invalid, or expired token                               |
+| `403 Forbidden`    | Authenticated but insufficient permission                        |
+| `404 Not Found`    | Resource or accessible resource not found                        |
+| `409 Conflict`     | Duplicate resource, invalid transition, or Task version conflict |
 
 Error responses use:
 

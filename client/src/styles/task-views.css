@@ -62,19 +62,15 @@
   color: var(--kanban-accent-dark);
 }
 
-.workspace-projects-page
-  .project-view-toggle__button:disabled,
-.workspaces-page
-  .project-view-toggle__button:disabled {
+.workspace-projects-page .project-view-toggle__button:disabled,
+.workspaces-page .project-view-toggle__button:disabled {
   cursor: not-allowed;
   color: #9ca8ae;
   opacity: 0.62;
 }
 
-.workspace-projects-page
-  .project-view-toggle__button:disabled:hover,
-.workspaces-page
-  .project-view-toggle__button:disabled:hover {
+.workspace-projects-page .project-view-toggle__button:disabled:hover,
+.workspaces-page .project-view-toggle__button:disabled:hover {
   color: #9ca8ae;
 }
 
@@ -176,7 +172,7 @@
 
 .task-list__table {
   width: 100%;
-  min-width: 1160px;
+  min-width: 1320px;
   border-collapse: collapse;
 }
 
@@ -297,7 +293,7 @@
   }
 
   .task-list__table {
-    min-width: 680px;
+    min-width: 1040px;
   }
 }
 

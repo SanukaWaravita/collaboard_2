@@ -16,18 +16,11 @@ function CardListViewToggle({
   isListAvailable = false,
 }) {
   return (
-    <div
-      className="project-view-toggle"
-      role="group"
-      aria-label={ariaLabel}
-    >
+    <div className="project-view-toggle" role="group" aria-label={ariaLabel}>
       {VIEW_OPTIONS.map((viewOption) => {
-        const isActive =
-          activeView === viewOption.value;
+        const isActive = activeView === viewOption.value;
 
-        const isDisabled =
-          viewOption.value === "list" &&
-          !isListAvailable;
+        const isDisabled = viewOption.value === "list" && !isListAvailable;
 
         return (
           <button
@@ -35,20 +28,12 @@ function CardListViewToggle({
             type="button"
             className={
               "project-view-toggle__button" +
-              (isActive
-                ? " project-view-toggle__button--active"
-                : "")
+              (isActive ? " project-view-toggle__button--active" : "")
             }
-            onClick={() =>
-              onViewChange(viewOption.value)
-            }
+            onClick={() => onViewChange(viewOption.value)}
             disabled={isDisabled}
             aria-pressed={isActive}
-            title={
-              isDisabled
-                ? "List view will be added later"
-                : undefined
-            }
+            title={isDisabled ? "List view will be added later" : undefined}
           >
             <span
               className="project-view-toggle__indicator"

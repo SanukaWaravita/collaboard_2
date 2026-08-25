@@ -1,32 +1,23 @@
 import { randomUUID } from "node:crypto";
 import { PROJECT_PERMISSIONS } from "../constants/access.js";
 import { store } from "../data/inMemoryStore.js";
-import {
-  getOrderedWorkflowStatuses,
-} from "../utils/workflowStatuses.js";
-import {
-  hasProjectPermission,
-} from "../utils/projectAccess.js";
+import { getOrderedWorkflowStatuses } from "../utils/workflowStatuses.js";
+import { hasProjectPermission } from "../utils/projectAccess.js";
 
 const MAX_WORKFLOW_STATUSES = 12;
 const MAX_STATUS_NAME_LENGTH = 40;
 const STATUS_COLOR_PATTERN = /^#[0-9a-fA-F]{6}$/;
 
 function findProject(projectId) {
-  return store.projects.find(
-    (project) => project.id === projectId,
-  );
+  return store.projects.find((project) => project.id === projectId);
 }
 
 function findStatus(project, statusId) {
-  return project.workflowStatuses?.find(
-    (status) => status.id === statusId,
-  );
+  return project.workflowStatuses?.find((status) => status.id === statusId);
 }
 
 function normalizeStatusPositions(project) {
-  const orderedStatuses =
-    getOrderedWorkflowStatuses(project);
+  const orderedStatuses = getOrderedWorkflowStatuses(project);
 
   orderedStatuses.forEach((status, index) => {
     status.position = index;
@@ -37,11 +28,7 @@ function normalizeStatusPositions(project) {
   return orderedStatuses;
 }
 
-function hasDuplicateStatusName(
-  project,
-  name,
-  ignoredStatusId = null,
-) {
+function hasDuplicateStatusName(project, name, ignoredStatusId = null) {
   const normalizedName = name.toLowerCase();
 
   return project.workflowStatuses.some(
@@ -64,10 +51,7 @@ function validateStatusName(name) {
 }
 
 function validateStatusColor(color) {
-  if (
-    typeof color !== "string" ||
-    !STATUS_COLOR_PATTERN.test(color)
-  ) {
+  if (typeof color !== "string" || !STATUS_COLOR_PATTERN.test(color)) {
     return "Status colour must be a six-digit hexadecimal value";
   }
 
@@ -82,13 +66,8 @@ function canManageWorkflow(project, userId) {
   );
 }
 
-export function getWorkflowStatuses(
-  request,
-  response,
-) {
-  const project = findProject(
-    request.params.projectId,
-  );
+export function getWorkflowStatuses(request, response) {
+  const project = findProject(request.params.projectId);
 
   if (
     !project ||
@@ -104,18 +83,12 @@ export function getWorkflowStatuses(
   }
 
   return response.status(200).json({
-    workflowStatuses:
-      getOrderedWorkflowStatuses(project),
+    workflowStatuses: getOrderedWorkflowStatuses(project),
   });
 }
 
-export function createWorkflowStatus(
-  request,
-  response,
-) {
-  const project = findProject(
-    request.params.projectId,
-  );
+export function createWorkflowStatus(request, response) {
+  const project = findProject(request.params.projectId);
 
   if (!project) {
     return response.status(404).json({
@@ -125,15 +98,11 @@ export function createWorkflowStatus(
 
   if (!canManageWorkflow(project, request.user.id)) {
     return response.status(403).json({
-      message:
-        "Only the project owner can manage workflow statuses",
+      message: "Only the project owner can manage workflow statuses",
     });
   }
 
-  const {
-    name,
-    color = "#64748b",
-  } = request.body ?? {};
+  const { name, color = "#64748b" } = request.body ?? {};
 
   const nameError = validateStatusName(name);
 
@@ -151,10 +120,7 @@ export function createWorkflowStatus(
     });
   }
 
-  if (
-    project.workflowStatuses.length >=
-    MAX_WORKFLOW_STATUSES
-  ) {
+  if (project.workflowStatuses.length >= MAX_WORKFLOW_STATUSES) {
     return response.status(409).json({
       message: `A project cannot contain more than ${MAX_WORKFLOW_STATUSES} workflow statuses`,
     });
@@ -162,28 +128,20 @@ export function createWorkflowStatus(
 
   const normalizedName = name.trim();
 
-  if (
-    hasDuplicateStatusName(
-      project,
-      normalizedName,
-    )
-  ) {
+  if (hasDuplicateStatusName(project, normalizedName)) {
     return response.status(409).json({
-      message:
-        "A workflow status with that name already exists",
+      message: "A workflow status with that name already exists",
     });
   }
 
   normalizeStatusPositions(project);
 
-  const firstCompletedStatus =
-    project.workflowStatuses.find(
-      (status) => status.isCompleted,
-    );
+  const firstCompletedStatus = project.workflowStatuses.find(
+    (status) => status.isCompleted,
+  );
 
   const newPosition =
-    firstCompletedStatus?.position ??
-    project.workflowStatuses.length;
+    firstCompletedStatus?.position ?? project.workflowStatuses.length;
 
   project.workflowStatuses.forEach((status) => {
     if (status.position >= newPosition) {
@@ -201,8 +159,7 @@ export function createWorkflowStatus(
 
   project.workflowStatuses.push(workflowStatus);
 
-  const workflowStatuses =
-    normalizeStatusPositions(project);
+  const workflowStatuses = normalizeStatusPositions(project);
 
   project.updatedAt = new Date().toISOString();
 
@@ -212,13 +169,8 @@ export function createWorkflowStatus(
   });
 }
 
-export function updateWorkflowStatus(
-  request,
-  response,
-) {
-  const project = findProject(
-    request.params.projectId,
-  );
+export function updateWorkflowStatus(request, response) {
+  const project = findProject(request.params.projectId);
 
   if (!project) {
     return response.status(404).json({
@@ -228,15 +180,11 @@ export function updateWorkflowStatus(
 
   if (!canManageWorkflow(project, request.user.id)) {
     return response.status(403).json({
-      message:
-        "Only the project owner can manage workflow statuses",
+      message: "Only the project owner can manage workflow statuses",
     });
   }
 
-  const workflowStatus = findStatus(
-    project,
-    request.params.statusId,
-  );
+  const workflowStatus = findStatus(project, request.params.statusId);
 
   if (!workflowStatus) {
     return response.status(404).json({
@@ -244,18 +192,13 @@ export function updateWorkflowStatus(
     });
   }
 
-  const {
-    name,
-    color,
-  } = request.body ?? {};
+  const { name, color } = request.body ?? {};
 
-  const containsUpdate =
-    name !== undefined || color !== undefined;
+  const containsUpdate = name !== undefined || color !== undefined;
 
   if (!containsUpdate) {
     return response.status(400).json({
-      message:
-        "Provide a status name or colour to update",
+      message: "Provide a status name or colour to update",
     });
   }
 
@@ -270,16 +213,9 @@ export function updateWorkflowStatus(
 
     const normalizedName = name.trim();
 
-    if (
-      hasDuplicateStatusName(
-        project,
-        normalizedName,
-        workflowStatus.id,
-      )
-    ) {
+    if (hasDuplicateStatusName(project, normalizedName, workflowStatus.id)) {
       return response.status(409).json({
-        message:
-          "A workflow status with that name already exists",
+        message: "A workflow status with that name already exists",
       });
     }
 
@@ -302,18 +238,12 @@ export function updateWorkflowStatus(
 
   return response.status(200).json({
     workflowStatus,
-    workflowStatuses:
-      getOrderedWorkflowStatuses(project),
+    workflowStatuses: getOrderedWorkflowStatuses(project),
   });
 }
 
-export function reorderWorkflowStatuses(
-  request,
-  response,
-) {
-  const project = findProject(
-    request.params.projectId,
-  );
+export function reorderWorkflowStatuses(request, response) {
+  const project = findProject(request.params.projectId);
 
   if (!project) {
     return response.status(404).json({
@@ -323,42 +253,27 @@ export function reorderWorkflowStatuses(
 
   if (!canManageWorkflow(project, request.user.id)) {
     return response.status(403).json({
-      message:
-        "Only the project owner can reorder workflow statuses",
+      message: "Only the project owner can reorder workflow statuses",
     });
   }
 
-  const {
-    statusIds,
-  } = request.body ?? {};
+  const { statusIds } = request.body ?? {};
 
   if (!Array.isArray(statusIds)) {
     return response.status(400).json({
-      message:
-        "statusIds must be an ordered array",
+      message: "statusIds must be an ordered array",
     });
   }
 
-  if (
-    statusIds.length !==
-    project.workflowStatuses.length
-  ) {
+  if (statusIds.length !== project.workflowStatuses.length) {
     return response.status(400).json({
-      message:
-        "The complete workflow status order is required",
+      message: "The complete workflow status order is required",
     });
   }
 
-  if (
-    statusIds.some(
-      (statusId) =>
-        typeof statusId !== "string" ||
-        !statusId,
-    )
-  ) {
+  if (statusIds.some((statusId) => typeof statusId !== "string" || !statusId)) {
     return response.status(400).json({
-      message:
-        "Every workflow status identifier must be text",
+      message: "Every workflow status identifier must be text",
     });
   }
 
@@ -366,16 +281,12 @@ export function reorderWorkflowStatuses(
 
   if (uniqueStatusIds.size !== statusIds.length) {
     return response.status(400).json({
-      message:
-        "Workflow status identifiers cannot be duplicated",
+      message: "Workflow status identifiers cannot be duplicated",
     });
   }
 
   const statusesById = new Map(
-    project.workflowStatuses.map((status) => [
-      status.id,
-      status,
-    ]),
+    project.workflowStatuses.map((status) => [status.id, status]),
   );
 
   const containsUnknownStatus = statusIds.some(
@@ -384,13 +295,12 @@ export function reorderWorkflowStatuses(
 
   if (containsUnknownStatus) {
     return response.status(400).json({
-      message:
-        "Every status must belong to this project",
+      message: "Every status must belong to this project",
     });
   }
 
-  const reorderedStatuses = statusIds.map(
-    (statusId) => statusesById.get(statusId),
+  const reorderedStatuses = statusIds.map((statusId) =>
+    statusesById.get(statusId),
   );
 
   let completedStatusFound = false;
@@ -409,8 +319,7 @@ export function reorderWorkflowStatuses(
 
   if (activeStatusAfterCompleted) {
     return response.status(400).json({
-      message:
-        "Completed statuses must remain after active statuses",
+      message: "Completed statuses must remain after active statuses",
     });
   }
 
@@ -426,13 +335,8 @@ export function reorderWorkflowStatuses(
   });
 }
 
-export function deleteWorkflowStatus(
-  request,
-  response,
-) {
-  const project = findProject(
-    request.params.projectId,
-  );
+export function deleteWorkflowStatus(request, response) {
+  const project = findProject(request.params.projectId);
 
   if (!project) {
     return response.status(404).json({
@@ -442,15 +346,11 @@ export function deleteWorkflowStatus(
 
   if (!canManageWorkflow(project, request.user.id)) {
     return response.status(403).json({
-      message:
-        "Only the project owner can manage workflow statuses",
+      message: "Only the project owner can manage workflow statuses",
     });
   }
 
-  const workflowStatus = findStatus(
-    project,
-    request.params.statusId,
-  );
+  const workflowStatus = findStatus(project, request.params.statusId);
 
   if (!workflowStatus) {
     return response.status(404).json({
@@ -460,64 +360,42 @@ export function deleteWorkflowStatus(
 
   if (project.workflowStatuses.length === 1) {
     return response.status(409).json({
-      message:
-        "A project must contain at least one workflow status",
+      message: "A project must contain at least one workflow status",
     });
   }
 
-  const otherCompletedStatus =
-    project.workflowStatuses.find(
-      (status) =>
-        status.id !== workflowStatus.id &&
-        status.isCompleted,
-    );
+  const otherCompletedStatus = project.workflowStatuses.find(
+    (status) => status.id !== workflowStatus.id && status.isCompleted,
+  );
 
-  if (
-    workflowStatus.isCompleted &&
-    !otherCompletedStatus
-  ) {
+  if (workflowStatus.isCompleted && !otherCompletedStatus) {
     return response.status(409).json({
-      message:
-        "The project's only completed status cannot be deleted",
+      message: "The project's only completed status cannot be deleted",
     });
   }
 
-  const {
-    replacementStatusId,
-  } = request.body ?? {};
+  const { replacementStatusId } = request.body ?? {};
 
   let replacementStatus = null;
 
   if (replacementStatusId !== undefined) {
-    replacementStatus = findStatus(
-      project,
-      replacementStatusId,
-    );
+    replacementStatus = findStatus(project, replacementStatusId);
 
-    if (
-      !replacementStatus ||
-      replacementStatus.id === workflowStatus.id
-    ) {
+    if (!replacementStatus || replacementStatus.id === workflowStatus.id) {
       return response.status(400).json({
-        message:
-          "Replacement status must be another status in this project",
+        message: "Replacement status must be another status in this project",
       });
     }
   }
 
   const affectedTasks = store.tasks.filter(
     (task) =>
-      task.projectId === project.id &&
-      task.status === workflowStatus.id,
+      task.projectId === project.id && task.status === workflowStatus.id,
   );
 
-  if (
-    affectedTasks.length > 0 &&
-    !replacementStatus
-  ) {
+  if (affectedTasks.length > 0 && !replacementStatus) {
     return response.status(409).json({
-      message:
-        "Move the status's tasks before deleting it",
+      message: "Move the status's tasks before deleting it",
       taskCount: affectedTasks.length,
     });
   }
@@ -530,20 +408,17 @@ export function deleteWorkflowStatus(
     task.updatedAt = timestamp;
   });
 
-  project.workflowStatuses =
-    project.workflowStatuses.filter(
-      (status) => status.id !== workflowStatus.id,
-    );
+  project.workflowStatuses = project.workflowStatuses.filter(
+    (status) => status.id !== workflowStatus.id,
+  );
 
-  const workflowStatuses =
-    normalizeStatusPositions(project);
+  const workflowStatuses = normalizeStatusPositions(project);
 
   project.updatedAt = timestamp;
 
   return response.status(200).json({
     deletedStatusId: workflowStatus.id,
-    replacementStatusId:
-      replacementStatus?.id ?? null,
+    replacementStatusId: replacementStatus?.id ?? null,
     movedTaskCount: affectedTasks.length,
     workflowStatuses,
   });

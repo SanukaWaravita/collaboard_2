@@ -1,35 +1,18 @@
 import { Link } from "react-router";
-import {
-  PROJECT_PERMISSIONS,
-} from "../constants/access";
+import { PROJECT_PERMISSIONS } from "../constants/access";
 
-function ProjectList({
-  projects,
-  onEdit,
-  onDelete,
-  deletingProjectId = null,
-}) {
+function ProjectList({ projects, onEdit, onDelete, deletingProjectId = null }) {
   return (
-    <section
-      className="entity-list"
-      aria-labelledby="project-list-title"
-    >
+    <section className="entity-list" aria-labelledby="project-list-title">
       <header className="entity-list__header">
-        <h2 id="project-list-title">
-          All Projects
-        </h2>
+        <h2 id="project-list-title">All Projects</h2>
 
-        <span className="entity-list__count">
-          {projects.length}
-        </span>
+        <span className="entity-list__count">{projects.length}</span>
       </header>
 
       <div className="entity-list__table-wrapper">
         <table
-          className={
-            "entity-list__table " +
-            "entity-list__table--projects"
-          }
+          className={"entity-list__table " + "entity-list__table--projects"}
         >
           <thead>
             <tr>
@@ -44,37 +27,26 @@ function ProjectList({
 
           <tbody>
             {projects.map((project) => {
-              const isDeleting =
-                deletingProjectId ===
-                project.id;
+              const isDeleting = deletingProjectId === project.id;
 
-              const canEdit =
-                project.permissions.includes(
-                  PROJECT_PERMISSIONS
-                    .UPDATE_PROJECT,
-                );
+              const canEdit = project.permissions.includes(
+                PROJECT_PERMISSIONS.UPDATE_PROJECT,
+              );
 
-              const canDelete =
-                project.permissions.includes(
-                  PROJECT_PERMISSIONS
-                    .DELETE_PROJECT,
-                );
+              const canDelete = project.permissions.includes(
+                PROJECT_PERMISSIONS.DELETE_PROJECT,
+              );
 
               return (
                 <tr key={project.id}>
                   <td className="entity-list__primary">
-                    <span className="project-key">
-                      {project.projectKey}
-                    </span>
+                    <span className="project-key">{project.projectKey}</span>
 
-                    <strong>
-                      {project.name}
-                    </strong>
+                    <strong>{project.name}</strong>
                   </td>
 
                   <td className="entity-list__description">
-                    {project.description ||
-                      "No description provided."}
+                    {project.description || "No description provided."}
                   </td>
 
                   <td>
@@ -92,41 +64,27 @@ function ProjectList({
                   <td>
                     <div className="entity-list__access">
                       <span className="entity-badge">
-                        {project.currentUserRole ??
-                          "None"}
+                        {project.currentUserRole ?? "None"}
                       </span>
 
                       {!project.isMember && (
-                        <span
-                          className={
-                            "entity-list__access-note"
-                          }
-                        >
+                        <span className={"entity-list__access-note"}>
                           Open Workspace access
                         </span>
                       )}
                     </div>
                   </td>
 
-                  <td className="entity-list__number">
-                    {project.taskCount}
-                  </td>
+                  <td className="entity-list__number">{project.taskCount}</td>
 
                   <td>
                     <div className="entity-list__actions">
                       {canEdit && (
                         <button
                           type="button"
-                          className={
-                            "button " +
-                            "button--secondary"
-                          }
-                          onClick={() =>
-                            onEdit(project)
-                          }
-                          aria-label={
-                            `Edit ${project.name}`
-                          }
+                          className={"button " + "button--secondary"}
+                          onClick={() => onEdit(project)}
+                          aria-label={`Edit ${project.name}`}
                           disabled={isDeleting}
                         >
                           Edit
@@ -136,21 +94,12 @@ function ProjectList({
                       {canDelete && (
                         <button
                           type="button"
-                          className={
-                            "button " +
-                            "button--danger"
-                          }
-                          onClick={() =>
-                            onDelete(project)
-                          }
-                          aria-label={
-                            `Delete ${project.name}`
-                          }
+                          className={"button " + "button--danger"}
+                          onClick={() => onDelete(project)}
+                          aria-label={`Delete ${project.name}`}
                           disabled={isDeleting}
                         >
-                          {isDeleting
-                            ? "Deleting..."
-                            : "Delete"}
+                          {isDeleting ? "Deleting..." : "Delete"}
                         </button>
                       )}
 
@@ -161,12 +110,9 @@ function ProjectList({
                           `/projects/${project.id}`
                         }
                         className={
-                          "button button--primary " +
-                          "entity-list__open-link"
+                          "button button--primary " + "entity-list__open-link"
                         }
-                        aria-label={
-                          `Open ${project.name}`
-                        }
+                        aria-label={`Open ${project.name}`}
                         aria-disabled={isDeleting}
                         onClick={(event) => {
                           if (isDeleting) {
