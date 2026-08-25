@@ -176,7 +176,8 @@
   line-height: 1;
 }
 
-.board-page.workspace-projects-page {
+.board-page.workspace-projects-page,
+.board-page.workspaces-page {
   width: min(1480px, 100%);
   min-height: calc(100vh - 68px);
   padding: 24px;
@@ -237,7 +238,9 @@
 }
 
 .workspace-projects-page
-  .workspace-project-header__create {
+  .workspace-project-header__create,
+.workspaces-page
+  .workspaces-header__create {
   border-color: var(--kanban-accent);
   color: #ffffff;
   background: var(--kanban-accent);
@@ -245,7 +248,9 @@
 }
 
 .workspace-projects-page
-  .workspace-project-header__create:hover:not(:disabled) {
+  .workspace-project-header__create:hover:not(:disabled),
+.workspaces-page
+  .workspaces-header__create:hover:not(:disabled) {
   border-color: var(--kanban-accent-dark);
   background: var(--kanban-accent-dark);
   box-shadow: 0 5px 12px rgb(8 126 184 / 24%);
@@ -762,7 +767,8 @@
     padding: 16px;
   }
 
-  .board-page.workspace-projects-page {
+  .board-page.workspace-projects-page,
+  .board-page.workspaces-page {
     padding: 16px;
   }
 
@@ -804,7 +810,8 @@
     padding: 10px;
   }
 
-    .board-page.workspace-projects-page {
+  .board-page.workspace-projects-page,
+  .board-page.workspaces-page {
     padding: 10px;
   }
 
