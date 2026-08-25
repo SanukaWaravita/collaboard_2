@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import ProjectCard from "../components/ProjectCard";
+import ProjectList from "../components/ProjectList";
 import ProjectForm from "../components/ProjectForm";
 import WorkspaceHeader from "../components/WorkspaceHeader";
 import CardListViewToggle from "../components/CardListViewToggle";
@@ -255,6 +256,7 @@ const [isLoading, setIsLoading] = useState(true);
   activeView={activeView}
   onViewChange={setActiveView}
   ariaLabel="Select Project view"
+  isListAvailable
 />
       </div>
 
@@ -275,38 +277,50 @@ const [isLoading, setIsLoading] = useState(true);
       )}
 
       {projects.length === 0 ? (
-        <section className="empty-state">
-          <h2>No projects available</h2>
+  <section className="empty-state">
+    <h2>No projects available</h2>
 
-          <p>
-            {canCreateProject
-              ? "Create the first project in this workspace."
-              : "You currently have access to no projects in this workspace."}
-          </p>
+    <p>
+      {canCreateProject
+        ? "Create the first project in this Workspace."
+        : "You currently have access to no Projects in this Workspace."}
+    </p>
 
-          {canCreateProject && (
-            <button
-              type="button"
-              className="button button--primary"
-              onClick={openCreateForm}
-            >
-              Create Your First Project
-            </button>
-          )}
-        </section>
-      ) : (
-        <section className="entity-grid" aria-label="Available projects">
-          {projects.map((project) => (
-            <ProjectCard
-              key={project.id}
-              project={project}
-              onEdit={openEditForm}
-              onDelete={handleDeleteProject}
-              isDeleting={deletingProjectId === project.id}
-            />
-          ))}
-        </section>
-      )}
+    {canCreateProject && (
+      <button
+        type="button"
+        className="button button--primary"
+        onClick={openCreateForm}
+      >
+        Create Your First Project
+      </button>
+    )}
+  </section>
+) : activeView === "cards" ? (
+  <section
+    className="entity-grid"
+    aria-label="Available Projects"
+  >
+    {projects.map((project) => (
+      <ProjectCard
+        key={project.id}
+        project={project}
+        onEdit={openEditForm}
+        onDelete={handleDeleteProject}
+        isDeleting={
+          deletingProjectId === project.id
+        }
+      />
+    ))}
+  </section>
+) : (
+  <ProjectList
+    projects={projects}
+    onEdit={openEditForm}
+    onDelete={handleDeleteProject}
+    deletingProjectId={deletingProjectId}
+  />
+)}
 
       {isFormOpen && (
         <ProjectForm
