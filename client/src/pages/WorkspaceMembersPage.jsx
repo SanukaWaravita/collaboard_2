@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
+import AccessPageHeader from "../components/AccessPageHeader";
 import WorkspaceMemberAccessCard from "../components/WorkspaceMemberAccessCard";
 import { apiRequest, clearSession } from "../services/api";
 import WorkspaceInvitationForm from "../components/WorkspaceInvitationForm";
@@ -508,7 +509,7 @@ function WorkspaceMembersPage() {
 
   if (isLoading) {
     return (
-      <main className="access-page">
+      <main className="board-page access-page">
         <p className="page-message" role="status">
           Loading Workspace members...
         </p>
@@ -518,7 +519,7 @@ function WorkspaceMembersPage() {
 
   if (loadError || !workspace) {
     return (
-      <main className="access-page">
+      <main className="board-page access-page">
         <section className="page-error">
           <p role="alert">{loadError || "Workspace not found"}</p>
 
@@ -551,26 +552,29 @@ function WorkspaceMembersPage() {
   const canManageAdminRoles = currentMember?.workspaceRole === "OWNER";
 
   return (
-    <main className="access-page">
-      <header className="boards-header">
-        <div>
-          <Link
-            to={`/workspaces/${workspaceId}` + `/projects`}
-            className="project-header__back"
-          >
-            ← Back to Projects
-          </Link>
-
-          <p className="board-header__eyebrow">{workspace.slug}</p>
-
-          <h1>Members & Access</h1>
-
-          <p>
-            Review and manage Workspace roles, Project membership, and effective
-            permissions.
-          </p>
-        </div>
-      </header>
+    <main className="board-page access-page">
+      <AccessPageHeader
+        title="Members & Access"
+        countLabel={
+          `${members.length} ` +
+          `${members.length === 1 ? "Member" : "Members"}`
+        }
+        backTo={`/workspaces/${workspaceId}` + `/projects`}
+        backLabel={`Back to ${workspace.name} Projects`}
+        metadata={[
+          {
+            label: workspace.slug,
+            className: "project-header__key",
+          },
+          {
+            label: workspace.name,
+          },
+          {
+            label: currentMember?.workspaceRole ?? "Member",
+            className: "project-header__role",
+          },
+        ]}
+      />
 
       {actionError && (
         <p className="board-action-error" role="alert">

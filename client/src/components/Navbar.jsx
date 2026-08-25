@@ -1,8 +1,33 @@
-import { NavLink, useNavigate } from "react-router";
+import {
+  NavLink,
+  useLocation,
+  useNavigate,
+} from "react-router";
 import { clearSession } from "../services/api";
 
 function Navbar() {
+  const location = useLocation();
   const navigate = useNavigate();
+
+  const currentLocation =
+    `${location.pathname}` +
+    `${location.search}` +
+    `${location.hash}`;
+
+  const existingReturnTo =
+    new URLSearchParams(
+      location.search,
+    ).get("returnTo");
+
+  const invitationReturnTo =
+    location.pathname === "/invitations"
+      ? existingReturnTo ?? "/workspaces"
+      : currentLocation;
+
+  const invitationSearch =
+    new URLSearchParams({
+      returnTo: invitationReturnTo,
+    }).toString();
 
   function handleLogout() {
     clearSession();
@@ -28,15 +53,18 @@ function Navbar() {
         </NavLink>
 
         <NavLink
-          to="/invitations"
-          className={({ isActive }) =>
-            isActive
-              ? "app-navbar__link app-navbar__link--active"
-              : "app-navbar__link"
-          }
-        >
-          Invitations
-        </NavLink>
+  to={{
+    pathname: "/invitations",
+    search: `?${invitationSearch}`,
+  }}
+  className={({ isActive }) =>
+    isActive
+      ? "app-navbar__link app-navbar__link--active"
+      : "app-navbar__link"
+  }
+>
+  Invitations
+</NavLink>
 
         <button
           type="button"
