@@ -1,7 +1,9 @@
 import "dotenv/config";
+import {
+  createDevelopmentSeed,
+} from "../src/data/developmentSeed.js";
 
-const { isDevelopmentSeedEnabled, store } =
-  await import("../src/data/inMemoryStore.js");
+const seedData = createDevelopmentSeed();
 
 const failures = [];
 
@@ -27,21 +29,19 @@ function findDuplicateIds(items) {
   return duplicateIds;
 }
 
-check(isDevelopmentSeedEnabled, "Development seed data is not enabled");
-
-const companyUsers = store.users.filter((user) =>
+const companyUsers = seedData.users.filter((user) =>
   user.email.endsWith("@aurora.example"),
 );
 
-const companyWorkspaces = store.workspaces.filter((workspace) =>
+const companyWorkspaces = seedData.workspaces.filter((workspace) =>
   workspace.slug.startsWith("aurora-"),
 );
 
-const companyProjects = store.projects.filter((project) =>
+const companyProjects = seedData.projects.filter((project) =>
   project.id.startsWith("aurora-project-"),
 );
 
-const companyTasks = store.tasks.filter((task) =>
+const companyTasks = seedData.tasks.filter((task) =>
   task.id.startsWith("aurora-task-"),
 );
 
@@ -51,11 +51,11 @@ const companyWorkspaceIds = new Set(
 
 const companyProjectIds = new Set(companyProjects.map((project) => project.id));
 
-const companyWorkspaceMembers = store.workspaceMembers.filter((membership) =>
+const companyWorkspaceMembers = seedData.workspaceMembers.filter((membership) =>
   companyWorkspaceIds.has(membership.workspaceId),
 );
 
-const companyProjectMembers = store.projectMembers.filter((membership) =>
+const companyProjectMembers = seedData.projectMembers.filter((membership) =>
   companyProjectIds.has(membership.projectId),
 );
 
@@ -92,13 +92,13 @@ check(
 );
 
 const collections = {
-  users: store.users,
-  workspaces: store.workspaces,
-  workspaceMembers: store.workspaceMembers,
-  projects: store.projects,
-  projectMembers: store.projectMembers,
-  projectInvitations: store.projectInvitations,
-  tasks: store.tasks,
+  users: seedData.users,
+  workspaces: seedData.workspaces,
+  workspaceMembers: seedData.workspaceMembers,
+  projects: seedData.projects,
+  projectMembers: seedData.projectMembers,
+  projectInvitations: seedData.projectInvitations,
+  tasks: seedData.tasks,
 };
 
 Object.entries(collections).forEach(([collectionName, items]) => {
@@ -110,11 +110,11 @@ Object.entries(collections).forEach(([collectionName, items]) => {
   );
 });
 
-const userIds = new Set(store.users.map((user) => user.id));
+const userIds = new Set(seedData.users.map((user) => user.id));
 
-const workspaceIds = new Set(store.workspaces.map((workspace) => workspace.id));
+const workspaceIds = new Set(seedData.workspaces.map((workspace) => workspace.id));
 
-const projectIds = new Set(store.projects.map((project) => project.id));
+const projectIds = new Set(seedData.projects.map((project) => project.id));
 
 const representative = companyUsers.find(
   (user) => user.email === "company.rep@aurora.example",

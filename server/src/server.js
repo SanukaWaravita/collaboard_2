@@ -5,9 +5,6 @@ import {
   connectDatabase,
   disconnectDatabase,
 } from "./config/database.js";
-import {
-  isDevelopmentSeedEnabled,
-} from "./data/inMemoryStore.js";
 
 const port = process.env.PORT || 5000;
 
@@ -61,14 +58,6 @@ async function startServer() {
     server = app.listen(port, () => {
       console.log(
         `CollaBoard API running at http://localhost:${port}`,
-      );
-
-      console.log(
-        `Development seed data: ${
-          isDevelopmentSeedEnabled
-            ? "enabled"
-            : "disabled"
-        }`,
       );
     });
 
