@@ -4,9 +4,9 @@
 
 This document declares the REST API used by the CollaBoard React client.
 
-CollaBoard currently stores users, Workspaces, Projects, workflow statuses, memberships, invitations, and Tasks in server memory.
+CollaBoard persists application data in MongoDB through Mongoose models.
 
-MongoDB persistence will replace the temporary in-memory store during a later milestone.
+The Express API is the source of truth for users, Workspaces, memberships, Projects, invitations, embedded workflow statuses, and Tasks. The client does not directly access MongoDB.
 
 ---
 
@@ -28,15 +28,15 @@ Workspace
 
 Every Project owns an ordered collection of Workflow Statuses.
 
-A Task’s `status` property stores the identifier of one Workflow Status belonging to the same Project.
+A Task’s `status` property stores the identifier of one Workflow Status belonging to the same Project.
 
-A Task’s `assigneeIds` property stores an array containing zero, one, or multiple assignable Project-member user IDs.
+A Task’s `assigneeIds` property stores an array containing zero, one, or multiple assignable Project-member user IDs.
 
 Every Assignee must:
 
 - be an explicit member of the Task’s Project;
 - exist as a registered user;
-- have the `OWNER` or `CONTRIBUTOR` Project role.
+- have the `OWNER` or `CONTRIBUTOR` Project role.
 
 Project reviewers, implicit viewers of open Projects, and users without Project access cannot be assigned.
 
@@ -99,7 +99,7 @@ Response:
 }
 ```
 
-The first registered user becomes the owner of the starter Workspace and starter Projects. The starter Tasks are also updated so that this user replaces the temporary creator and Reporter references.
+Registration creates and persists a new user. Workspace and Project ownership is established through the relevant creation, membership, invitation, and ownership-transfer endpoints rather than being assigned implicitly during registration.
 
 ### Login
 
@@ -565,7 +565,7 @@ Request:
 }
 ```
 
-When using the nested Workspace endpoint, `workspaceId` does not need to be included in the request body.
+When using the nested Workspace endpoint, `workspaceId` does not need to be included in the request body.
 
 Project Keys:
 
@@ -748,9 +748,9 @@ Changing a contributor to a reviewer automatically:
 - preserves other Assignees on those Tasks;
 - preserves Task creator and Reporter references;
 - increments each affected Task version;
-- updates each affected Task’s `updatedAt` timestamp.
+- updates each affected Task’s `updatedAt` timestamp.
 
-Restoring the user to `CONTRIBUTOR` does not automatically add them back to previous Tasks.
+Restoring the user to `CONTRIBUTOR` does not automatically add them back to previous Tasks.
 
 ### Remove a Project member
 
@@ -802,7 +802,7 @@ Rules:
 - guest users cannot own Projects;
 - the previous owner becomes a contributor.
 
-Both `OWNER` and `CONTRIBUTOR` are assignable roles, so ownership transfer does not remove either user from Task assignments.
+Both `OWNER` and `CONTRIBUTOR` are assignable roles, so ownership transfer does not remove either user from Task assignments.
 
 ---
 
@@ -946,7 +946,7 @@ Response:
 }
 ```
 
-Statuses are returned in ascending `position` order.
+Statuses are returned in ascending `position` order.
 
 ### Create a Workflow Status
 
@@ -1018,7 +1018,7 @@ Reordering rules:
 - positions are reassigned from zero;
 - Task status identifiers do not change;
 - Task versions do not increment;
-- the Project’s `updatedAt` timestamp is updated.
+- the Project’s `updatedAt` timestamp is updated.
 
 ### Delete a Workflow Status
 
@@ -1503,10 +1503,10 @@ A Task cannot retain a user who no longer has an assignable role in its Project.
 
 When an assigned contributor becomes a reviewer:
 
-- only that contributor’s ID is removed from `assigneeIds`;
+- only that contributor’s ID is removed from `assigneeIds`;
 - other Assignees remain;
 - the affected Task version increments;
-- the Task receives a new `updatedAt` timestamp.
+- the Task receives a new `updatedAt` timestamp.
 
 Example:
 
@@ -1531,14 +1531,14 @@ When an assigned member is removed:
 - only that member’s ID is removed;
 - other Assignees remain;
 - each affected Task version increments;
-- each affected Task receives a new `updatedAt` timestamp.
+- each affected Task receives a new `updatedAt` timestamp.
 
 ### Project ownership transferred
 
 Ownership transfer does not remove assignments because:
 
-- the new owner has the assignable `OWNER` role;
-- the previous owner receives the assignable `CONTRIBUTOR` role.
+- the new owner has the assignable `OWNER` role;
+- the previous owner receives the assignable `CONTRIBUTOR` role.
 
 Automatic Assignee cleanup does not:
 
@@ -1591,25 +1591,37 @@ Error responses use:
 
 ---
 
-## 19. In-memory limitation
+## 19. MongoDB persistence and development data
 
-All application data is currently stored in server memory.
+Application data is persisted in MongoDB through Mongoose models.
 
-Restarting the Express server removes:
+Persisted entities include:
 
-- registered users;
-- created Workspaces;
-- created Projects;
-- memberships;
-- invitations;
-- created Tasks;
-- Task updates;
-- Task Due Dates;
-- Task Assignees;
-- Task creator and Reporter changes;
-- created, renamed, recoloured, reordered, and deleted Workflow Statuses.
+- users;
+- Workspaces;
+- Workspace memberships;
+- Projects;
+- Project memberships;
+- Project invitations;
+- embedded workflow statuses;
+- Tasks, including Due Dates, Assignees, creator history, Reporter assignment, and optimistic-lock versions.
 
-Seeded Tasks use:
+Restarting the Express API does not remove or restore application data.
+
+Development demonstration data is generated by the seed definitions and written explicitly with:
+
+```bash
+cd server
+npm run seed:development -- --confirm-reset
+```
+
+The development seed command resets the selected approved development database before inserting the demonstration dataset. It must not be run against production data.
+
+The reset is guarded by the development-seeding configuration, the approved database name, the database name included in `MONGODB_URI`, and the explicit `--confirm-reset` argument.
+
+Starting or restarting the API does not run the seed command automatically.
+
+Seeded Tasks retain the same persisted shape as Tasks created through the API. For example:
 
 ```json
 {
@@ -1621,4 +1633,4 @@ Seeded Tasks use:
 }
 ```
 
-MongoDB persistence will replace this temporary behaviour in a later milestone.
+MongoDB stores Task creator and Reporter identifiers independently. Reporter reassignment does not change the immutable original creator.
