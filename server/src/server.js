@@ -57,8 +57,8 @@ async function startServer() {
 
     server = app.listen(port, () => {
       console.log(
-        `CollaBoard API running at http://localhost:${port}`,
-      );
+  `CollaBoard API listening on port ${port}`,
+);
     });
 
     process.once("SIGINT", () => {

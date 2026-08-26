@@ -2,7 +2,7 @@ import {
   isDatabaseConnected,
 } from "../config/database.js";
 
-export function getHealth(_request, response) {
+export function getHealth(request, response) {
   const databaseConnected =
     isDatabaseConnected();
 
@@ -12,8 +12,12 @@ export function getHealth(_request, response) {
       status: databaseConnected
         ? "ok"
         : "unavailable",
+      message: databaseConnected
+        ? "CollaBoard API is running"
+        : "CollaBoard API cannot reach MongoDB",
       database: databaseConnected
         ? "connected"
         : "disconnected",
+      timestamp: new Date().toISOString(),
     });
 }
