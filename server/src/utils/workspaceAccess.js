@@ -25,6 +25,12 @@ const rolePermissions = Object.freeze({
   [WORKSPACE_ROLES.GUEST]: [WORKSPACE_PERMISSIONS.READ_WORKSPACE],
 });
 
+export function getWorkspacePermissions(
+  role,
+) {
+  return rolePermissions[role] ?? [];
+}
+
 export function getWorkspaceMembership(workspaceId, userId) {
   return store.workspaceMembers.find(
     (membership) =>
@@ -41,7 +47,9 @@ export function getWorkspaceAccess(workspace, userId) {
 
   return {
     role: membership.role,
-    permissions: rolePermissions[membership.role] ?? [],
+    permissions: getWorkspacePermissions(
+  membership.role,
+),
   };
 }
 
