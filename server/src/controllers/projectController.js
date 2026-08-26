@@ -23,7 +23,9 @@ import {
   projectKeyExists,
   validateProjectKey,
 } from "../utils/projectKey.js";
-import { presentTask } from "../utils/taskReporter.js";
+import {
+  presentDatabaseTask,
+} from "../utils/databaseTaskReporter.js";
 import {
   createDefaultWorkflowStatuses,
 } from "../utils/workflowStatuses.js";
@@ -339,13 +341,15 @@ export async function getProject(
     createdAt: 1,
   });
 
-  const tasks = taskDocuments.map(
-    (task) =>
-      presentTask(
-        task.toJSON(),
-        request.user.id,
-      ),
-  );
+  const tasks = await Promise.all(
+  taskDocuments.map((task) =>
+    presentDatabaseTask(
+      task,
+      request.user.id,
+      project,
+    ),
+  ),
+);
 
   return response.status(200).json({
     project: await presentProject(

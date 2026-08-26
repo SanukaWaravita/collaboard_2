@@ -1,60 +1,86 @@
-import { randomUUID } from "node:crypto";
-import { store } from "../data/inMemoryStore.js";
-import { PROJECT_PERMISSIONS } from "../constants/access.js";
 import {
-  getProjectAccess,
-  hasProjectPermission,
-} from "../utils/projectAccess.js";
+  PROJECT_PERMISSIONS,
+} from "../constants/access.js";
 import {
-  findWorkflowStatus,
-  getInitialWorkflowStatus,
-} from "../utils/workflowStatuses.js";
-import { isValidDueDate, normalizeDueDate } from "../utils/taskDueDate.js";
+  Project,
+  Task,
+} from "../models/index.js";
 import {
-  findInvalidAssigneeId,
+  getDatabaseProjectAccess,
+  hasDatabaseProjectPermission,
+} from "../utils/databaseProjectAccess.js";
+import {
+  findInvalidDatabaseAssigneeId,
+} from "../utils/databaseTaskAssignee.js";
+import {
+  canAssignDatabaseTaskReporter,
+  findEligibleDatabaseTaskReporter,
+  presentDatabaseTask,
+} from "../utils/databaseTaskReporter.js";
+import {
   isValidAssigneeIdsValue,
   normalizeAssigneeIds,
 } from "../utils/taskAssignee.js";
 import {
-  canAssignTaskReporter,
-  findEligibleTaskReporter,
-  presentTask,
-} from "../utils/taskReporter.js";
+  isValidDueDate,
+  normalizeDueDate,
+} from "../utils/taskDueDate.js";
+import {
+  findWorkflowStatus,
+  getInitialWorkflowStatus,
+} from "../utils/workflowStatuses.js";
 
-function findTaskAndProject(taskId) {
-  const task = store.tasks.find((currentTask) => currentTask.id === taskId);
+async function findTaskAndProject(taskId) {
+  const task = await Task.findById(
+    taskId,
+  );
 
   if (!task) {
     return null;
   }
 
-  const project = store.projects.find(
-    (currentProject) => currentProject.id === task.projectId,
+  const project = await Project.findById(
+    task.projectId,
   );
 
-  return project ? { task, project } : null;
+  return project
+    ? {
+        task,
+        project,
+      }
+    : null;
 }
 
-export function createTask(request, response) {
-  const project = store.projects.find(
-    (currentProject) => currentProject.id === request.params.projectId,
+export async function createTask(
+  request,
+  response,
+) {
+  const project = await Project.findById(
+    request.params.projectId,
   );
 
-  if (!project || !getProjectAccess(project, request.user.id)) {
+  if (
+    !project ||
+    !(await getDatabaseProjectAccess(
+      project,
+      request.user.id,
+    ))
+  ) {
     return response.status(404).json({
       message: "Project not found",
     });
   }
 
   if (
-    !hasProjectPermission(
+    !(await hasDatabaseProjectPermission(
       project,
       request.user.id,
       PROJECT_PERMISSIONS.CREATE_TASK,
-    )
+    ))
   ) {
     return response.status(403).json({
-      message: "You cannot create tasks in this project",
+      message:
+        "You cannot create tasks in this project",
     });
   }
 
@@ -75,7 +101,10 @@ export function createTask(request, response) {
     });
   }
 
-  if (typeof title !== "string" || !title.trim()) {
+  if (
+    typeof title !== "string" ||
+    !title.trim()
+  ) {
     return response.status(400).json({
       message: "Task title is required",
     });
@@ -83,51 +112,66 @@ export function createTask(request, response) {
 
   if (typeof description !== "string") {
     return response.status(400).json({
-      message: "Task description must be text",
+      message:
+        "Task description must be text",
     });
   }
 
   if (!isValidDueDate(dueDate)) {
     return response.status(400).json({
-      message: "Due date must use YYYY-MM-DD format or be null",
+      message:
+        "Due date must use YYYY-MM-DD format or be null",
     });
   }
 
-  if (!isValidAssigneeIdsValue(assigneeIds)) {
+  if (
+    !isValidAssigneeIdsValue(
+      assigneeIds,
+    )
+  ) {
     return response.status(400).json({
       message:
         "Assignee IDs must be a duplicate-free array of user IDs or null",
     });
   }
 
-  const normalizedAssigneeIds = normalizeAssigneeIds(assigneeIds);
+  const normalizedAssigneeIds =
+    normalizeAssigneeIds(assigneeIds);
 
-  const invalidAssigneeId = findInvalidAssigneeId(
-    project.id,
-    normalizedAssigneeIds,
-  );
+  const invalidAssigneeId =
+    await findInvalidDatabaseAssigneeId(
+      project.id,
+      normalizedAssigneeIds,
+    );
 
   if (invalidAssigneeId) {
     return response.status(400).json({
-      message: "Every Assignee must be an owner or contributor in this project",
+      message:
+        "Every Assignee must be an owner or contributor in this project",
     });
   }
 
-  const selectedReporter = findEligibleTaskReporter(
-    project.id,
-    reporterId ?? request.user.id,
-  );
+  const selectedReporter =
+    await findEligibleDatabaseTaskReporter(
+      project.id,
+      reporterId ??
+        request.user.id,
+    );
 
   if (!selectedReporter) {
     return response.status(400).json({
-      message: "Reporter must be a current Project member",
+      message:
+        "Reporter must be a current Project member",
     });
   }
 
   const selectedStatus =
     status === undefined
       ? getInitialWorkflowStatus(project)
-      : findWorkflowStatus(project, status);
+      : findWorkflowStatus(
+          project,
+          status,
+        );
 
   if (!selectedStatus) {
     return response.status(400).json({
@@ -138,40 +182,51 @@ export function createTask(request, response) {
     });
   }
 
-  const timestamp = new Date().toISOString();
-
-  const task = {
-    id: randomUUID(),
+  const task = new Task({
     projectId: project.id,
     title: title.trim(),
-    description: description.trim(),
+    description:
+      description.trim(),
     status: selectedStatus.id,
-    dueDate: normalizeDueDate(dueDate),
-    assigneeIds: normalizedAssigneeIds,
-    createdById: request.user.id,
-    reporterId: selectedReporter.user.id,
+    dueDate:
+      normalizeDueDate(dueDate),
+    assigneeIds:
+      normalizedAssigneeIds,
+    createdById:
+      request.user.id,
+    reporterId:
+      selectedReporter.user.id,
     version: 1,
-    createdAt: timestamp,
-    updatedAt: timestamp,
-  };
+  });
 
-  store.tasks.push(task);
+  await task.save();
 
   return response.status(201).json({
-    task: presentTask(task, request.user.id),
+    task:
+      await presentDatabaseTask(
+        task,
+        request.user.id,
+        project,
+      ),
   });
 }
 
-export function getTask(request, response) {
-  const result = findTaskAndProject(request.params.taskId);
+export async function getTask(
+  request,
+  response,
+) {
+  const result =
+    await findTaskAndProject(
+      request.params.taskId,
+    );
 
   if (
     !result ||
-    !hasProjectPermission(
+    !(await hasDatabaseProjectPermission(
       result.project,
       request.user.id,
       PROJECT_PERMISSIONS.READ_PROJECT,
-    )
+    ))
   ) {
     return response.status(404).json({
       message: "Task not found",
@@ -179,12 +234,23 @@ export function getTask(request, response) {
   }
 
   return response.status(200).json({
-    task: presentTask(result.task, request.user.id),
+    task:
+      await presentDatabaseTask(
+        result.task,
+        request.user.id,
+        result.project,
+      ),
   });
 }
 
-export function updateTask(request, response) {
-  const result = findTaskAndProject(request.params.taskId);
+export async function updateTask(
+  request,
+  response,
+) {
+  const result =
+    await findTaskAndProject(
+      request.params.taskId,
+    );
 
   if (!result) {
     return response.status(404).json({
@@ -192,7 +258,10 @@ export function updateTask(request, response) {
     });
   }
 
-  const { task, project } = result;
+  const {
+    task,
+    project,
+  } = result;
 
   const {
     title,
@@ -207,7 +276,8 @@ export function updateTask(request, response) {
 
   if (createdById !== undefined) {
     return response.status(400).json({
-      message: "A Task creator cannot be changed",
+      message:
+        "A Task creator cannot be changed",
     });
   }
 
@@ -220,45 +290,60 @@ export function updateTask(request, response) {
 
   if (
     containsTaskFieldUpdate &&
-    !hasProjectPermission(
+    !(await hasDatabaseProjectPermission(
       project,
       request.user.id,
       PROJECT_PERMISSIONS.UPDATE_TASK,
-    )
+    ))
   ) {
     return response.status(403).json({
-      message: "You cannot edit tasks in this project",
+      message:
+        "You cannot edit tasks in this project",
     });
   }
 
   let normalizedReporterId;
 
   if (reporterId !== undefined) {
-    const selectedReporter = findEligibleTaskReporter(project.id, reporterId);
+    const selectedReporter =
+      await findEligibleDatabaseTaskReporter(
+        project.id,
+        reporterId,
+      );
 
     if (!selectedReporter) {
       return response.status(400).json({
-        message: "Reporter must be a current Project member",
+        message:
+          "Reporter must be a current Project member",
       });
     }
 
-    normalizedReporterId = selectedReporter.user.id;
+    normalizedReporterId =
+      selectedReporter.user.id;
   }
 
   const changesReporter =
     normalizedReporterId !== undefined &&
-    normalizedReporterId !== task.reporterId;
+    normalizedReporterId !==
+      task.reporterId;
 
   if (
     changesReporter &&
-    !canAssignTaskReporter(task, project, request.user.id)
+    !(await canAssignDatabaseTaskReporter(
+      task,
+      project,
+      request.user.id,
+    ))
   ) {
     return response.status(403).json({
-      message: "You cannot assign the Reporter for this Task",
+      message:
+        "You cannot assign the Reporter for this Task",
     });
   }
 
-  const containsUpdate = containsTaskFieldUpdate || changesReporter;
+  const containsUpdate =
+    containsTaskFieldUpdate ||
+    changesReporter;
 
   if (!containsUpdate) {
     return response.status(400).json({
@@ -267,53 +352,87 @@ export function updateTask(request, response) {
     });
   }
 
-  if (!Number.isInteger(version) || version < 1) {
+  if (
+    !Number.isInteger(version) ||
+    version < 1
+  ) {
     return response.status(400).json({
-      message: "A valid task version is required",
+      message:
+        "A valid task version is required",
     });
   }
 
   if (version !== task.version) {
     return response.status(409).json({
-      message: "Task was modified by another request",
-      task: presentTask(result.task, request.user.id),
+      message:
+        "Task was modified by another request",
+
+      task:
+        await presentDatabaseTask(
+          task,
+          request.user.id,
+          project,
+        ),
     });
   }
 
-  if (title !== undefined && (typeof title !== "string" || !title.trim())) {
+  if (
+    title !== undefined &&
+    (
+      typeof title !== "string" ||
+      !title.trim()
+    )
+  ) {
     return response.status(400).json({
-      message: "Task title cannot be empty",
+      message:
+        "Task title cannot be empty",
     });
   }
 
-  if (description !== undefined && typeof description !== "string") {
+  if (
+    description !== undefined &&
+    typeof description !== "string"
+  ) {
     return response.status(400).json({
-      message: "Task description must be text",
+      message:
+        "Task description must be text",
     });
   }
 
-  if (dueDate !== undefined && !isValidDueDate(dueDate)) {
+  if (
+    dueDate !== undefined &&
+    !isValidDueDate(dueDate)
+  ) {
     return response.status(400).json({
-      message: "Due date must use YYYY-MM-DD format or be null",
+      message:
+        "Due date must use YYYY-MM-DD format or be null",
     });
   }
 
   let normalizedAssigneeIds;
 
   if (assigneeIds !== undefined) {
-    if (!isValidAssigneeIdsValue(assigneeIds)) {
+    if (
+      !isValidAssigneeIdsValue(
+        assigneeIds,
+      )
+    ) {
       return response.status(400).json({
         message:
           "Assignee IDs must be a duplicate-free array of user IDs or null",
       });
     }
 
-    normalizedAssigneeIds = normalizeAssigneeIds(assigneeIds);
+    normalizedAssigneeIds =
+      normalizeAssigneeIds(
+        assigneeIds,
+      );
 
-    const invalidAssigneeId = findInvalidAssigneeId(
-      project.id,
-      normalizedAssigneeIds,
-    );
+    const invalidAssigneeId =
+      await findInvalidDatabaseAssigneeId(
+        project.id,
+        normalizedAssigneeIds,
+      );
 
     if (invalidAssigneeId) {
       return response.status(400).json({
@@ -323,46 +442,110 @@ export function updateTask(request, response) {
     }
   }
 
-  if (status !== undefined && !findWorkflowStatus(project, status)) {
+  if (
+    status !== undefined &&
+    !findWorkflowStatus(
+      project,
+      status,
+    )
+  ) {
     return response.status(400).json({
-      message: "Task status does not exist in this project",
+      message:
+        "Task status does not exist in this project",
     });
   }
 
+  const changedFields = {};
+
   if (title !== undefined) {
-    task.title = title.trim();
+    changedFields.title =
+      title.trim();
   }
 
   if (description !== undefined) {
-    task.description = description.trim();
+    changedFields.description =
+      description.trim();
   }
 
   if (status !== undefined) {
-    task.status = status;
+    changedFields.status = status;
   }
 
   if (dueDate !== undefined) {
-    task.dueDate = normalizeDueDate(dueDate);
+    changedFields.dueDate =
+      normalizeDueDate(dueDate);
   }
 
   if (assigneeIds !== undefined) {
-    task.assigneeIds = normalizedAssigneeIds;
+    changedFields.assigneeIds =
+      normalizedAssigneeIds;
   }
 
   if (changesReporter) {
-    task.reporterId = normalizedReporterId;
+    changedFields.reporterId =
+      normalizedReporterId;
   }
 
-  task.version += 1;
-  task.updatedAt = new Date().toISOString();
+  const updatedTask =
+    await Task.findOneAndUpdate(
+      {
+        _id: task.id,
+        version,
+      },
+      {
+        $set: changedFields,
+
+        $inc: {
+          version: 1,
+        },
+      },
+      {
+        new: true,
+        runValidators: true,
+      },
+    );
+
+  if (!updatedTask) {
+    const latestTask =
+      await Task.findById(task.id);
+
+    if (!latestTask) {
+      return response.status(404).json({
+        message: "Task not found",
+      });
+    }
+
+    return response.status(409).json({
+      message:
+        "Task was modified by another request",
+
+      task:
+        await presentDatabaseTask(
+          latestTask,
+          request.user.id,
+          project,
+        ),
+    });
+  }
 
   return response.status(200).json({
-    task: presentTask(result.task, request.user.id),
+    task:
+      await presentDatabaseTask(
+        updatedTask,
+        request.user.id,
+        project,
+      ),
   });
 }
 
-export function deleteTask(request, response) {
-  const result = findTaskAndProject(request.params.taskId);
+export async function deleteTask(
+  request,
+  response,
+) {
+  const result =
+    await findTaskAndProject(
+      request.params.taskId,
+    );
 
   if (!result) {
     return response.status(404).json({
@@ -370,25 +553,27 @@ export function deleteTask(request, response) {
     });
   }
 
-  const { task, project } = result;
+  const {
+    task,
+    project,
+  } = result;
 
   if (
-    !hasProjectPermission(
+    !(await hasDatabaseProjectPermission(
       project,
       request.user.id,
       PROJECT_PERMISSIONS.DELETE_TASK,
-    )
+    ))
   ) {
     return response.status(403).json({
-      message: "You cannot delete tasks in this project",
+      message:
+        "You cannot delete tasks in this project",
     });
   }
 
-  const taskIndex = store.tasks.findIndex(
-    (currentTask) => currentTask.id === task.id,
-  );
-
-  store.tasks.splice(taskIndex, 1);
+  await Task.deleteOne({
+    _id: task.id,
+  });
 
   return response.status(204).send();
 }
