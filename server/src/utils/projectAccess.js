@@ -27,6 +27,10 @@ const rolePermissions = Object.freeze({
   [PROJECT_ROLES.REVIEWER]: [PROJECT_PERMISSIONS.READ_PROJECT],
 });
 
+export function getProjectPermissions(role) {
+  return rolePermissions[role] ?? [];
+}
+
 export function getWorkspaceMembership(workspaceId, userId) {
   return store.workspaceMembers.find(
     (membership) =>
@@ -66,7 +70,7 @@ export function getProjectAccess(project, userId) {
     return {
       role: PROJECT_ROLES.REVIEWER,
       isMember: false,
-      permissions: rolePermissions[PROJECT_ROLES.REVIEWER],
+      permissions: getProjectPermissions(PROJECT_ROLES.REVIEWER),
     };
   }
 
