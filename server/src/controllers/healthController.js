@@ -1,7 +1,19 @@
-export function getHealth(request, response) {
-  response.status(200).json({
-    status: "ok",
-    message: "CollabBoard API is running",
-    timestamp: new Date().toISOString(),
-  });
+import {
+  isDatabaseConnected,
+} from "../config/database.js";
+
+export function getHealth(_request, response) {
+  const databaseConnected =
+    isDatabaseConnected();
+
+  return response
+    .status(databaseConnected ? 200 : 503)
+    .json({
+      status: databaseConnected
+        ? "ok"
+        : "unavailable",
+      database: databaseConnected
+        ? "connected"
+        : "disconnected",
+    });
 }
