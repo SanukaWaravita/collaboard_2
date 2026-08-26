@@ -37,9 +37,13 @@ Implemented:
 - optimistic Task-version conflict detection;
 - consistent JSON error responses;
 - guarded development database seeding;
+- production-oriented client and server Docker images;
+- a Docker Compose environment for the client, API, MongoDB, and one-shot seed tooling;
+- container health checks and persistent local MongoDB storage;
+- Nginx delivery of the built React client with `/api` reverse proxying;
 - responsive layouts.
 
-Docker configuration, automated test suites, real-time updates, and public deployment remain planned.
+Automated test suites, real-time updates, and public deployment remain planned.
 
 ## Domain model
 
@@ -141,33 +145,257 @@ Removing a member does not erase historical Task creator or Reporter identifiers
 | Password hashing | bcrypt.js |
 | Data persistence | MongoDB through Mongoose |
 | Client session persistence | Browser `localStorage` |
+| Containerization | Docker and Docker Compose |
+| Production client server | Nginx |
 | Testing | Jest, Supertest, and React Testing Library — planned |
 | Real-time updates | Socket.IO — planned |
-| Deployment | Docker Compose and public hosting — planned |
+| Deployment | Local Docker Compose implemented; public hosting planned |
 
 ## Prerequisites
 
-Install:
+Install Git, then choose one setup method.
+
+For the recommended Docker setup, install:
+
+- Docker Engine;
+- Docker Compose v2, available through the `docker compose` command.
+
+For native development without containers, install:
 
 - Node.js 22 or newer;
 - npm;
-- Git;
 - MongoDB, either as a local service or through a compatible hosted MongoDB connection.
 
-The local examples use:
+Native local development uses:
 
 ```text
 mongodb://127.0.0.1:27017/collaboard
 ```
 
-## Installation
+## Clone the repository
 
 Clone the repository:
 
 ```bash
-git clone https://github.com/SanukaWaravita/collaboard_2.git
-cd collaboard_2
+git clone https://github.com/SanukaWaravita/collaboard.git
+cd collaboard
 ```
+
+If the repository URL changes, use the exact URL shown under the GitHub repository's **Code** button.
+
+## Recommended setup: Docker Compose
+
+Docker Compose runs the complete local stack:
+
+| Service | Purpose | Local address |
+|---|---|---|
+| `mongo` | Persistent MongoDB database | Internal Docker network only |
+| `server` | Express REST API | `http://localhost:5000` |
+| `client` | Nginx-hosted React production build | `http://localhost:8080` |
+| `seed` | One-shot development database reset and seed tool | Runs only when explicitly requested |
+
+### 1. Create the Docker environment file
+
+From the repository root:
+
+```bash
+cp .env.docker.example .env.docker
+```
+
+Generate a JWT secret:
+
+```bash
+openssl rand -hex 32
+```
+
+Open `.env.docker` and replace its placeholder `JWT_SECRET` with the generated value. The local Docker configuration uses the `collaboard` database and keeps automatic development seeding disabled during normal startup.
+
+Do not commit `.env.docker`. It contains runtime secrets. Commit only `.env.docker.example` with safe placeholder values.
+
+### 2. Validate the Compose configuration
+
+```bash
+docker compose \
+  --env-file .env.docker \
+  config \
+  --quiet
+```
+
+List the configured services:
+
+```bash
+docker compose \
+  --env-file .env.docker \
+  --profile tools \
+  config \
+  --services
+```
+
+Expected services:
+
+```text
+mongo
+server
+client
+seed
+```
+
+### 3. Build and start the stack
+
+```bash
+docker compose \
+  --env-file .env.docker \
+  build
+
+docker compose \
+  --env-file .env.docker \
+  up \
+  --detach
+```
+
+The first run may take several minutes while Docker downloads base images and builds the client and server images.
+
+Check container health:
+
+```bash
+docker compose \
+  --env-file .env.docker \
+  ps
+```
+
+The `mongo`, `server`, and `client` services should be running and healthy. The `seed` service is not a long-running application container and therefore does not appear in the normal running-service list.
+
+Inspect startup logs:
+
+```bash
+docker compose \
+  --env-file .env.docker \
+  logs \
+  --no-color \
+  --tail=150
+```
+
+Successful API startup includes messages resembling:
+
+```text
+MongoDB connected: collaboard
+CollaBoard API running at http://localhost:5000
+```
+
+Repeated MongoDB health-check connections and Nginx `GET /` responses from `Wget` are expected.
+
+### 4. Verify the running application
+
+Check the API directly:
+
+```bash
+curl --include \
+  http://localhost:5000/api/health
+```
+
+Check the API through the client container's Nginx proxy:
+
+```bash
+curl --include \
+  http://localhost:8080/api/health
+```
+
+Check the React client:
+
+```bash
+curl --head \
+  http://localhost:8080
+```
+
+All three checks should return an HTTP `200` response. Open the application at:
+
+```text
+http://localhost:8080
+```
+
+### 5. Seed the Docker database
+
+Seeding is optional and destructive. It resets the selected Docker development database before writing the demonstration data.
+
+Run the one-shot seed service only when you intend to reset that database:
+
+```bash
+docker compose \
+  --env-file .env.docker \
+  --profile tools \
+  run \
+  --rm \
+  seed
+```
+
+The command should validate the dataset, reset the `collaboard` database, insert the development data, print non-zero document counts, and remove the temporary seed container.
+
+Refresh the browser after seeding. The sample accounts are listed in [Development seed data](#development-seed-data).
+
+### 6. Stop or restart the stack
+
+Stop and remove the application containers and network while preserving database data:
+
+```bash
+docker compose \
+  --env-file .env.docker \
+  down
+```
+
+Start the existing stack again:
+
+```bash
+docker compose \
+  --env-file .env.docker \
+  up \
+  --detach
+```
+
+Rebuild after source or dependency changes:
+
+```bash
+docker compose \
+  --env-file .env.docker \
+  up \
+  --detach \
+  --build
+```
+
+### 7. Docker data persistence
+
+MongoDB stores its database files in the named Docker volume `collaboard_collaboard_mongo_data`. Normal container restarts, image rebuilds, and `docker compose down` do not delete this volume.
+
+The following command removes the containers **and permanently deletes the local Docker database volume**:
+
+```bash
+docker compose \
+  --env-file .env.docker \
+  down \
+  --volumes
+```
+
+Use `--volumes` only when you deliberately want an empty Docker database. The deleted data is not recoverable unless it was backed up elsewhere.
+
+### 8. MongoDB image compatibility
+
+The Compose environment pins MongoDB to `mongo:7.0.40-jammy`. This avoids a known startup incompatibility encountered with the MongoDB 8.0 container on Linux kernel 6.19 and newer.
+
+If MongoDB repeatedly restarts, inspect it with:
+
+```bash
+docker compose \
+  --env-file .env.docker \
+  logs \
+  --no-color \
+  --tail=100 \
+  mongo
+```
+
+Do not change the pinned image without rebuilding and re-running the health checks.
+
+## Native development setup
+
+Use this workflow when developing the client and server directly with Node.js instead of running them in containers.
 
 Install the client dependencies:
 
@@ -185,9 +413,7 @@ npm install
 cd ..
 ```
 
-If the repository URL changes, use the exact URL shown under the GitHub repository's **Code** button.
-
-## Server configuration
+### Server configuration
 
 Create a local environment file from the example:
 
@@ -220,11 +446,30 @@ Replace the placeholder `JWT_SECRET` with the generated value. Do not commit the
 
 For a hosted MongoDB service, replace the local URI with the service's connection string and ensure the database name is included in the URI path. Keep credentials out of Git.
 
+### Client configuration
+
+Create the client environment file:
+
+```bash
+cd client
+cp .env.example .env
+```
+
+For native local development, configure:
+
+```dotenv
+VITE_API_URL=http://localhost:5000/api
+```
+
+Do not commit the generated `client/.env` file. The Docker production build uses `/api` instead because Nginx proxies that path to the API container.
+
 ## Development seed data
 
 CollaBoard includes optional development seed data for repeatable local testing.
 
 Seeding writes the demonstration dataset to MongoDB. It is an explicit, destructive operation: the seed script resets the selected development database before writing the new data.
+
+For Docker, use the one-shot command in [Seed the Docker database](#5-seed-the-docker-database). The following instructions apply to native local development.
 
 Before running the seed, configure the ignored `server/.env` file with:
 
@@ -339,7 +584,7 @@ The validator checks:
 
 Validation generates a temporary seed-data object for consistency checks but does not connect to MongoDB, reset the database, or write documents.
 
-## Running the application
+## Running natively
 
 Ensure MongoDB is running and the server environment variables are configured. The client and server then run in separate terminals.
 
@@ -416,6 +661,12 @@ Local API base URL:
 
 ```text
 http://localhost:5000/api
+```
+
+When using Docker Compose, the browser-facing API is also available through the client container at:
+
+```text
+http://localhost:8080/api
 ```
 
 Protected endpoints require:
@@ -504,8 +755,10 @@ See the [complete API contract](docs/api-contract.md) for request bodies, respon
 ## Project structure
 
 ```text
-collaboard_2/
+collaboard/
 ├── client/
+│   ├── Dockerfile
+│   ├── nginx.conf
 │   ├── src/
 │   │   ├── components/
 │   │   ├── constants/
@@ -515,9 +768,11 @@ collaboard_2/
 │   │   ├── utils/
 │   │   ├── App.jsx
 │   │   └── main.jsx
+│   ├── .dockerignore
 │   ├── .env.example
 │   └── package.json
 ├── server/
+│   ├── Dockerfile
 │   ├── scripts/
 │   │   ├── seedDatabase.js
 │   │   └── validateCompanyDemoSeed.js
@@ -532,6 +787,7 @@ collaboard_2/
 │   │   ├── utils/
 │   │   ├── app.js
 │   │   └── server.js
+│   ├── .dockerignore
 │   ├── .env.example
 │   └── package.json
 ├── docs/
@@ -539,7 +795,9 @@ collaboard_2/
 │   ├── component-tree.md
 │   ├── requirements.md
 │   └── wireframes.md
+├── .env.docker.example
 ├── .gitignore
+├── compose.yaml
 └── README.md
 ```
 
@@ -547,15 +805,18 @@ collaboard_2/
 
 ```mermaid
 flowchart TD
-    User[User] --> Client[React client]
-    Client -->|REST + JWT| API[Express API]
+    User[User] --> Nginx[Nginx client container]
+    Nginx --> Client[React production build]
+    Client -->|Requests to /api| Nginx
+    Nginx -->|Reverse proxy /api| API[Express API container]
     API --> Middleware[Authentication and authorization middleware]
     Middleware --> Controllers[Route controllers]
     Controllers --> Access[Database-backed access helpers]
     Controllers --> Models[Mongoose models]
     Access --> Models
-    Models --> MongoDB[(MongoDB)]
-    Seed[Development seed script] --> Models
+    Models --> MongoDB[(MongoDB container or hosted MongoDB)]
+    Seed[One-shot seed service] --> Models
+    Volume[(Named Docker volume)] --> MongoDB
 ```
 
 MongoDB is the persistent source of truth for users, Workspaces, memberships, Projects, invitations, embedded workflow statuses, and Tasks.
@@ -573,6 +834,21 @@ The application persists:
 - Tasks, Due Dates, Assignees, creator history, Reporter assignment, and optimistic-lock versions.
 
 Restarting the API does not remove or restore application data. Development data changes only when the application modifies it or when the guarded seed command deliberately resets the selected development database.
+
+## Docker architecture and security
+
+The Docker environment separates runtime responsibilities:
+
+- the client image builds the Vite application and serves the static output through Nginx;
+- Nginx forwards browser requests under `/api` to the internal `server` service;
+- the server connects to MongoDB using the internal Compose hostname `mongo`;
+- MongoDB data is stored outside the container filesystem in a named volume;
+- health checks control dependency startup and report service readiness;
+- the seed service uses the server image but runs only through the `tools` profile.
+
+The local MongoDB container is not published to a host port. It is reachable by the API and seed containers on the private Compose network. The local Compose database currently runs without MongoDB authentication and is intended only for development on a trusted machine.
+
+For public hosting, use a secured managed MongoDB deployment or enable authenticated MongoDB access, restrict network access, store secrets in the hosting platform, configure production CORS rules, and establish backup and monitoring procedures.
 
 ## Task conflict detection
 
@@ -600,8 +876,9 @@ This provides optimistic concurrency control for Task edits. Real-time update de
 - JWTs are stored in browser `localStorage`.
 - Automated client and server test suites are not implemented yet.
 - Real-time Socket.IO updates are not implemented yet.
-- Docker configuration and public deployment are not implemented yet.
-- Production database hosting, secret management, backups, and operational monitoring are not configured yet.
+- Public hosting is not configured yet.
+- Production database credentials, secret management, backups, and operational monitoring are not configured yet.
+- The local Compose MongoDB service does not enable authentication and must not be exposed publicly.
 
 MongoDB persistence is implemented. Restarting the API does not discard users, Workspaces, Projects, memberships, invitations, workflow statuses, or Tasks.
 
@@ -613,4 +890,4 @@ The repository uses:
 - `develop` for integrated development;
 - `feature/*`, `fix/*`, and `docs/*` for isolated changes.
 
-Changes are merged through pull requests with meaningful incremental commit history. Before opening a pull request, run the relevant lint, build, syntax, seed-validation, and manual access-control checks, then review the staged diff.
+Changes are merged through pull requests with meaningful incremental commit history. Before opening a pull request, run the relevant lint, build, syntax, seed-validation, Docker configuration, health, persistence, and manual access-control checks, then review the staged diff.
