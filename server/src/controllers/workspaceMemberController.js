@@ -1,5 +1,4 @@
-import { randomUUID } from "node:crypto";
-import { store } from "../data/inMemoryStore.js";
+import mongoose from "mongoose";
 import {
   INVITATION_STATUS,
   MEMBER_TYPES,
@@ -7,12 +6,25 @@ import {
   WORKSPACE_PERMISSIONS,
   WORKSPACE_ROLES,
 } from "../constants/access.js";
-import { getProjectAccess } from "../utils/projectAccess.js";
 import {
-  getWorkspaceAccess,
-  hasWorkspacePermission,
-} from "../utils/workspaceAccess.js";
-import { removeUserFromTaskAssignments } from "../utils/taskAssignee.js";
+  Project,
+  ProjectInvitation,
+  ProjectMember,
+  User,
+  Workspace,
+  WorkspaceMember,
+} from "../models/index.js";
+import {
+  getDatabaseProjectAccess,
+} from "../utils/databaseProjectAccess.js";
+import {
+  removeDatabaseUserFromTaskAssignments,
+} from "../utils/databaseTaskAssignee.js";
+import {
+  getDatabaseWorkspaceAccess,
+  getDatabaseWorkspaceMembership,
+  hasDatabaseWorkspacePermission,
+} from "../utils/databaseWorkspaceAccess.js";
 
 const workspaceRoleOrder = new Map([
   [WORKSPACE_ROLES.OWNER, 0],
@@ -32,66 +44,32 @@ const editableProjectRoles = new Set([
   PROJECT_ROLES.REVIEWER,
 ]);
 
-function findWorkspace(workspaceId) {
-  return store.workspaces.find((workspace) => workspace.id === workspaceId);
-}
-
-function findWorkspaceMembership(workspaceId, userId) {
-  return store.workspaceMembers.find(
-    (membership) =>
-      membership.workspaceId === workspaceId && membership.userId === userId,
+async function findWorkspace(
+  workspaceId,
+) {
+  return Workspace.findById(
+    workspaceId,
   );
 }
 
-function findWorkspaceProject(workspaceId, projectId) {
-  return store.projects.find(
-    (project) =>
-      project.id === projectId && project.workspaceId === workspaceId,
-  );
+async function findWorkspaceProject(
+  workspaceId,
+  projectId,
+) {
+  return Project.findOne({
+    _id: projectId,
+    workspaceId,
+  });
 }
 
-function findProjectMembership(projectId, userId) {
-  return store.projectMembers.find(
-    (membership) =>
-      membership.projectId === projectId && membership.userId === userId,
-  );
-}
-
-function removeUnusedGuestWorkspaceMembership(workspaceId, userId) {
-  const workspaceMembershipIndex = store.workspaceMembers.findIndex(
-    (membership) =>
-      membership.workspaceId === workspaceId &&
-      membership.userId === userId &&
-      membership.role === WORKSPACE_ROLES.GUEST,
-  );
-
-  if (workspaceMembershipIndex === -1) {
-    return false;
-  }
-
-  const hasAnotherProjectMembership = store.projectMembers.some(
-    (membership) => {
-      if (membership.userId !== userId) {
-        return false;
-      }
-
-      const project = store.projects.find(
-        (currentProject) =>
-          currentProject.id === membership.projectId &&
-          currentProject.workspaceId === workspaceId,
-      );
-
-      return Boolean(project);
-    },
-  );
-
-  if (hasAnotherProjectMembership) {
-    return false;
-  }
-
-  store.workspaceMembers.splice(workspaceMembershipIndex, 1);
-
-  return true;
+async function findProjectMembership(
+  projectId,
+  userId,
+) {
+  return ProjectMember.findOne({
+    projectId,
+    userId,
+  });
 }
 
 function presentProjectSummary(project) {
@@ -102,31 +80,37 @@ function presentProjectSummary(project) {
   };
 }
 
-function presentPendingWorkspaceInvitation(invitation) {
-  const project = store.projects.find(
-    (currentProject) =>
-      currentProject.id === invitation.projectId &&
-      currentProject.workspaceId === invitation.workspaceId,
-  );
+async function presentPendingWorkspaceInvitation(
+  invitation,
+) {
+  const project = await Project.findOne({
+    _id: invitation.projectId,
+    workspaceId:
+      invitation.workspaceId,
+  });
 
-  const invitedBy = store.users.find(
-    (user) => user.id === invitation.invitedById,
+  const invitedBy = await User.findById(
+    invitation.invitedById,
   );
 
   return {
     id: invitation.id,
     email: invitation.email,
     role: invitation.role,
-    memberType: invitation.memberType,
+    memberType:
+      invitation.memberType,
     status: invitation.status,
-    createdAt: invitation.createdAt,
+    createdAt:
+      invitation.createdAt,
 
     project: project
       ? {
           projectId: project.id,
-          projectKey: project.projectKey,
+          projectKey:
+            project.projectKey,
           name: project.name,
-          visibility: project.visibility,
+          visibility:
+            project.visibility,
         }
       : null,
 
@@ -140,18 +124,18 @@ function presentPendingWorkspaceInvitation(invitation) {
   };
 }
 
-function getInheritedProjects(projects, userId) {
-  return projects.filter((project) => {
-    const access = getProjectAccess(project, userId);
+async function presentProjectAccess(
+  project,
+  userId,
+) {
+  const access =
+    await getDatabaseProjectAccess(
+      project,
+      userId,
+    );
 
-    return access && access.isMember === false;
-  });
-}
-
-function presentProjectAccess(project, userId) {
-  const access = getProjectAccess(project, userId);
-
-  const isProjectMember = access?.isMember ?? false;
+  const isProjectMember =
+    access?.isMember ?? false;
 
   return {
     projectId: project.id,
@@ -161,66 +145,141 @@ function presentProjectAccess(project, userId) {
 
     hasAccess: Boolean(access),
 
-    accessSource: access ? (isProjectMember ? "EXPLICIT" : "INHERITED") : null,
+    accessSource: access
+      ? (
+          isProjectMember
+            ? "EXPLICIT"
+            : "INHERITED"
+        )
+      : null,
 
-    projectRole: access?.role ?? null,
-    permissions: access?.permissions ?? [],
+    projectRole:
+      access?.role ?? null,
+
+    permissions:
+      access?.permissions ?? [],
+
     isProjectMember,
-    isProjectOwner: project.ownerId === userId,
+
+    isProjectOwner:
+      project.ownerId === userId,
   };
 }
 
-function presentWorkspaceMember(membership, workspace, projects) {
-  const user = store.users.find(
-    (currentUser) => currentUser.id === membership.userId,
+async function getInheritedProjects(
+  projects,
+  userId,
+) {
+  const inheritedProjects = [];
+
+  for (const project of projects) {
+    const access =
+      await getDatabaseProjectAccess(
+        project,
+        userId,
+      );
+
+    if (
+      access &&
+      access.isMember === false
+    ) {
+      inheritedProjects.push(project);
+    }
+  }
+
+  return inheritedProjects;
+}
+
+async function presentWorkspaceMember(
+  membership,
+  workspace,
+  projects,
+) {
+  const user = await User.findById(
+    membership.userId,
   );
 
-  const workspaceAccess = getWorkspaceAccess(workspace, membership.userId);
+  const workspaceAccess =
+    await getDatabaseWorkspaceAccess(
+      workspace,
+      membership.userId,
+    );
 
-  const projectAccess = projects.map((project) =>
-    presentProjectAccess(project, membership.userId),
-  );
+  const projectAccess =
+    await Promise.all(
+      projects.map((project) =>
+        presentProjectAccess(
+          project,
+          membership.userId,
+        ),
+      ),
+    );
 
-  const accessibleProjectCount = projectAccess.filter(
-    (access) => access.hasAccess,
-  ).length;
+  const accessibleProjectCount =
+    projectAccess.filter(
+      (access) => access.hasAccess,
+    ).length;
 
-  const explicitProjectCount = projectAccess.filter(
-    (access) => access.accessSource === "EXPLICIT",
-  ).length;
+  const explicitProjectCount =
+    projectAccess.filter(
+      (access) =>
+        access.accessSource ===
+        "EXPLICIT",
+    ).length;
 
-  const inheritedProjectCount = projectAccess.filter(
-    (access) => access.accessSource === "INHERITED",
-  ).length;
+  const inheritedProjectCount =
+    projectAccess.filter(
+      (access) =>
+        access.accessSource ===
+        "INHERITED",
+    ).length;
 
   const isWorkspaceOwner =
-    workspace.ownerId === membership.userId ||
-    membership.role === WORKSPACE_ROLES.OWNER;
+    workspace.ownerId ===
+      membership.userId ||
+    membership.role ===
+      WORKSPACE_ROLES.OWNER;
 
   return {
     userId: membership.userId,
-    name: user?.name ?? "Unknown user",
-    email: user?.email ?? null,
+    name:
+      user?.name ??
+      "Unknown user",
+    email:
+      user?.email ??
+      null,
 
-    workspaceRole: membership.role,
+    workspaceRole:
+      membership.role,
 
     memberType:
-      membership.role === WORKSPACE_ROLES.GUEST
+      membership.role ===
+      WORKSPACE_ROLES.GUEST
         ? MEMBER_TYPES.GUEST
         : MEMBER_TYPES.INTERNAL,
 
-    workspacePermissions: workspaceAccess?.permissions ?? [],
+    workspacePermissions:
+      workspaceAccess?.permissions ??
+      [],
 
     isWorkspaceOwner,
-    canChangeWorkspaceRole: !isWorkspaceOwner,
-    canRemoveFromWorkspace: !isWorkspaceOwner,
 
-    joinedAt: membership.joinedAt ?? membership.createdAt ?? null,
+    canChangeWorkspaceRole:
+      !isWorkspaceOwner,
+
+    canRemoveFromWorkspace:
+      !isWorkspaceOwner,
+
+    joinedAt:
+      membership.joinedAt ??
+      membership.createdAt ??
+      null,
 
     projectAccess,
 
     accessSummary: {
-      totalProjects: projects.length,
+      totalProjects:
+        projects.length,
       accessibleProjectCount,
       explicitProjectCount,
       inheritedProjectCount,
@@ -228,8 +287,73 @@ function presentWorkspaceMember(membership, workspace, projects) {
   };
 }
 
-export function getWorkspaceMembers(request, response) {
-  const workspace = findWorkspace(request.params.workspaceId);
+async function removeUnusedGuestWorkspaceMembership(
+  workspaceId,
+  userId,
+  session,
+) {
+  const workspaceMembership =
+    await WorkspaceMember.findOne({
+      workspaceId,
+      userId,
+      role: WORKSPACE_ROLES.GUEST,
+    }).session(session);
+
+  if (!workspaceMembership) {
+    return false;
+  }
+
+  const projectMemberships =
+    await ProjectMember.find({
+      userId,
+    })
+      .session(session)
+      .select("projectId");
+
+  const projectIds =
+    projectMemberships.map(
+      (membership) =>
+        membership.projectId,
+    );
+
+  let hasAnotherProject = false;
+
+  if (projectIds.length > 0) {
+    hasAnotherProject = Boolean(
+      await Project.exists({
+        _id: {
+          $in: projectIds,
+        },
+        workspaceId,
+      }).session(session),
+    );
+  }
+
+  if (hasAnotherProject) {
+    return false;
+  }
+
+  await WorkspaceMember.deleteOne(
+    {
+      _id:
+        workspaceMembership.id,
+    },
+    {
+      session,
+    },
+  );
+
+  return true;
+}
+
+export async function getWorkspaceMembers(
+  request,
+  response,
+) {
+  const workspace =
+    await findWorkspace(
+      request.params.workspaceId,
+    );
 
   if (!workspace) {
     return response.status(404).json({
@@ -238,52 +362,85 @@ export function getWorkspaceMembers(request, response) {
   }
 
   if (
-    !hasWorkspacePermission(
+    !(await hasDatabaseWorkspacePermission(
       workspace,
       request.user.id,
       WORKSPACE_PERMISSIONS.MANAGE_MEMBERS,
-    )
+    ))
   ) {
     return response.status(403).json({
-      message: "You cannot manage members in this workspace",
+      message:
+        "You cannot manage members in this workspace",
     });
   }
 
-  const projects = store.projects.filter(
-    (project) => project.workspaceId === workspace.id,
-  );
+  const projects = await Project.find({
+    workspaceId: workspace.id,
+  });
 
-  const members = store.workspaceMembers
-    .filter((membership) => membership.workspaceId === workspace.id)
-    .map((membership) =>
-      presentWorkspaceMember(membership, workspace, projects),
-    )
-    .sort((firstMember, secondMember) => {
-      const firstRolePosition =
-        workspaceRoleOrder.get(firstMember.workspaceRole) ?? 99;
-
-      const secondRolePosition =
-        workspaceRoleOrder.get(secondMember.workspaceRole) ?? 99;
-
-      if (firstRolePosition !== secondRolePosition) {
-        return firstRolePosition - secondRolePosition;
-      }
-
-      return firstMember.name.localeCompare(secondMember.name);
+  const memberships =
+    await WorkspaceMember.find({
+      workspaceId: workspace.id,
     });
 
-  const pendingInvitations = store.projectInvitations
-    .filter(
-      (invitation) =>
-        invitation.workspaceId === workspace.id &&
-        invitation.status === INVITATION_STATUS.PENDING,
-    )
-    .map(presentPendingWorkspaceInvitation)
-    .sort(
-      (firstInvitation, secondInvitation) =>
-        new Date(secondInvitation.createdAt).getTime() -
-        new Date(firstInvitation.createdAt).getTime(),
+  const members = await Promise.all(
+    memberships.map(
+      (membership) =>
+        presentWorkspaceMember(
+          membership,
+          workspace,
+          projects,
+        ),
+    ),
+  );
+
+  members.sort(
+    (
+      firstMember,
+      secondMember,
+    ) => {
+      const firstRolePosition =
+        workspaceRoleOrder.get(
+          firstMember.workspaceRole,
+        ) ?? 99;
+
+      const secondRolePosition =
+        workspaceRoleOrder.get(
+          secondMember.workspaceRole,
+        ) ?? 99;
+
+      if (
+        firstRolePosition !==
+        secondRolePosition
+      ) {
+        return (
+          firstRolePosition -
+          secondRolePosition
+        );
+      }
+
+      return firstMember.name.localeCompare(
+        secondMember.name,
+      );
+    },
+  );
+
+  const invitations =
+    await ProjectInvitation.find({
+      workspaceId: workspace.id,
+      status:
+        INVITATION_STATUS.PENDING,
+    }).sort({
+      createdAt: -1,
+    });
+
+  const pendingInvitations =
+    await Promise.all(
+      invitations.map(
+        presentPendingWorkspaceInvitation,
+      ),
     );
+
   return response.status(200).json({
     workspace: {
       id: workspace.id,
@@ -294,22 +451,31 @@ export function getWorkspaceMembers(request, response) {
 
     members,
 
-    projects: projects.map((project) => ({
-      id: project.id,
-      projectKey: project.projectKey,
-      name: project.name,
-      visibility: project.visibility,
-    })),
+    projects: projects.map(
+      (project) => ({
+        id: project.id,
+        projectKey:
+          project.projectKey,
+        name: project.name,
+        visibility:
+          project.visibility,
+      }),
+    ),
 
     pendingInvitations,
-
     currentUserId: request.user.id,
     canManageMembers: true,
   });
 }
 
-export function updateWorkspaceMemberRole(request, response) {
-  const workspace = findWorkspace(request.params.workspaceId);
+export async function updateWorkspaceMemberRole(
+  request,
+  response,
+) {
+  const workspace =
+    await findWorkspace(
+      request.params.workspaceId,
+    );
 
   if (!workspace) {
     return response.status(404).json({
@@ -318,116 +484,206 @@ export function updateWorkspaceMemberRole(request, response) {
   }
 
   if (
-    !hasWorkspacePermission(
+    !(await hasDatabaseWorkspacePermission(
       workspace,
       request.user.id,
       WORKSPACE_PERMISSIONS.MANAGE_MEMBERS,
-    )
+    ))
   ) {
     return response.status(403).json({
-      message: "You cannot manage members in this workspace",
+      message:
+        "You cannot manage members in this workspace",
     });
   }
 
-  const { role } = request.body ?? {};
+  const {
+    role,
+  } = request.body ?? {};
 
-  if (!editableWorkspaceRoles.has(role)) {
+  if (
+    !editableWorkspaceRoles.has(role)
+  ) {
     return response.status(400).json({
-      message: "Workspace role must be ADMIN, MEMBER, or GUEST",
+      message:
+        "Workspace role must be ADMIN, MEMBER, or GUEST",
     });
   }
 
-  const membership = findWorkspaceMembership(
-    workspace.id,
-    request.params.userId,
-  );
+  const membership =
+    await getDatabaseWorkspaceMembership(
+      workspace.id,
+      request.params.userId,
+    );
 
   if (!membership) {
     return response.status(404).json({
-      message: "Workspace member not found",
+      message:
+        "Workspace member not found",
     });
   }
 
   const isWorkspaceOwner =
-    workspace.ownerId === membership.userId ||
-    membership.role === WORKSPACE_ROLES.OWNER;
+    workspace.ownerId ===
+      membership.userId ||
+    membership.role ===
+      WORKSPACE_ROLES.OWNER;
 
   if (isWorkspaceOwner) {
     return response.status(409).json({
-      message: "Transfer Workspace ownership before changing the owner's role",
+      message:
+        "Transfer Workspace ownership before changing the owner's role",
     });
   }
 
-  if (membership.userId === request.user.id) {
+  if (
+    membership.userId ===
+    request.user.id
+  ) {
     return response.status(409).json({
-      message: "You cannot change your own Workspace role",
+      message:
+        "You cannot change your own Workspace role",
     });
   }
 
-  const requesterIsWorkspaceOwner = workspace.ownerId === request.user.id;
+  const requesterIsWorkspaceOwner =
+    workspace.ownerId ===
+    request.user.id;
 
   if (
     !requesterIsWorkspaceOwner &&
-    (membership.role === WORKSPACE_ROLES.ADMIN ||
-      role === WORKSPACE_ROLES.ADMIN)
+    (
+      membership.role ===
+        WORKSPACE_ROLES.ADMIN ||
+      role === WORKSPACE_ROLES.ADMIN
+    )
   ) {
     return response.status(403).json({
-      message: "Only the Workspace owner can manage Admin roles",
+      message:
+        "Only the Workspace owner can manage Admin roles",
     });
   }
 
-  const projects = store.projects.filter(
-    (project) => project.workspaceId === workspace.id,
-  );
+  const projects = await Project.find({
+    workspaceId: workspace.id,
+  });
 
-  const ownedProjects = projects.filter(
-    (project) => project.ownerId === membership.userId,
-  );
+  const ownedProjects =
+    projects.filter(
+      (project) =>
+        project.ownerId ===
+        membership.userId,
+    );
 
-  if (role === WORKSPACE_ROLES.GUEST && ownedProjects.length > 0) {
+  if (
+    role === WORKSPACE_ROLES.GUEST &&
+    ownedProjects.length > 0
+  ) {
     return response.status(409).json({
       message:
         "Transfer Project ownership before converting this member into a guest",
 
-      ownedProjects: ownedProjects.map(presentProjectSummary),
+      ownedProjects:
+        ownedProjects.map(
+          presentProjectSummary,
+        ),
     });
   }
 
-  const inheritedProjectsBefore = getInheritedProjects(
-    projects,
-    membership.userId,
-  );
+  const inheritedProjectsBefore =
+    await getInheritedProjects(
+      projects,
+      membership.userId,
+    );
 
-  const previousRole = membership.role;
-  const timestamp = new Date().toISOString();
+  const previousRole =
+    membership.role;
 
-  membership.role = role;
-  membership.updatedAt = timestamp;
-  workspace.updatedAt = timestamp;
+  const session =
+    await mongoose.startSession();
 
-  const inheritedProjectsAfter = getInheritedProjects(
-    projects,
-    membership.userId,
-  );
+  let updatedMembership;
 
-  const previousInheritedIds = new Set(
-    inheritedProjectsBefore.map((project) => project.id),
-  );
+  try {
+    await session.withTransaction(
+      async () => {
+        updatedMembership =
+          await WorkspaceMember.findById(
+            membership.id,
+          ).session(session);
 
-  const currentInheritedIds = new Set(
-    inheritedProjectsAfter.map((project) => project.id),
-  );
+        updatedMembership.role = role;
 
-  const gainedInheritedAccess = inheritedProjectsAfter
-    .filter((project) => !previousInheritedIds.has(project.id))
-    .map(presentProjectSummary);
+        await updatedMembership.save({
+          session,
+        });
 
-  const lostInheritedAccess = inheritedProjectsBefore
-    .filter((project) => !currentInheritedIds.has(project.id))
-    .map(presentProjectSummary);
+        await Workspace.updateOne(
+          {
+            _id: workspace.id,
+          },
+          {
+            $set: {
+              updatedAt: new Date(),
+            },
+          },
+          {
+            session,
+            timestamps: false,
+          },
+        );
+      },
+    );
+  } finally {
+    await session.endSession();
+  }
+
+  const inheritedProjectsAfter =
+    await getInheritedProjects(
+      projects,
+      membership.userId,
+    );
+
+  const previousInheritedIds =
+    new Set(
+      inheritedProjectsBefore.map(
+        (project) => project.id,
+      ),
+    );
+
+  const currentInheritedIds =
+    new Set(
+      inheritedProjectsAfter.map(
+        (project) => project.id,
+      ),
+    );
+
+  const gainedInheritedAccess =
+    inheritedProjectsAfter
+      .filter(
+        (project) =>
+          !previousInheritedIds.has(
+            project.id,
+          ),
+      )
+      .map(presentProjectSummary);
+
+  const lostInheritedAccess =
+    inheritedProjectsBefore
+      .filter(
+        (project) =>
+          !currentInheritedIds.has(
+            project.id,
+          ),
+      )
+      .map(presentProjectSummary);
 
   return response.status(200).json({
-    member: presentWorkspaceMember(membership, workspace, projects),
+    member:
+      await presentWorkspaceMember(
+        updatedMembership,
+        workspace,
+        projects,
+      ),
 
     previousRole,
 
@@ -438,8 +694,14 @@ export function updateWorkspaceMemberRole(request, response) {
   });
 }
 
-export function setWorkspaceMemberProjectAccess(request, response) {
-  const workspace = findWorkspace(request.params.workspaceId);
+export async function setWorkspaceMemberProjectAccess(
+  request,
+  response,
+) {
+  const workspace =
+    await findWorkspace(
+      request.params.workspaceId,
+    );
 
   if (!workspace) {
     return response.status(404).json({
@@ -448,112 +710,188 @@ export function setWorkspaceMemberProjectAccess(request, response) {
   }
 
   if (
-    !hasWorkspacePermission(
+    !(await hasDatabaseWorkspacePermission(
       workspace,
       request.user.id,
       WORKSPACE_PERMISSIONS.MANAGE_MEMBERS,
-    )
+    ))
   ) {
     return response.status(403).json({
-      message: "You cannot manage members in this workspace",
+      message:
+        "You cannot manage members in this workspace",
     });
   }
 
-  const workspaceMembership = findWorkspaceMembership(
-    workspace.id,
-    request.params.userId,
-  );
+  const workspaceMembership =
+    await getDatabaseWorkspaceMembership(
+      workspace.id,
+      request.params.userId,
+    );
 
   if (!workspaceMembership) {
     return response.status(404).json({
-      message: "Workspace member not found",
+      message:
+        "Workspace member not found",
     });
   }
 
-  const project = findWorkspaceProject(workspace.id, request.params.projectId);
+  const project =
+    await findWorkspaceProject(
+      workspace.id,
+      request.params.projectId,
+    );
 
   if (!project) {
     return response.status(404).json({
-      message: "Project not found in this workspace",
+      message:
+        "Project not found in this workspace",
     });
   }
 
-  const { role } = request.body ?? {};
+  const {
+    role,
+  } = request.body ?? {};
 
-  if (!editableProjectRoles.has(role)) {
+  if (
+    !editableProjectRoles.has(role)
+  ) {
     return response.status(400).json({
-      message: "Project role must be CONTRIBUTOR or REVIEWER",
+      message:
+        "Project role must be CONTRIBUTOR or REVIEWER",
     });
   }
 
-  let projectMembership = findProjectMembership(
-    project.id,
-    workspaceMembership.userId,
-  );
+  const existingMembership =
+    await findProjectMembership(
+      project.id,
+      workspaceMembership.userId,
+    );
 
   const isProjectOwner =
-    project.ownerId === workspaceMembership.userId ||
-    projectMembership?.role === PROJECT_ROLES.OWNER;
+    project.ownerId ===
+      workspaceMembership.userId ||
+    existingMembership?.role ===
+      PROJECT_ROLES.OWNER;
 
   if (isProjectOwner) {
     return response.status(409).json({
-      message: "Transfer Project ownership before changing the owner's access",
+      message:
+        "Transfer Project ownership before changing the owner's access",
     });
   }
 
-  const timestamp = new Date().toISOString();
-  const previousRole = projectMembership?.role ?? null;
+  const previousRole =
+    existingMembership?.role ??
+    null;
 
+  const session =
+    await mongoose.startSession();
+
+  let projectMembership;
   let action;
   let responseStatus;
   let unassignedTaskCount = 0;
 
-  if (projectMembership) {
-    projectMembership.role = role;
-    projectMembership.updatedAt = timestamp;
+  try {
+    await session.withTransaction(
+      async () => {
+        if (existingMembership) {
+          projectMembership =
+            await ProjectMember.findById(
+              existingMembership.id,
+            ).session(session);
 
-    action = "UPDATED";
-    responseStatus = 200;
+          projectMembership.role = role;
 
-    if (
-      previousRole === PROJECT_ROLES.CONTRIBUTOR &&
-      role === PROJECT_ROLES.REVIEWER
-    ) {
-      unassignedTaskCount = removeUserFromTaskAssignments(
-        project.id,
-        workspaceMembership.userId,
-      );
-    }
-  } else {
-    projectMembership = {
-      id: randomUUID(),
-      projectId: project.id,
-      userId: workspaceMembership.userId,
-      role,
-      joinedAt: timestamp,
-      updatedAt: timestamp,
-    };
+          await projectMembership.save({
+            session,
+          });
 
-    store.projectMembers.push(projectMembership);
+          action = "UPDATED";
+          responseStatus = 200;
 
-    action = "GRANTED";
-    responseStatus = 201;
+          if (
+            previousRole ===
+              PROJECT_ROLES.CONTRIBUTOR &&
+            role ===
+              PROJECT_ROLES.REVIEWER
+          ) {
+            unassignedTaskCount =
+              await removeDatabaseUserFromTaskAssignments(
+                project.id,
+                workspaceMembership.userId,
+                {
+                  session,
+                },
+              );
+          }
+        } else {
+          [projectMembership] =
+            await ProjectMember.create(
+              [
+                {
+                  projectId:
+                    project.id,
+                  userId:
+                    workspaceMembership.userId,
+                  role,
+                  joinedAt:
+                    new Date(),
+                },
+              ],
+              {
+                session,
+              },
+            );
+
+          action = "GRANTED";
+          responseStatus = 201;
+        }
+
+        await Project.updateOne(
+          {
+            _id: project.id,
+          },
+          {
+            $set: {
+              updatedAt: new Date(),
+            },
+          },
+          {
+            session,
+            timestamps: false,
+          },
+        );
+      },
+    );
+  } finally {
+    await session.endSession();
   }
 
-  project.updatedAt = timestamp;
+  return response
+    .status(responseStatus)
+    .json({
+      action,
+      previousRole,
 
-  return response.status(responseStatus).json({
-    action,
-    previousRole,
+      projectAccess:
+        await presentProjectAccess(
+          project,
+          workspaceMembership.userId,
+        ),
 
-    projectAccess: presentProjectAccess(project, workspaceMembership.userId),
-
-    unassignedTaskCount,
-  });
+      unassignedTaskCount,
+    });
 }
 
-export function removeWorkspaceMemberProjectAccess(request, response) {
-  const workspace = findWorkspace(request.params.workspaceId);
+export async function removeWorkspaceMemberProjectAccess(
+  request,
+  response,
+) {
+  const workspace =
+    await findWorkspace(
+      request.params.workspaceId,
+    );
 
   if (!workspace) {
     return response.status(404).json({
@@ -562,46 +900,61 @@ export function removeWorkspaceMemberProjectAccess(request, response) {
   }
 
   if (
-    !hasWorkspacePermission(
+    !(await hasDatabaseWorkspacePermission(
       workspace,
       request.user.id,
       WORKSPACE_PERMISSIONS.MANAGE_MEMBERS,
-    )
+    ))
   ) {
     return response.status(403).json({
-      message: "You cannot manage members in this workspace",
+      message:
+        "You cannot manage members in this workspace",
     });
   }
 
-  const workspaceMembership = findWorkspaceMembership(
-    workspace.id,
-    request.params.userId,
-  );
+  const workspaceMembership =
+    await getDatabaseWorkspaceMembership(
+      workspace.id,
+      request.params.userId,
+    );
 
   if (!workspaceMembership) {
     return response.status(404).json({
-      message: "Workspace member not found",
+      message:
+        "Workspace member not found",
     });
   }
 
-  const project = findWorkspaceProject(workspace.id, request.params.projectId);
+  const project =
+    await findWorkspaceProject(
+      workspace.id,
+      request.params.projectId,
+    );
 
   if (!project) {
     return response.status(404).json({
-      message: "Project not found in this workspace",
+      message:
+        "Project not found in this workspace",
     });
   }
 
-  const projectMembershipIndex = store.projectMembers.findIndex(
-    (membership) =>
-      membership.projectId === project.id &&
-      membership.userId === workspaceMembership.userId,
-  );
+  const projectMembership =
+    await findProjectMembership(
+      project.id,
+      workspaceMembership.userId,
+    );
 
-  if (projectMembershipIndex === -1) {
-    const currentAccess = getProjectAccess(project, workspaceMembership.userId);
+  if (!projectMembership) {
+    const currentAccess =
+      await getDatabaseProjectAccess(
+        project,
+        workspaceMembership.userId,
+      );
 
-    if (currentAccess && currentAccess.isMember === false) {
+    if (
+      currentAccess &&
+      currentAccess.isMember === false
+    ) {
       return response.status(409).json({
         message:
           "This access is inherited from the open Project and cannot be removed individually",
@@ -609,51 +962,104 @@ export function removeWorkspaceMemberProjectAccess(request, response) {
     }
 
     return response.status(404).json({
-      message: "Explicit Project membership not found",
+      message:
+        "Explicit Project membership not found",
     });
   }
-
-  const projectMembership = store.projectMembers[projectMembershipIndex];
 
   if (
-    project.ownerId === workspaceMembership.userId ||
-    projectMembership.role === PROJECT_ROLES.OWNER
+    project.ownerId ===
+      workspaceMembership.userId ||
+    projectMembership.role ===
+      PROJECT_ROLES.OWNER
   ) {
     return response.status(409).json({
-      message: "Transfer Project ownership before removing the owner's access",
+      message:
+        "Transfer Project ownership before removing the owner's access",
     });
   }
 
-  store.projectMembers.splice(projectMembershipIndex, 1);
+  const session =
+    await mongoose.startSession();
 
-  const unassignedTaskCount = removeUserFromTaskAssignments(
-    project.id,
-    workspaceMembership.userId,
-  );
+  let unassignedTaskCount = 0;
+  let workspaceMembershipRemoved = false;
 
-  const workspaceMembershipRemoved = removeUnusedGuestWorkspaceMembership(
-    workspace.id,
-    workspaceMembership.userId,
-  );
+  try {
+    await session.withTransaction(
+      async () => {
+        await ProjectMember.deleteOne(
+          {
+            _id:
+              projectMembership.id,
+          },
+          {
+            session,
+          },
+        );
 
-  project.updatedAt = new Date().toISOString();
+        unassignedTaskCount =
+          await removeDatabaseUserFromTaskAssignments(
+            project.id,
+            workspaceMembership.userId,
+            {
+              session,
+            },
+          );
+
+        workspaceMembershipRemoved =
+          await removeUnusedGuestWorkspaceMembership(
+            workspace.id,
+            workspaceMembership.userId,
+            session,
+          );
+
+        await Project.updateOne(
+          {
+            _id: project.id,
+          },
+          {
+            $set: {
+              updatedAt: new Date(),
+            },
+          },
+          {
+            session,
+            timestamps: false,
+          },
+        );
+      },
+    );
+  } finally {
+    await session.endSession();
+  }
 
   return response.status(200).json({
-    message: "Explicit Project access removed",
+    message:
+      "Explicit Project access removed",
 
-    removedRole: projectMembership.role,
+    removedRole:
+      projectMembership.role,
+
     unassignedTaskCount,
     workspaceMembershipRemoved,
 
-    remainingProjectAccess: presentProjectAccess(
-      project,
-      workspaceMembership.userId,
-    ),
+    remainingProjectAccess:
+      await presentProjectAccess(
+        project,
+        workspaceMembership.userId,
+      ),
   });
 }
 
-export function removeWorkspaceMember(request, response) {
-  const workspace = findWorkspace(request.params.workspaceId);
+export async function removeWorkspaceMember(
+  request,
+  response,
+) {
+  const workspace =
+    await findWorkspace(
+      request.params.workspaceId,
+    );
 
   if (!workspace) {
     return response.status(404).json({
@@ -662,171 +1068,283 @@ export function removeWorkspaceMember(request, response) {
   }
 
   if (
-    !hasWorkspacePermission(
+    !(await hasDatabaseWorkspacePermission(
       workspace,
       request.user.id,
       WORKSPACE_PERMISSIONS.MANAGE_MEMBERS,
-    )
+    ))
   ) {
     return response.status(403).json({
-      message: "You cannot manage members in this workspace",
+      message:
+        "You cannot manage members in this workspace",
     });
   }
 
-  const membership = findWorkspaceMembership(
-    workspace.id,
-    request.params.userId,
-  );
+  const membership =
+    await getDatabaseWorkspaceMembership(
+      workspace.id,
+      request.params.userId,
+    );
 
   if (!membership) {
     return response.status(404).json({
-      message: "Workspace member not found",
+      message:
+        "Workspace member not found",
     });
   }
 
   const isWorkspaceOwner =
-    workspace.ownerId === membership.userId ||
-    membership.role === WORKSPACE_ROLES.OWNER;
+    workspace.ownerId ===
+      membership.userId ||
+    membership.role ===
+      WORKSPACE_ROLES.OWNER;
 
   if (isWorkspaceOwner) {
     return response.status(409).json({
-      message: "Transfer Workspace ownership before removing the owner",
+      message:
+        "Transfer Workspace ownership before removing the owner",
     });
   }
 
-  if (membership.userId === request.user.id) {
+  if (
+    membership.userId ===
+    request.user.id
+  ) {
     return response.status(409).json({
       message:
         "You cannot remove yourself from the Workspace through member management",
     });
   }
 
-  const requesterIsWorkspaceOwner = workspace.ownerId === request.user.id;
+  const requesterIsWorkspaceOwner =
+    workspace.ownerId ===
+    request.user.id;
 
-  if (membership.role === WORKSPACE_ROLES.ADMIN && !requesterIsWorkspaceOwner) {
+  if (
+    membership.role ===
+      WORKSPACE_ROLES.ADMIN &&
+    !requesterIsWorkspaceOwner
+  ) {
     return response.status(403).json({
-      message: "Only the Workspace owner can remove an Admin",
+      message:
+        "Only the Workspace owner can remove an Admin",
     });
   }
 
-  const projects = store.projects.filter(
-    (project) => project.workspaceId === workspace.id,
-  );
-
-  const projectIds = new Set(projects.map((project) => project.id));
-
-  const ownedProjects = projects.filter((project) => {
-    if (project.ownerId === membership.userId) {
-      return true;
-    }
-
-    return store.projectMembers.some(
-      (projectMembership) =>
-        projectMembership.projectId === project.id &&
-        projectMembership.userId === membership.userId &&
-        projectMembership.role === PROJECT_ROLES.OWNER,
-    );
+  const projects = await Project.find({
+    workspaceId: workspace.id,
   });
+
+  const projectIds =
+    projects.map(
+      (project) => project.id,
+    );
+
+  const ownerMemberships =
+    await ProjectMember.find({
+      projectId: {
+        $in: projectIds,
+      },
+      userId: membership.userId,
+      role: PROJECT_ROLES.OWNER,
+    });
+
+  const ownerMembershipProjectIds =
+    new Set(
+      ownerMemberships.map(
+        (projectMembership) =>
+          projectMembership.projectId,
+      ),
+    );
+
+  const ownedProjects =
+    projects.filter(
+      (project) =>
+        project.ownerId ===
+          membership.userId ||
+        ownerMembershipProjectIds.has(
+          project.id,
+        ),
+    );
 
   if (ownedProjects.length > 0) {
     return response.status(409).json({
       message:
         "Transfer Project ownership before removing this Workspace member",
 
-      ownedProjects: ownedProjects.map(presentProjectSummary),
+      ownedProjects:
+        ownedProjects.map(
+          presentProjectSummary,
+        ),
     });
   }
 
-  const user = store.users.find(
-    (currentUser) => currentUser.id === membership.userId,
+  const user = await User.findById(
+    membership.userId,
   );
 
-  const projectMembershipsToRemove = store.projectMembers.filter(
-    (projectMembership) =>
-      projectMembership.userId === membership.userId &&
-      projectIds.has(projectMembership.projectId),
-  );
+  const projectMemberships =
+    await ProjectMember.find({
+      projectId: {
+        $in: projectIds,
+      },
+      userId: membership.userId,
+    });
 
-  const removedProjectMemberships = projectMembershipsToRemove.map(
-    (projectMembership) => {
-      const project = projects.find(
-        (currentProject) => currentProject.id === projectMembership.projectId,
-      );
+  const session =
+    await mongoose.startSession();
 
-      const unassignedTaskCount = removeUserFromTaskAssignments(
-        projectMembership.projectId,
-        membership.userId,
-      );
+  const removedProjectMemberships = [];
+  let totalUnassignedTaskCount = 0;
+  let cancelledInvitationCount = 0;
 
-      if (project) {
-        project.updatedAt = new Date().toISOString();
-      }
+  try {
+    await session.withTransaction(
+      async () => {
+        for (
+          const projectMembership of
+          projectMemberships
+        ) {
+          const project =
+            projects.find(
+              (currentProject) =>
+                currentProject.id ===
+                projectMembership.projectId,
+            );
 
-      return {
-        projectId: projectMembership.projectId,
+          const unassignedTaskCount =
+            await removeDatabaseUserFromTaskAssignments(
+              projectMembership.projectId,
+              membership.userId,
+              {
+                session,
+              },
+            );
 
-        projectKey: project?.projectKey ?? null,
+          totalUnassignedTaskCount +=
+            unassignedTaskCount;
 
-        name: project?.name ?? "Unknown Project",
+          removedProjectMemberships.push({
+            projectId:
+              projectMembership.projectId,
 
-        removedRole: projectMembership.role,
+            projectKey:
+              project?.projectKey ??
+              null,
 
-        unassignedTaskCount,
-      };
-    },
-  );
+            name:
+              project?.name ??
+              "Unknown Project",
 
-  const totalUnassignedTaskCount = removedProjectMemberships.reduce(
-    (total, projectMembership) => total + projectMembership.unassignedTaskCount,
-    0,
-  );
+            removedRole:
+              projectMembership.role,
 
-  store.projectMembers = store.projectMembers.filter(
-    (projectMembership) =>
-      !(
-        projectMembership.userId === membership.userId &&
-        projectIds.has(projectMembership.projectId)
-      ),
-  );
+            unassignedTaskCount,
+          });
+        }
 
-  const timestamp = new Date().toISOString();
+        await ProjectMember.deleteMany(
+          {
+            projectId: {
+              $in: projectIds,
+            },
+            userId: membership.userId,
+          },
+          {
+            session,
+          },
+        );
 
-  const pendingInvitations = store.projectInvitations.filter(
-    (invitation) =>
-      invitation.workspaceId === workspace.id &&
-      invitation.email === user?.email &&
-      invitation.status === INVITATION_STATUS.PENDING,
-  );
+        if (user?.email) {
+          const invitationResult =
+            await ProjectInvitation.updateMany(
+              {
+                workspaceId:
+                  workspace.id,
+                email: user.email,
+                status:
+                  INVITATION_STATUS.PENDING,
+              },
+              {
+                $set: {
+                  status:
+                    INVITATION_STATUS.CANCELLED,
+                  respondedAt:
+                    new Date(),
+                },
+              },
+              {
+                session,
+              },
+            );
 
-  for (const invitation of pendingInvitations) {
-    invitation.status = INVITATION_STATUS.CANCELLED;
+          cancelledInvitationCount =
+            invitationResult.modifiedCount;
+        }
 
-    invitation.respondedAt = timestamp;
+        await WorkspaceMember.deleteOne(
+          {
+            _id: membership.id,
+          },
+          {
+            session,
+          },
+        );
+
+        await Project.updateMany(
+          {
+            workspaceId:
+              workspace.id,
+          },
+          {
+            $set: {
+              updatedAt: new Date(),
+            },
+          },
+          {
+            session,
+            timestamps: false,
+          },
+        );
+
+        await Workspace.updateOne(
+          {
+            _id: workspace.id,
+          },
+          {
+            $set: {
+              updatedAt: new Date(),
+            },
+          },
+          {
+            session,
+            timestamps: false,
+          },
+        );
+      },
+    );
+  } finally {
+    await session.endSession();
   }
 
-  store.workspaceMembers = store.workspaceMembers.filter(
-    (workspaceMembership) =>
-      !(
-        workspaceMembership.workspaceId === workspace.id &&
-        workspaceMembership.userId === membership.userId
-      ),
-  );
-
-  workspace.updatedAt = timestamp;
-
   return response.status(200).json({
-    message: "Workspace member removed",
+    message:
+      "Workspace member removed",
 
     removedMember: {
       userId: membership.userId,
-      name: user?.name ?? "Unknown user",
-      email: user?.email ?? null,
-      workspaceRole: membership.role,
+      name:
+        user?.name ??
+        "Unknown user",
+      email:
+        user?.email ??
+        null,
+      workspaceRole:
+        membership.role,
     },
 
     removedProjectMemberships,
     totalUnassignedTaskCount,
-
-    cancelledInvitationCount: pendingInvitations.length,
+    cancelledInvitationCount,
   });
 }

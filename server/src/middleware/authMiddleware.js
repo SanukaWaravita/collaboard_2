@@ -1,36 +1,79 @@
 import jwt from "jsonwebtoken";
-import { store } from "../data/inMemoryStore.js";
+import User from "../models/User.js";
 
-export function authenticateUser(request, response, next) {
-  const authorizationHeader = request.get("Authorization");
+export async function authenticateUser(
+  request,
+  response,
+  next,
+) {
+  const authorizationHeader =
+    request.get("Authorization");
 
-  if (!authorizationHeader || !authorizationHeader.startsWith("Bearer ")) {
+  if (
+    !authorizationHeader ||
+    !authorizationHeader.startsWith(
+      "Bearer ",
+    )
+  ) {
     return response.status(401).json({
-      message: "Authentication required",
+      message:
+        "Authentication required",
     });
   }
 
-  const token = authorizationHeader.slice("Bearer ".length).trim();
+  const token = authorizationHeader
+    .slice("Bearer ".length)
+    .trim();
+
   const secret = process.env.JWT_SECRET;
 
   if (!secret) {
-    const error = new Error("JWT secret is not configured");
+    const error = new Error(
+      "JWT secret is not configured",
+    );
+
     error.status = 500;
+
     return next(error);
   }
 
-  try {
-    const decodedToken = jwt.verify(token, secret, {
-      algorithms: ["HS256"],
-    });
+  let decodedToken;
 
-    const user = store.users.find(
-      (currentUser) => currentUser.id === decodedToken.sub,
+  try {
+    decodedToken = jwt.verify(
+      token,
+      secret,
+      {
+        algorithms: ["HS256"],
+      },
     );
+  } catch {
+    return response.status(401).json({
+      message:
+        "Invalid or expired token",
+    });
+  }
+
+  if (
+    typeof decodedToken.sub !== "string" ||
+    !decodedToken.sub
+  ) {
+    return response.status(401).json({
+      message:
+        "Invalid or expired token",
+    });
+  }
+
+  try {
+    const user =
+      await User.findById(
+        decodedToken.sub,
+      );
 
     if (!user) {
       return response.status(401).json({
-        message: "Invalid or expired token",
+        message:
+          "Invalid or expired token",
       });
     }
 
@@ -41,9 +84,7 @@ export function authenticateUser(request, response, next) {
     };
 
     return next();
-  } catch {
-    return response.status(401).json({
-      message: "Invalid or expired token",
-    });
+  } catch (error) {
+    return next(error);
   }
 }
