@@ -86,3 +86,4 @@ Each temporary task will use the following structure:
   description: "Build the initial login interface",
   status: "todo"
 }
+```

@@ -7,10 +7,6 @@ import {
 
 const router = Router();
 
-router
-  .route("/:taskId")
-  .get(getTask)
-  .patch(updateTask)
-  .delete(deleteTask);
+router.route("/:taskId").get(getTask).patch(updateTask).delete(deleteTask);
 
 export default router;

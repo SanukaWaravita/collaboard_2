@@ -1,0 +1,327 @@
+.project-view-toolbar {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin: 0 0 12px;
+  padding: 9px 14px;
+  border: 1px solid var(--kanban-border);
+  border-top: 0;
+  border-radius: 0 0 10px 10px;
+  background: var(--surface);
+}
+
+.project-view-toolbar__view {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.project-view-toolbar__label {
+  color: #87939a;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.project-view-toolbar__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.project-view-toolbar__summary {
+  color: #89959c;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.project-view-toggle {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 12px;
+}
+
+.project-view-toggle__button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  padding: 5px 0;
+  color: #6c7981;
+  background: transparent;
+  font-size: 0.76rem;
+  font-weight: 650;
+  transition: color 150ms ease;
+}
+
+.project-view-toggle__button:hover {
+  color: var(--kanban-accent-dark);
+}
+
+.workspace-projects-page .project-view-toggle__button:disabled,
+.workspaces-page .project-view-toggle__button:disabled {
+  cursor: not-allowed;
+  color: #9ca8ae;
+  opacity: 0.62;
+}
+
+.workspace-projects-page .project-view-toggle__button:disabled:hover,
+.workspaces-page .project-view-toggle__button:disabled:hover {
+  color: #9ca8ae;
+}
+
+.workspace-projects-page
+  .project-view-toggle__button:disabled
+  .project-view-toggle__indicator,
+.workspaces-page
+  .project-view-toggle__button:disabled
+  .project-view-toggle__indicator {
+  border-color: #c3ccd1;
+  background: #f4f6f7;
+}
+
+.project-view-toggle__indicator {
+  width: 11px;
+  height: 11px;
+  border: 1px solid #aab6bd;
+  border-radius: 50%;
+  background: var(--surface);
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    background-color 150ms ease;
+}
+
+.project-view-toggle__button--active {
+  color: var(--kanban-accent-dark);
+}
+
+.project-view-toggle__button--active .project-view-toggle__indicator {
+  border-color: var(--kanban-accent-dark);
+  background: var(--kanban-accent-dark);
+  box-shadow: inset 0 0 0 2px var(--surface);
+}
+
+.project-view-toggle__button--active:hover {
+  color: var(--kanban-accent-dark);
+}
+
+.project-view-toolbar__manage {
+  min-height: 32px;
+  border: 1px solid var(--kanban-border);
+  border-radius: 5px;
+  padding: 6px 10px;
+  color: #526671;
+  background: var(--surface);
+  font-size: 0.72rem;
+}
+
+.project-view-toolbar__manage:hover:not(:disabled) {
+  border-color: #9dd6ef;
+  color: var(--kanban-accent-dark);
+  background: var(--kanban-accent-soft);
+}
+
+.project-view-toolbar__manage svg {
+  width: 14px;
+  height: 14px;
+}
+
+.task-list {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 4px 12px rgb(23 32 51 / 5%);
+}
+
+.task-list__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.task-list__header h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.task-list__count {
+  display: grid;
+  min-width: 28px;
+  min-height: 28px;
+  place-items: center;
+  border-radius: 999px;
+  color: var(--text-muted);
+  background: var(--surface-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.task-list__table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.task-list__table {
+  width: 100%;
+  min-width: 1320px;
+  border-collapse: collapse;
+}
+
+.task-list__table th,
+.task-list__table td {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.task-list__table th {
+  color: var(--text-muted);
+  background: var(--surface-subtle);
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.task-list__table tbody tr {
+  transition: background 150ms ease;
+}
+
+.task-list__table tbody tr:hover {
+  background: var(--surface-subtle);
+}
+
+.task-list__table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.task-list__table th:last-child,
+.task-list__table td:last-child {
+  text-align: right;
+}
+
+.task-list__title {
+  width: 24%;
+  color: var(--text);
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.task-list__description {
+  width: 40%;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.task-list__table td .task-status {
+  display: inline-flex;
+  white-space: nowrap;
+}
+
+.task-list__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 150px;
+}
+
+.task-list__actions .button {
+  padding: 7px 10px;
+  font-size: 0.78rem;
+}
+
+.task-list__read-only {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.task-list-empty {
+  padding: 56px 24px;
+  border: 1px dashed var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  text-align: center;
+}
+
+.task-list-empty h2 {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+}
+
+.task-list-empty p {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+@media (max-width: 700px) {
+  .project-view-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .project-view-toolbar__view {
+    justify-content: space-between;
+  }
+
+  .project-view-toolbar__actions {
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  .project-view-toggle {
+    width: auto;
+  }
+
+  .project-view-toggle__button {
+    flex: 0 0 auto;
+  }
+
+  .task-list__table {
+    min-width: 1040px;
+  }
+}
+
+@media (max-width: 500px) {
+  .project-view-toolbar {
+    padding: 12px;
+  }
+
+  .project-view-toolbar__view,
+  .project-view-toolbar__actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .project-view-toolbar__manage {
+    width: 100%;
+  }
+
+  .task-list__header {
+    padding: 14px;
+  }
+
+  .task-list__table th,
+  .task-list__table td {
+    padding: 12px 14px;
+  }
+
+  .task-list-empty {
+    padding: 40px 18px;
+  }
+}
