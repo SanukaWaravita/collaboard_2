@@ -9,6 +9,8 @@ import invitationRoutes from "./routes/invitationRoutes.js";
 import projectRoutes from "./routes/projectRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
 import workspaceRoutes from "./routes/workspaceRoutes.js";
+import swaggerUi from "swagger-ui-express";
+import openApiDocument from "./docs/openapi.js";
 
 const DEFAULT_ALLOWED_ORIGINS = [
   "http://localhost:5173",
@@ -68,6 +70,29 @@ app.use(
 );
 
 app.use(express.json());
+
+app.get(
+  "/api/openapi.json",
+  (_request, response) => {
+    response.json(openApiDocument);
+  },
+);
+
+app.use(
+  "/api/docs",
+  swaggerUi.serve,
+  swaggerUi.setup(openApiDocument, {
+    customSiteTitle:
+      "CollaBoard API Documentation",
+    explorer: true,
+    swaggerOptions: {
+      docExpansion: "list",
+      filter: true,
+      persistAuthorization: true,
+      displayRequestDuration: true,
+    },
+  }),
+);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/health", healthRoutes);
