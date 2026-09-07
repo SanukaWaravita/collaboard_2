@@ -46,26 +46,38 @@ const app = express();
 app.set("trust proxy", 1);
 
 app.use(
-  cors({
-    origin(origin, callback) {
-      if (
-        !origin ||
-        allowedOrigins.has(
-          normalizeOrigin(origin),
-        )
-      ) {
-        callback(null, true);
-        return;
-      }
+  cors((request, callback) => {
+    const requestOrigin = request.get("Origin");
+    const serverOrigin = `${request.protocol}://${request.get("host")}`;
 
-      const error = new Error(
-        "Origin is not allowed by CORS",
-      );
+    // Swagger runs on this API's own origin. Render terminates HTTPS at
+    // its proxy; trust proxy above lets request.protocol reflect HTTPS.
+    if (requestOrigin === serverOrigin) {
+      callback(null, { origin: false });
+      return;
+    }
 
-      error.status = 403;
+    callback(null, {
+      origin(origin, callback) {
+        if (
+          !origin ||
+          allowedOrigins.has(
+            normalizeOrigin(origin),
+          )
+        ) {
+          callback(null, true);
+          return;
+        }
 
-      callback(error);
-    },
+        const error = new Error(
+          "Origin is not allowed by CORS",
+        );
+
+        error.status = 403;
+
+        callback(error);
+      },
+    });
   }),
 );
 
