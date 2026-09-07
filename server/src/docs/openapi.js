@@ -158,7 +158,7 @@ const schemas = {
 
   WorkspaceInvitationCreate: {
     type: "object",
-    required: ["email"],
+    required: ["email", "projects"],
     properties: {
       email: {
         type: "string",
@@ -171,6 +171,7 @@ const schemas = {
       },
       projects: {
         type: "array",
+        minItems: 1,
         items: {
           type: "object",
           required: ["projectId", "role"],
@@ -239,7 +240,7 @@ const schemas = {
 
   TaskCreate: {
     type: "object",
-    required: ["title", "status"],
+    required: ["title"],
     properties: {
       title: {
         type: "string",
@@ -250,10 +251,11 @@ const schemas = {
       },
       status: {
         type: "string",
+        description: "Workflow status ID; defaults to the project's initial status when omitted.",
       },
       dueDate: {
         type: "string",
-        format: "date-time",
+        format: "date",
         nullable: true,
       },
       assigneeIds: {
@@ -270,6 +272,7 @@ const schemas = {
 
   TaskUpdate: {
     type: "object",
+    required: ["version"],
     properties: {
       title: {
         type: "string",
@@ -282,7 +285,7 @@ const schemas = {
       },
       dueDate: {
         type: "string",
-        format: "date-time",
+        format: "date",
         nullable: true,
       },
       assigneeIds: {
@@ -323,7 +326,7 @@ const routeDefinitions = [
   ["post", "/workspaces", "Workspaces", "Create a workspace", "WorkspaceCreate", 201],
   ["get", "/workspaces/{workspaceId}", "Workspaces", "Get a workspace"],
   ["patch", "/workspaces/{workspaceId}", "Workspaces", "Update a workspace", "WorkspaceUpdate"],
-  ["delete", "/workspaces/{workspaceId}", "Workspaces", "Delete a workspace"],
+  ["delete", "/workspaces/{workspaceId}", "Workspaces", "Delete a workspace", null, 204],
 
   ["get", "/workspaces/{workspaceId}/projects", "Projects", "List workspace projects"],
   ["post", "/workspaces/{workspaceId}/projects", "Projects", "Create a workspace project", "ProjectCreate", 201],
@@ -340,7 +343,7 @@ const routeDefinitions = [
   ["post", "/projects", "Projects", "Create a project", "ProjectCreate", 201],
   ["get", "/projects/{projectId}", "Projects", "Get a project"],
   ["patch", "/projects/{projectId}", "Projects", "Update a project", "ProjectUpdate"],
-  ["delete", "/projects/{projectId}", "Projects", "Delete a project"],
+  ["delete", "/projects/{projectId}", "Projects", "Delete a project", null, 204],
 
   ["get", "/projects/{projectId}/members", "Project Access", "List project members"],
   ["patch", "/projects/{projectId}/members/{userId}", "Project Access", "Update a project member role", "ProjectRoleUpdate"],
@@ -360,7 +363,7 @@ const routeDefinitions = [
   ["post", "/projects/{projectId}/tasks", "Tasks", "Create a task", "TaskCreate", 201],
   ["get", "/tasks/{taskId}", "Tasks", "Get a task"],
   ["patch", "/tasks/{taskId}", "Tasks", "Update a task", "TaskUpdate"],
-  ["delete", "/tasks/{taskId}", "Tasks", "Delete a task"],
+  ["delete", "/tasks/{taskId}", "Tasks", "Delete a task", null, 204],
 
   ["get", "/invitations", "Invitations", "List invitations for the authenticated user"],
   ["post", "/invitations/{invitationId}/accept", "Invitations", "Accept an invitation"],
@@ -434,6 +437,20 @@ function buildOperation({
       errorResponse("Insufficient permission");
   }
 
+  if (successStatus === 204) {
+    operation.responses[204] = { description: "Deleted successfully; no response body" };
+  }
+
+  if (path === "/health") {
+    operation.responses[503] = {
+      description: "MongoDB is disconnected; the API is unavailable",
+    };
+  }
+
+  if (path === "/auth/login") {
+    operation.responses[401] = errorResponse("Invalid email or password");
+  }
+
   if (bodySchema) {
     operation.requestBody = {
       required: method !== "delete",
@@ -486,12 +503,8 @@ const openApiDocument = {
 
   servers: [
     {
-      url: "https://collaboard-team-api.onrender.com/api",
-      description: "Production",
-    },
-    {
-      url: "http://localhost:5000/api",
-      description: "Local development",
+      url: "/api",
+      description: "The backend serving this documentation (local or deployed)",
     },
   ],
 
