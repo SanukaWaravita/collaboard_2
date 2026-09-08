@@ -1,3 +1,4 @@
+import Modal from "./Modal";
 import { useState } from "react";
 import { getAssigneeInitial } from "../utils/taskAssignee";
 
@@ -100,7 +101,7 @@ function TaskForm({
   }
 
   return (
-    <div className="modal-backdrop">
+    <Modal onClose={onCancel} busy={isSubmitting}>
       <form
         className="task-form"
         onSubmit={handleSubmit}
@@ -141,7 +142,6 @@ function TaskForm({
             placeholder="Enter a task title"
             required
             disabled={isSubmitting || !canEditTaskFields}
-            autoFocus={canEditTaskFields}
           />
         </div>
 
@@ -153,9 +153,32 @@ function TaskForm({
             value={description}
             onChange={(event) => setDescription(event.target.value)}
             placeholder="Describe the task"
-            rows="4"
+            rows="3"
             disabled={isSubmitting || !canEditTaskFields}
           />
+        </div>
+        <div className="task-form__field">
+          <label htmlFor="task-status">Status</label>
+
+          <select
+            id="task-status"
+            value={status}
+            onChange={(event) => setStatus(event.target.value)}
+            disabled={
+              isSubmitting || !canEditTaskFields || !hasWorkflowStatuses
+            }
+            required
+          >
+            {!hasWorkflowStatuses && (
+              <option value="">No workflow statuses available</option>
+            )}
+
+            {workflowStatuses.map((workflowStatus) => (
+              <option key={workflowStatus.id} value={workflowStatus.id}>
+                {workflowStatus.name}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="task-form__field">
           <label htmlFor="task-due-date">Due date</label>
@@ -346,29 +369,7 @@ function TaskForm({
           </div>
         </fieldset>
 
-        <div className="task-form__field">
-          <label htmlFor="task-status">Status</label>
 
-          <select
-            id="task-status"
-            value={status}
-            onChange={(event) => setStatus(event.target.value)}
-            disabled={
-              isSubmitting || !canEditTaskFields || !hasWorkflowStatuses
-            }
-            required
-          >
-            {!hasWorkflowStatuses && (
-              <option value="">No workflow statuses available</option>
-            )}
-
-            {workflowStatuses.map((workflowStatus) => (
-              <option key={workflowStatus.id} value={workflowStatus.id}>
-                {workflowStatus.name}
-              </option>
-            ))}
-          </select>
-        </div>
 
         {error && (
           <p className="auth-form__error" role="alert">
@@ -401,7 +402,7 @@ function TaskForm({
           </button>
         </div>
       </form>
-    </div>
+    </Modal>
   );
 }
 

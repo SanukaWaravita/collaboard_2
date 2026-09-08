@@ -1,3 +1,4 @@
+import useViewPreference from "../hooks/useViewPreference";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import CardListViewToggle from "../components/CardListViewToggle";
@@ -11,7 +12,7 @@ function WorkspacesPage() {
   const navigate = useNavigate();
 
   const [workspaces, setWorkspaces] = useState([]);
-  const [activeView, setActiveView] = useState("cards");
+  const [activeView, setActiveView] = useViewPreference("workspaces", "cards", ["cards", "list"]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);

@@ -284,7 +284,7 @@
   width: fit-content;
   padding: 4px 8px;
   border-radius: 999px;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -343,7 +343,7 @@
 
 .workspace-role-control > span {
   color: var(--text-muted);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   font-weight: 700;
 }
 
@@ -536,7 +536,7 @@
 
 .workspace-invitation-project__role label {
   color: var(--text-muted);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   font-weight: 700;
 }
 

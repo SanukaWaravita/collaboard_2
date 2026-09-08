@@ -94,7 +94,7 @@ function TaskCard({
         )}
       </div>
 
-      <h3>{task.title}</h3>
+      <h3>{canEdit ? <button type="button" className="task-card__title-button" onClick={() => onEdit(task)} disabled={isBusy}>{task.title}</button> : task.title}</h3>
 
       {task.description && (
         <p className="task-card__description">{task.description}</p>

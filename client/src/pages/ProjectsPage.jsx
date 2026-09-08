@@ -1,3 +1,4 @@
+import useViewPreference from "../hooks/useViewPreference";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import ProjectCard from "../components/ProjectCard";
@@ -14,7 +15,7 @@ function ProjectsPage() {
 
   const [workspace, setWorkspace] = useState(null);
   const [projects, setProjects] = useState([]);
-  const [activeView, setActiveView] = useState("cards");
+  const [activeView, setActiveView] = useViewPreference("projects", "cards", ["cards", "list"]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);

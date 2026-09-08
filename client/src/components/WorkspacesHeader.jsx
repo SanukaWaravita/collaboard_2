@@ -17,11 +17,7 @@ function WorkspacesHeader({ workspaceCount, onCreateWorkspace }) {
             className="project-header__metadata"
             aria-label="Workspace collection information"
           >
-            <span className="project-header__key">Collaboration</span>
-
-            <span aria-hidden="true">·</span>
-
-            <span>Organize Projects and members</span>
+            <span>Your teams, projects, and shared work.</span>
           </div>
         </div>
       </div>

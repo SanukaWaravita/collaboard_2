@@ -247,7 +247,7 @@
 
 .entity-card__type {
   color: var(--entity-blue-dark);
-  font-size: 0.71rem;
+  font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -257,13 +257,13 @@
   padding: 3px 7px;
   color: var(--entity-blue-dark);
   background: var(--entity-blue-soft);
-  font-size: 0.68rem;
+  font-size: 0.75rem;
 }
 
 .entity-card .entity-badge {
   flex: 0 0 auto;
   padding: 4px 8px;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
 }
 
 .entity-card__slug,
@@ -418,7 +418,7 @@
 .entity-list__table th {
   color: var(--entity-muted);
   background: var(--surface-subtle);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 750;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -457,7 +457,7 @@
   display: block;
   margin-bottom: 4px;
   color: var(--entity-blue-dark);
-  font-size: 0.67rem;
+  font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -476,7 +476,7 @@
   padding: 3px 7px;
   color: var(--entity-blue-dark);
   background: var(--entity-blue-soft);
-  font-size: 0.68rem;
+  font-size: 0.75rem;
 }
 
 .entity-list__description {
@@ -496,7 +496,7 @@
 
 .entity-list__access-note {
   color: var(--entity-muted);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   line-height: 1.35;
   white-space: nowrap;
 }

@@ -1,3 +1,4 @@
+import useViewPreference from "../hooks/useViewPreference";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import ProjectHeader from "../components/ProjectHeader";
@@ -17,7 +18,7 @@ function ProjectPage() {
   const [project, setProject] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [projectMembers, setProjectMembers] = useState([]);
-  const [activeView, setActiveView] = useState("kanban");
+  const [activeView, setActiveView] = useViewPreference("tasks", "kanban", ["kanban", "list"]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
