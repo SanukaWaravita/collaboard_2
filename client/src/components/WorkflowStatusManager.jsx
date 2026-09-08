@@ -1,3 +1,4 @@
+import Modal from "./Modal";
 import { useState } from "react";
 
 const DEFAULT_STATUS_COLOR = "#64748b";
@@ -193,7 +194,7 @@ function WorkflowStatusManager({
   }
 
   return (
-    <div className="modal-backdrop">
+    <Modal onClose={onClose} busy={isSaving}>
       <section
         className="workflow-manager"
         role="dialog"
@@ -489,7 +490,7 @@ function WorkflowStatusManager({
           })}
         </ol>
       </section>
-    </div>
+    </Modal>
   );
 }
 

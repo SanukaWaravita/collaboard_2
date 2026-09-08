@@ -20,7 +20,7 @@
 
 .project-view-toolbar__label {
   color: #87939a;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
 }
@@ -34,7 +34,7 @@
 
 .project-view-toolbar__summary {
   color: #89959c;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   white-space: nowrap;
 }
 
@@ -117,7 +117,7 @@
   padding: 6px 10px;
   color: #526671;
   background: var(--surface);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
 }
 
 .project-view-toolbar__manage:hover:not(:disabled) {
@@ -187,7 +187,7 @@
 .task-list__table th {
   color: var(--text-muted);
   background: var(--surface-subtle);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 750;
   letter-spacing: 0.06em;
   text-transform: uppercase;

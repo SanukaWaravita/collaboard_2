@@ -18,6 +18,7 @@ function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -130,12 +131,13 @@ function LoginPage() {
             <div className="auth-form__field">
               <label htmlFor="login-password">Password</label>
 
+              <div className="password-control">
               <input
                 id="login-password"
 
                 name="password"
 
-                type="password"
+                type={showPassword ? "text" : "password"}
 
                 placeholder="Enter your password"
 
@@ -145,6 +147,8 @@ function LoginPage() {
 
                 required
               />
+                <button type="button" aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} onClick={() => setShowPassword(!showPassword)}>{showPassword ? "Hide" : "Show"}</button>
+              </div>
             </div>
 
             {error && (

@@ -33,9 +33,9 @@ function WorkspaceCard({ workspace, onEdit, onDelete, isDeleting = false }) {
         <div className="entity-card__content">
           <div className="entity-card__heading">
             <div>
-              <span className="entity-card__type">Workspace</span>
 
-              <h2>{workspace.name}</h2>
+
+              <h2><Link to={`/workspaces/${workspace.id}/projects`}>{workspace.name}</Link></h2>
             </div>
 
             <span className="entity-badge">{workspace.currentUserRole}</span>

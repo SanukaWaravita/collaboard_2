@@ -6,7 +6,7 @@
   border: 1px solid transparent;
   border-radius: 999px;
   padding: 3px 7px;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 750;
   line-height: 1.25;
   white-space: nowrap;
@@ -83,7 +83,7 @@
   border-radius: 50%;
   color: var(--primary-dark);
   background: var(--primary-soft);
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 800;
 }
 
@@ -127,7 +127,7 @@
   padding: 2px 7px 2px 2px;
   color: #50626b;
   background: #f5f7f8;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
 }
 
 .task-card .task-assignee__avatar {
@@ -138,7 +138,7 @@
   color: #ffffff;
   background: linear-gradient(135deg, #1596d1, #0b577a);
   box-shadow: 0 1px 4px rgb(20 49 67 / 16%);
-  font-size: 0.6rem;
+  font-size: 0.75rem;
 }
 
 .task-card .task-assignee__name {
@@ -199,7 +199,7 @@
   border-radius: 50%;
   color: #075985;
   background: #e0f2fe;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 800;
 }
 
@@ -211,7 +211,7 @@
 
 .task-reporter__label {
   color: var(--text-muted);
-  font-size: 0.62rem;
+  font-size: 0.75rem;
   font-weight: 650;
   line-height: 1.2;
 }
@@ -231,7 +231,7 @@
   min-width: 0;
   overflow: hidden;
   color: var(--text-muted);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 500;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -250,13 +250,13 @@
   color: #ffffff;
   background: linear-gradient(135deg, #0ea5e9, #075985);
   box-shadow: 0 1px 4px rgb(20 49 67 / 16%);
-  font-size: 0.6rem;
+  font-size: 0.75rem;
 }
 
 .task-reporter--card .task-reporter__name {
   max-width: 125px;
   color: #50626b;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
 }
 
 .task-list__reporter {
