@@ -43,7 +43,7 @@ Implemented:
 - Nginx delivery of the built React client with `/api` reverse proxying;
 - responsive layouts.
 
-Automated test suites, real-time updates, and public deployment remain planned.
+Automated client and server test suites and a GitHub Actions test workflow are implemented for M4. See [M4 testing](docs/m4-testing.md) for commands, scope, and validation status. Real-time updates remain planned.
 
 ## Domain model
 
@@ -147,7 +147,7 @@ Removing a member does not erase historical Task creator or Reporter identifiers
 | Client session persistence | Browser `localStorage` |
 | Containerization | Docker and Docker Compose |
 | Production client server | Nginx |
-| Testing | Jest, Supertest, and React Testing Library — planned |
+| Testing | Jest, Supertest, React Testing Library, and mongodb-memory-server |
 | Real-time updates | Socket.IO — planned |
 | Deployment | Local Docker Compose implemented; public hosting planned |
 
@@ -640,7 +640,20 @@ Run from `server`:
 | `npm run validate:company-seed` | Validate the company demonstration seed definitions |
 | `npm run seed:development -- --confirm-reset` | Reset the approved development database and write seed data |
 
-Automated test scripts are planned but are not yet part of the current repository.
+### M4 automated tests
+
+From the repository root, after installing dependencies with `npm --prefix client ci` and `npm --prefix server ci`:
+
+```bash
+npm --prefix server test
+npm --prefix client test
+npm --prefix client run lint
+npm --prefix client run build
+```
+
+The server has 19 Jest + Supertest tests; the client has 10 Jest + React Testing Library tests. `npm --prefix server run test:docs` runs the nine Swagger/CORS regression cases alone. Database-backed tests use a temporary MongoDB process and never connect to Atlas or the development database. The first run may download its binary.
+
+GitHub Actions runs both suites on every push and pull request. See [M4 testing and bug-fix evidence](docs/m4-testing.md), including the database-startup limitation observed during preparation and the remaining local/CI verification.
 
 ## Client routes
 
@@ -874,7 +887,7 @@ This provides optimistic concurrency control for Task edits. Real-time update de
 ## Current limitations
 
 - JWTs are stored in browser `localStorage`.
-- Automated client and server test suites are not implemented yet.
+- Browser E2E tests are not implemented. M4 component/API suites are included; see [validation status](docs/m4-testing.md#validation-recorded-for-this-package).
 - Real-time Socket.IO updates are not implemented yet.
 - Public hosting is not configured yet.
 - Production database credentials, secret management, backups, and operational monitoring are not configured yet.

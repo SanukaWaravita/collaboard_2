@@ -140,7 +140,6 @@ function TaskForm({
             onChange={(event) => setTitle(event.target.value)}
             placeholder="Enter a task title"
             required
-            autoFocus
             disabled={isSubmitting || !canEditTaskFields}
             autoFocus={canEditTaskFields}
           />
