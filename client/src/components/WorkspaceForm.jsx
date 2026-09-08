@@ -1,3 +1,4 @@
+import Modal from "./Modal";
 function WorkspaceForm({
   initialWorkspace = null,
   onSubmit,
@@ -37,7 +38,7 @@ function WorkspaceForm({
   }
 
   return (
-    <div className="modal-backdrop">
+    <Modal onClose={onCancel} busy={isSubmitting}>
       <form
         className="board-form"
         onSubmit={handleSubmit}
@@ -77,7 +78,6 @@ function WorkspaceForm({
             defaultValue={initialWorkspace?.name ?? ""}
             placeholder="For example: CollaBoard Team"
             required
-            autoFocus
             disabled={isSubmitting}
           />
         </div>
@@ -146,7 +146,7 @@ function WorkspaceForm({
           </button>
         </div>
       </form>
-    </div>
+    </Modal>
   );
 }
 

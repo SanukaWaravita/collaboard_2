@@ -101,7 +101,7 @@
   padding: 3px 8px;
   color: var(--kanban-text-muted);
   background: #edf0f2;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 700;
   white-space: nowrap;
 }
@@ -113,7 +113,7 @@
   gap: 5px;
   margin-top: 5px;
   color: #87939a;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   line-height: 1.4;
 }
 
@@ -322,7 +322,7 @@
   border-bottom: 1px solid #dce8ed;
   color: #607681;
   background: var(--kanban-accent-soft);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   line-height: 1.45;
 }
 
@@ -445,7 +445,7 @@
   padding: 0 6px;
   color: #717e85;
   background: #d7dbde;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 750;
 }
 
@@ -512,7 +512,7 @@
   color: #929da3;
   background: rgb(255 255 255 / 32%);
   text-align: center;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
 }
 
 .task-column__empty svg {
@@ -542,7 +542,7 @@
   padding: 7px 9px;
   color: #7e8b92;
   background: transparent;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 650;
   transition:
     color 150ms ease,
@@ -637,7 +637,7 @@
 
 .task-card__moving-status {
   color: var(--kanban-accent-dark);
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   font-weight: 750;
   white-space: nowrap;
 }
@@ -656,7 +656,7 @@
   margin: 7px 0 0;
   overflow: hidden;
   color: #66767e;
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   line-height: 1.5;
   overflow-wrap: anywhere;
   -webkit-box-orient: vertical;
@@ -686,7 +686,7 @@
     var(--status-color, var(--status-default)) 16%,
     white
   );
-  font-size: 0.66rem;
+  font-size: 0.75rem;
   font-weight: 750;
   line-height: 1.2;
 }

@@ -1,8 +1,10 @@
 import { NavLink, useLocation, useNavigate } from "react-router";
-import { clearSession } from "../services/api";
+import Icon from "./Icon";
+import { clearSession, getCurrentUser } from "../services/api";
 
 function Navbar() {
   const location = useLocation();
+  const user = getCurrentUser();
   const navigate = useNavigate();
 
   const currentLocation =
@@ -25,8 +27,9 @@ function Navbar() {
   }
 
   return (
-    <nav className="app-navbar">
+    <nav className="app-navbar" aria-label="Main navigation">
       <NavLink to="/workspaces" className="app-navbar__brand">
+        <span className="app-navbar__mark"><Icon name="layers" /></span>
         CollaBoard
       </NavLink>
 
@@ -39,6 +42,7 @@ function Navbar() {
               : "app-navbar__link"
           }
         >
+          <Icon name="grid" />
           My Workspaces
         </NavLink>
 
@@ -53,15 +57,22 @@ function Navbar() {
               : "app-navbar__link"
           }
         >
+          <Icon name="inbox" />
           Invitations
         </NavLink>
 
+      </div>
+
+      <div className="app-navbar__account">
+        <span className="app-navbar__avatar" aria-hidden="true">{(user?.name ?? "U").slice(0, 1).toUpperCase()}</span>
+        <span className="app-navbar__user"><strong>{user?.name ?? "Your account"}</strong><small>{user?.email ?? ""}</small></span>
         <button
           type="button"
           className="button button--secondary"
           onClick={handleLogout}
         >
-          Log Out
+          <Icon name="logout" />
+          <span>Log Out</span>
         </button>
       </div>
     </nav>

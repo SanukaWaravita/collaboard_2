@@ -30,7 +30,7 @@ function ProjectCard({ project, onEdit, onDelete, isDeleting = false }) {
             <div>
               <span className="project-key">{project.projectKey}</span>
 
-              <h2>{project.name}</h2>
+              <h2><Link to={`/workspaces/${project.workspaceId}/projects/${project.id}`}>{project.name}</Link></h2>
             </div>
 
             <span

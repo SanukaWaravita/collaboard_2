@@ -11,17 +11,17 @@ function ProjectList({ projects, onEdit, onDelete, deletingProjectId = null }) {
       </header>
 
       <div className="entity-list__table-wrapper">
-        <table
+        <table role="table"
           className={"entity-list__table " + "entity-list__table--projects"}
         >
           <thead>
-            <tr>
-              <th scope="col">Project</th>
-              <th scope="col">Description</th>
-              <th scope="col">Visibility</th>
-              <th scope="col">Access</th>
-              <th scope="col">Tasks</th>
-              <th scope="col">Actions</th>
+            <tr role="row">
+              <th role="columnheader" scope="col">Project</th>
+              <th role="columnheader" scope="col">Description</th>
+              <th role="columnheader" scope="col">Visibility</th>
+              <th role="columnheader" scope="col">Access</th>
+              <th role="columnheader" scope="col">Tasks</th>
+              <th role="columnheader" scope="col">Actions</th>
             </tr>
           </thead>
 
@@ -38,18 +38,18 @@ function ProjectList({ projects, onEdit, onDelete, deletingProjectId = null }) {
               );
 
               return (
-                <tr key={project.id}>
-                  <td className="entity-list__primary">
+                <tr role="row" key={project.id}>
+                  <td role="cell" className="entity-list__primary"><span className="mobile-cell-label" aria-hidden="true">Project</span>
                     <span className="project-key">{project.projectKey}</span>
 
                     <strong>{project.name}</strong>
                   </td>
 
-                  <td className="entity-list__description">
+                  <td role="cell" className="entity-list__description"><span className="mobile-cell-label" aria-hidden="true">Description</span>
                     {project.description || "No description provided."}
                   </td>
 
-                  <td>
+                  <td role="cell"><span className="mobile-cell-label" aria-hidden="true">Visibility</span>
                     <span
                       className={
                         "entity-badge " +
@@ -61,7 +61,7 @@ function ProjectList({ projects, onEdit, onDelete, deletingProjectId = null }) {
                     </span>
                   </td>
 
-                  <td>
+                  <td role="cell"><span className="mobile-cell-label" aria-hidden="true">Access</span>
                     <div className="entity-list__access">
                       <span className="entity-badge">
                         {project.currentUserRole ?? "None"}
@@ -75,9 +75,9 @@ function ProjectList({ projects, onEdit, onDelete, deletingProjectId = null }) {
                     </div>
                   </td>
 
-                  <td className="entity-list__number">{project.taskCount}</td>
+                  <td role="cell" className="entity-list__number"><span className="mobile-cell-label" aria-hidden="true">Tasks</span>{project.taskCount}</td>
 
-                  <td>
+                  <td role="cell"><span className="mobile-cell-label" aria-hidden="true">Actions</span>
                     <div className="entity-list__actions">
                       {canEdit && (
                         <button

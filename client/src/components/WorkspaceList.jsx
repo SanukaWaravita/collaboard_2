@@ -16,17 +16,17 @@ function WorkspaceList({
       </header>
 
       <div className="entity-list__table-wrapper">
-        <table
+        <table role="table"
           className={"entity-list__table " + "entity-list__table--workspaces"}
         >
           <thead>
-            <tr>
-              <th scope="col">Workspace</th>
-              <th scope="col">Slug</th>
-              <th scope="col">Role</th>
-              <th scope="col">Projects</th>
-              <th scope="col">Members</th>
-              <th scope="col">Actions</th>
+            <tr role="row">
+              <th role="columnheader" scope="col">Workspace</th>
+              <th role="columnheader" scope="col">Slug</th>
+              <th role="columnheader" scope="col">Role</th>
+              <th role="columnheader" scope="col">Projects</th>
+              <th role="columnheader" scope="col">Members</th>
+              <th role="columnheader" scope="col">Actions</th>
             </tr>
           </thead>
 
@@ -43,30 +43,30 @@ function WorkspaceList({
               );
 
               return (
-                <tr key={workspace.id}>
-                  <td className="entity-list__primary">
+                <tr role="row" key={workspace.id}>
+                  <td role="cell" className="entity-list__primary"><span className="mobile-cell-label" aria-hidden="true">Workspace</span>
                     <span className="entity-list__type">Workspace</span>
 
                     <strong>{workspace.name}</strong>
                   </td>
 
-                  <td className="entity-list__slug">/{workspace.slug}</td>
+                  <td role="cell" className="entity-list__slug"><span className="mobile-cell-label" aria-hidden="true">Slug</span>/{workspace.slug}</td>
 
-                  <td>
+                  <td role="cell"><span className="mobile-cell-label" aria-hidden="true">Role</span>
                     <span className="entity-badge">
                       {workspace.currentUserRole}
                     </span>
                   </td>
 
-                  <td className="entity-list__number">
+                  <td role="cell" className="entity-list__number"><span className="mobile-cell-label" aria-hidden="true">Projects</span>
                     {workspace.projectCount}
                   </td>
 
-                  <td className="entity-list__number">
+                  <td role="cell" className="entity-list__number"><span className="mobile-cell-label" aria-hidden="true">Members</span>
                     {workspace.memberCount}
                   </td>
 
-                  <td>
+                  <td role="cell"><span className="mobile-cell-label" aria-hidden="true">Actions</span>
                     <div className="entity-list__actions">
                       {canEdit && (
                         <button

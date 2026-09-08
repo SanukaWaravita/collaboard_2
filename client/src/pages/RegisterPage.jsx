@@ -11,6 +11,7 @@ const REGISTER_FEATURES = [
 
 function RegisterPage() {
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -111,15 +112,18 @@ function RegisterPage() {
             <div className="auth-form__field">
               <label htmlFor="register-password">Password</label>
 
+              <div className="password-control">
               <input
                 id="register-password"
                 name="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="At least 8 characters"
                 autoComplete="new-password"
                 minLength="8"
                 required
               />
+                <button type="button" aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} onClick={() => setShowPassword(!showPassword)}>{showPassword ? "Hide" : "Show"}</button>
+              </div>
             </div>
 
             <div className="auth-form__field">

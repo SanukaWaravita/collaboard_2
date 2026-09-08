@@ -1,3 +1,4 @@
+import Modal from "./Modal";
 function ProjectForm({
   initialProject = null,
   onSubmit,
@@ -46,7 +47,7 @@ function ProjectForm({
   }
 
   return (
-    <div className="modal-backdrop">
+    <Modal onClose={onCancel} busy={isSubmitting}>
       <form
         className="board-form"
         onSubmit={handleSubmit}
@@ -86,7 +87,6 @@ function ProjectForm({
             defaultValue={initialProject?.name ?? ""}
             placeholder="For example: Milestone 3"
             required
-            autoFocus
             disabled={isSubmitting}
           />
         </div>
@@ -189,7 +189,7 @@ function ProjectForm({
           </button>
         </div>
       </form>
-    </div>
+    </Modal>
   );
 }
 
