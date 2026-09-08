@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { Link, useNavigate } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 
 import { apiRequest, saveSession } from "../services/api";
 
@@ -16,6 +16,7 @@ const LOGIN_FEATURES = [
 
 function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [error, setError] = useState("");
 
@@ -47,7 +48,22 @@ function LoginPage() {
 
       saveSession(session);
 
-      navigate("/workspaces");
+      const from = location.state?.from;
+      const pathname = from?.pathname;
+      const isInternalDestination =
+        typeof pathname === "string" &&
+        pathname.startsWith("/") &&
+        !pathname.startsWith("//") &&
+        !pathname.includes("\\") &&
+        pathname !== "/login" &&
+        pathname !== "/register";
+
+      navigate(
+        isInternalDestination
+          ? { pathname, search: from.search ?? "", hash: from.hash ?? "" }
+          : "/workspaces",
+        { replace: true },
+      );
     } catch (requestError) {
       setError(requestError.message);
     } finally {
