@@ -29,6 +29,10 @@ import {
   findWorkflowStatus,
   getInitialWorkflowStatus,
 } from "../utils/workflowStatuses.js";
+import {
+  emitTaskEvent,
+  TASK_REALTIME_EVENTS,
+} from "../realtime/taskEvents.js";
 
 async function findTaskAndProject(taskId) {
   const task = await Task.findById(
@@ -201,13 +205,21 @@ export async function createTask(
 
   await task.save();
 
+  const presentedTask =
+    await presentDatabaseTask(
+      task,
+      request.user.id,
+      project,
+    );
+
+  emitTaskEvent(
+    request,
+    TASK_REALTIME_EVENTS.CREATED,
+    task,
+  );
+
   return response.status(201).json({
-    task:
-      await presentDatabaseTask(
-        task,
-        request.user.id,
-        project,
-      ),
+    task: presentedTask,
   });
 }
 
@@ -528,13 +540,21 @@ export async function updateTask(
     });
   }
 
+  const presentedTask =
+    await presentDatabaseTask(
+      updatedTask,
+      request.user.id,
+      project,
+    );
+
+  emitTaskEvent(
+    request,
+    TASK_REALTIME_EVENTS.UPDATED,
+    updatedTask,
+  );
+
   return response.status(200).json({
-    task:
-      await presentDatabaseTask(
-        updatedTask,
-        request.user.id,
-        project,
-      ),
+    task: presentedTask,
   });
 }
 
@@ -574,6 +594,12 @@ export async function deleteTask(
   await Task.deleteOne({
     _id: task.id,
   });
+
+  emitTaskEvent(
+    request,
+    TASK_REALTIME_EVENTS.DELETED,
+    task,
+  );
 
   return response.status(204).send();
 }

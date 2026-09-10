@@ -6,7 +6,7 @@ Users can create Workspaces and Projects, manage access, customize workflows, as
 
 ## Current status
 
-The current development build provides a React client connected to a protected Express REST API, with application data persisted in MongoDB through Mongoose.
+The current development build provides a React client connected to a protected Express REST API and authenticated Socket.IO server, with application data persisted in MongoDB through Mongoose.
 
 Implemented:
 
@@ -28,6 +28,7 @@ Implemented:
 - customizable and reorderable Project workflow statuses;
 - Kanban and List Task views;
 - Task creation, viewing, editing, movement, and deletion;
+- per-user, per-Project unfinished Task draft recovery in the same browser;
 - drag-and-drop Task movement;
 - multiple Task Assignees;
 - Task Due Dates and due-state indicators;
@@ -35,6 +36,7 @@ Implemented:
 - assignable Project-member Task Reporters;
 - role-based Reporter reassignment;
 - optimistic Task-version conflict detection;
+- authenticated real-time Task creation, update, movement, and deletion delivery;
 - consistent JSON error responses;
 - guarded development database seeding;
 - production-oriented client and server Docker images;
@@ -43,7 +45,7 @@ Implemented:
 - Nginx delivery of the built React client with `/api` reverse proxying;
 - responsive layouts.
 
-Automated client and server test suites and a GitHub Actions test workflow are implemented for M4. See [M4 testing](docs/m4-testing.md) for commands, scope, and validation status. Real-time updates remain planned.
+Automated client and server test suites and a GitHub Actions test workflow are implemented for M4. See [M4 testing](docs/m4-testing.md) for commands, scope, and validation status. M5 real-time Task delivery is implemented with Socket.IO Project rooms.
 
 ## Domain model
 
@@ -148,8 +150,8 @@ Removing a member does not erase historical Task creator or Reporter identifiers
 | Containerization | Docker and Docker Compose |
 | Production client server | Nginx |
 | Testing | Jest, Supertest, React Testing Library, and mongodb-memory-server |
-| Real-time updates | Socket.IO — planned |
-| Deployment | Local Docker Compose implemented; public hosting planned |
+| Real-time updates | Socket.IO 4 |
+| Deployment | Docker Compose locally, Firebase Hosting for the client, and Render for the API |
 
 ## Prerequisites
 
@@ -651,9 +653,9 @@ npm --prefix client run lint
 npm --prefix client run build
 ```
 
-The server has 19 Jest + Supertest tests; the client has 10 Jest + React Testing Library tests. `npm --prefix server run test:docs` runs the nine Swagger/CORS regression cases alone. Database-backed tests use a temporary MongoDB process and never connect to Atlas or the development database. The first run may download its binary.
+The server has 25 Jest + Supertest/Socket.IO tests; the client has 30 Jest + React Testing Library tests. `npm --prefix server run test:docs` runs the nine Swagger/CORS regression cases alone. Database-backed tests use a temporary MongoDB process and never connect to Atlas or the development database. The first run may download its binary.
 
-GitHub Actions runs both suites on every push and pull request. See [M4 testing and bug-fix evidence](docs/m4-testing.md), including the database-startup limitation observed during preparation and the remaining local/CI verification.
+GitHub Actions runs both suites on every push and pull request. See [M4 testing and bug-fix evidence](docs/m4-testing.md) for the completed local/CI validation record and remaining submission-evidence links.
 
 ## Client routes
 
@@ -822,6 +824,8 @@ flowchart TD
     Nginx --> Client[React production build]
     Client -->|Requests to /api| Nginx
     Nginx -->|Reverse proxy /api| API[Express API container]
+    Client -->|Socket.IO /socket.io| Nginx
+    Nginx -->|WebSocket proxy| API
     API --> Middleware[Authentication and authorization middleware]
     Middleware --> Controllers[Route controllers]
     Controllers --> Access[Database-backed access helpers]
@@ -875,7 +879,7 @@ When a client edits a Task, it submits the version it originally loaded. The ser
 - the response contains the newest Task;
 - the client displays the current Task instead of silently overwriting it.
 
-This provides optimistic concurrency control for Task edits. Real-time update delivery remains planned with Socket.IO.
+This provides optimistic concurrency control for Task edits alongside Socket.IO delivery. Connected clients join an authorized Project room and receive small Task invalidation events. Each client then fetches the changed Task through its own authenticated REST request, preserving viewer-specific permissions. See [real-time Task updates](docs/realtime-task-updates.md).
 
 ## Documentation
 
@@ -883,14 +887,16 @@ This provides optimistic concurrency control for Task edits. Real-time update de
 - [Wireframes](docs/wireframes.md)
 - [Component tree](docs/component-tree.md)
 - [REST API contract](docs/api-contract.md)
+- [Real-time Task updates](docs/realtime-task-updates.md)
+- [Final verification record](docs/final-verification.md)
 
 ## Current limitations
 
 - JWTs are stored in browser `localStorage`.
 - Browser E2E tests are not implemented. M4 component/API suites are included; see [validation status](docs/m4-testing.md#validation-recorded-for-this-package).
-- Real-time Socket.IO updates are not implemented yet.
-- Public hosting is not configured yet.
-- Production database credentials, secret management, backups, and operational monitoring are not configured yet.
+- Real-time delivery currently covers direct Task create, update, move, and delete operations. Workflow, membership, invitation, and Project metadata changes still require a refresh.
+- The default Socket.IO adapter is process-local. Multi-instance deployment requires a compatible shared adapter and, where applicable, sticky sessions.
+- Automated browser E2E monitoring and documented production backup/restore procedures are not configured yet.
 - The local Compose MongoDB service does not enable authentication and must not be exposed publicly.
 
 MongoDB persistence is implemented. Restarting the API does not discard users, Workspaces, Projects, memberships, invitations, workflow statuses, or Tasks.

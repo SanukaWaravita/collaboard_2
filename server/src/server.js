@@ -1,14 +1,17 @@
 import "dotenv/config";
 import "./models/index.js";
+import { createServer } from "node:http";
 import app from "./app.js";
 import {
   connectDatabase,
   disconnectDatabase,
 } from "./config/database.js";
+import { initializeRealtimeServer } from "./realtime/projectRooms.js";
 
 const port = process.env.PORT || 5000;
 
 let server = null;
+let io = null;
 let isShuttingDown = false;
 
 async function shutdown(signal) {
@@ -23,7 +26,11 @@ async function shutdown(signal) {
   );
 
   try {
-    if (server) {
+    if (io) {
+      await new Promise((resolve) => {
+        io.close(resolve);
+      });
+    } else if (server) {
       await new Promise((resolve, reject) => {
         server.close((error) => {
           if (error) {
@@ -55,7 +62,10 @@ async function startServer() {
   try {
     await connectDatabase();
 
-    server = app.listen(port, () => {
+    server = createServer(app);
+    io = initializeRealtimeServer(server, app);
+
+    server.listen(port, () => {
       console.log(
   `CollaBoard API listening on port ${port}`,
 );

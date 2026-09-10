@@ -8,7 +8,7 @@ CollabBoard is a collaborative Kanban task-management application. It allows reg
 - Doing
 - Done
 
-The application will eventually support persistent storage, real-time updates, offline draft recovery, and simultaneous-edit conflict detection.
+The application supports persistent storage, real-time Task updates, offline draft recovery, and simultaneous-edit conflict detection.
 
 ## 2. Target users
 
@@ -45,6 +45,7 @@ The target users are small teams that need a shared space for organizing and mon
 - FR-16: Connected users shall receive task changes in real time.
 - FR-17: The system shall detect conflicting simultaneous task updates.
 - FR-18: The user shall be notified when another user has already changed the task being edited.
+- FR-19: An unfinished new-Task draft shall be recoverable in the same browser for the same user and Project.
 
 ## 4. Non-functional requirements
 
