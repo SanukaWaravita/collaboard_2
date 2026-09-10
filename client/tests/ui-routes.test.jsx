@@ -30,3 +30,25 @@ test.each([
   render(<MemoryRouter initialEntries={[route]}><App /></MemoryRouter>);
   expect(await screen.findByRole("heading", { level: 1, name: heading })).toBeInTheDocument();
 });
+
+test("workspace actions use accessible icon-only buttons", async () => {
+  render(<MemoryRouter initialEntries={["/workspaces"]}><App /></MemoryRouter>);
+
+  expect(
+    await screen.findByRole("heading", { level: 1, name: "My Workspaces" }),
+  ).toBeInTheDocument();
+
+  const editButton = screen.getByRole("button", {
+    name: "Edit Product team",
+  });
+  const deleteButton = screen.getByRole("button", {
+    name: "Delete Product team",
+  });
+
+  expect(editButton).toHaveAttribute("title", "Edit Product team");
+  expect(deleteButton).toHaveAttribute("title", "Delete Product team");
+  expect(editButton.querySelector("svg")).not.toBeNull();
+  expect(deleteButton.querySelector("svg")).not.toBeNull();
+  expect(editButton).not.toHaveTextContent("Edit");
+  expect(deleteButton).not.toHaveTextContent("Delete");
+});

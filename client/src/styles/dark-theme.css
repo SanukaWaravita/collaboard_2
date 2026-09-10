@@ -1,0 +1,458 @@
+/* Component-level dark-theme refinements. The core palette and toggle live in
+   theme.css so this file can remain a separate, reviewable follow-up change. */
+
+:root[data-theme="dark"] {
+  --kanban-accent: var(--primary);
+  --kanban-accent-dark: var(--primary-dark);
+  --kanban-accent-soft: var(--primary-soft);
+}
+
+:root[data-theme="dark"] body,
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] textarea,
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] option {
+  color: var(--text);
+}
+
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] textarea,
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] option {
+  border-color: var(--border-strong);
+  background: var(--surface);
+}
+
+:root[data-theme="dark"] input::placeholder,
+:root[data-theme="dark"] textarea::placeholder {
+  color: #7f8a99;
+}
+
+:root[data-theme="dark"] .skip-link {
+  color: var(--text);
+  background: var(--surface);
+}
+
+:root[data-theme="dark"] .board-page,
+:root[data-theme="dark"] .entity-page,
+:root[data-theme="dark"] .access-page {
+  --kanban-surface-muted: var(--surface-muted);
+  --kanban-border: var(--border);
+  --kanban-text: var(--text);
+  --kanban-text-muted: var(--text-muted);
+  --entity-blue: var(--primary);
+  --entity-blue-dark: var(--primary-dark);
+  --entity-blue-soft: var(--primary-soft);
+  --entity-blue-border: #355b8d;
+  --entity-text: var(--text);
+  --entity-muted: var(--text-muted);
+  --entity-border: var(--border);
+}
+
+/* Navigation and shared controls */
+:root[data-theme="dark"] .app-navbar__link:hover,
+:root[data-theme="dark"] .app-navbar__account .button:hover {
+  background: var(--surface-hover);
+}
+
+:root[data-theme="dark"] .button--secondary,
+:root[data-theme="dark"] .board-page .board-header__actions .button--secondary,
+:root[data-theme="dark"] .project-view-toolbar__manage {
+  border-color: var(--border);
+  color: var(--text-muted);
+  background: var(--surface);
+}
+
+:root[data-theme="dark"] .button--secondary:hover:not(:disabled),
+:root[data-theme="dark"] .project-view-toolbar__manage:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  color: var(--text);
+  background: var(--surface-hover);
+}
+
+:root[data-theme="dark"] .project-task-count,
+:root[data-theme="dark"] .project-view-toggle {
+  color: var(--text-muted);
+  background: var(--surface-muted);
+}
+
+:root[data-theme="dark"] .project-view-toggle__button {
+  color: var(--text-muted);
+}
+
+:root[data-theme="dark"] .project-view-toggle__button:hover,
+:root[data-theme="dark"] .project-view-toggle__button--active {
+  color: var(--text);
+}
+
+:root[data-theme="dark"] .project-view-toggle__button--active {
+  background: var(--surface);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 35%);
+}
+
+:root[data-theme="dark"] .project-view-toggle__indicator {
+  border-color: var(--border-strong);
+  background: var(--surface-muted);
+}
+
+:root[data-theme="dark"] .project-view-toggle__button--active
+  .project-view-toggle__indicator {
+  border-color: var(--primary);
+  background: var(--primary);
+  box-shadow: inset 0 0 0 2px var(--surface);
+}
+
+/* Authentication */
+:root[data-theme="dark"] .auth-page {
+  --auth-primary: var(--primary);
+  --auth-primary-hover: var(--primary-dark);
+  --auth-primary-dark: #c9daf2;
+  --auth-muted: var(--text-muted);
+  --auth-input-border: var(--border-strong);
+  --auth-focus-ring: var(--primary-alpha-25);
+  background: var(--page-background);
+}
+
+:root[data-theme="dark"] .auth-layout,
+:root[data-theme="dark"] .auth-card {
+  border-color: var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-modal);
+}
+
+:root[data-theme="dark"] .auth-visual {
+  color: var(--text);
+  background: #151d29;
+}
+
+:root[data-theme="dark"] .auth-visual__brand,
+:root[data-theme="dark"] .auth-card h1,
+:root[data-theme="dark"] .auth-form__field label {
+  color: var(--text);
+}
+
+:root[data-theme="dark"] .auth-visual__content > p,
+:root[data-theme="dark"] .auth-card__subtitle,
+:root[data-theme="dark"] .auth-footer {
+  color: var(--text-muted);
+}
+
+:root[data-theme="dark"] .auth-visual__feature span {
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+
+:root[data-theme="dark"] .auth-form__field input {
+  border-color: var(--border-strong);
+  color: var(--text);
+  background: var(--surface-muted);
+}
+
+:root[data-theme="dark"] .password-control button:hover {
+  background: var(--surface-hover);
+}
+
+/* Workspaces, projects, and list surfaces */
+:root[data-theme="dark"] .entity-card,
+:root[data-theme="dark"] .entity-list,
+:root[data-theme="dark"] .task-list,
+:root[data-theme="dark"] .access-panel,
+:root[data-theme="dark"] .member-card,
+:root[data-theme="dark"] .invitation-card,
+:root[data-theme="dark"] .workspace-member-card,
+:root[data-theme="dark"] .workspace-invitation-project {
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+:root[data-theme="dark"] .entity-card:hover,
+:root[data-theme="dark"] .member-card:hover,
+:root[data-theme="dark"] .invitation-card:hover,
+:root[data-theme="dark"] .workspace-invitation-project:hover {
+  border-color: var(--border-strong);
+}
+
+:root[data-theme="dark"] .entity-card__icon,
+:root[data-theme="dark"] .entity-card--workspace .entity-card__icon,
+:root[data-theme="dark"] .entity-badge,
+:root[data-theme="dark"] .project-key {
+  border-color: #355b8d;
+  color: var(--primary-dark);
+  background: var(--primary-soft);
+}
+
+:root[data-theme="dark"] .entity-card__footer,
+:root[data-theme="dark"] .entity-list__table th,
+:root[data-theme="dark"] .task-list__table th,
+:root[data-theme="dark"] .task-list__header {
+  border-color: var(--border);
+}
+
+:root[data-theme="dark"] .entity-list__table th,
+:root[data-theme="dark"] .task-list__table th {
+  color: var(--text-muted);
+  background: var(--surface-subtle);
+}
+
+:root[data-theme="dark"] .entity-list__table td,
+:root[data-theme="dark"] .task-list__table td {
+  border-color: var(--border);
+}
+
+:root[data-theme="dark"] .entity-list__table tbody tr:hover,
+:root[data-theme="dark"] .task-list__table tbody tr:hover {
+  background: var(--surface-hover);
+}
+
+:root[data-theme="dark"] .entity-card__actions .entity-card__open-link:hover {
+  color: var(--primary-dark);
+  background: #203a5f;
+}
+
+/* Kanban board and task cards */
+:root[data-theme="dark"] .task-column {
+  border-color: var(--border);
+  background: var(--surface-muted);
+}
+
+:root[data-theme="dark"] .task-column__header {
+  border-color: var(--border);
+  color: var(--text-muted);
+  background: transparent;
+}
+
+:root[data-theme="dark"] .task-column__count {
+  color: var(--text-muted);
+  background: #2b3441;
+}
+
+:root[data-theme="dark"] .task-column__body,
+:root[data-theme="dark"] .task-board {
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+:root[data-theme="dark"] .task-column__body::-webkit-scrollbar-thumb,
+:root[data-theme="dark"] .task-board::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+}
+
+:root[data-theme="dark"] .task-card {
+  border-color: var(--border);
+  color: var(--text);
+  background: var(--surface);
+  box-shadow: 0 3px 8px rgb(0 0 0 / 22%);
+}
+
+:root[data-theme="dark"] .task-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-card-hover);
+}
+
+:root[data-theme="dark"] .task-card--dragging {
+  border-color: var(--primary);
+  background: #1c2a3e;
+}
+
+:root[data-theme="dark"] .task-card__status {
+  border-color: color-mix(in srgb, var(--status-color) 48%, var(--border));
+  color: var(--text);
+  background: color-mix(in srgb, var(--status-color) 18%, var(--surface));
+}
+
+:root[data-theme="dark"] .task-card__description,
+:root[data-theme="dark"] .task-card__metadata,
+:root[data-theme="dark"] .project-view-toolbar__summary,
+:root[data-theme="dark"] .project-view-toolbar__label {
+  color: var(--text-muted);
+}
+
+:root[data-theme="dark"] .task-card__icon-button:hover,
+:root[data-theme="dark"] .task-column__add:hover {
+  color: var(--text);
+  background: var(--surface-hover);
+}
+
+:root[data-theme="dark"] .task-column__empty,
+:root[data-theme="dark"] .task-column__drop-target {
+  border-color: var(--border-strong);
+  color: var(--text-muted);
+  background: rgb(23 28 36 / 55%);
+}
+
+:root[data-theme="dark"] .task-column__drop-target--active {
+  border-color: var(--primary);
+  color: var(--text);
+  background: var(--primary-soft);
+}
+
+/* Forms, modals, and workflow controls */
+:root[data-theme="dark"] .modal-backdrop {
+  background: rgb(0 0 0 / 66%);
+}
+
+:root[data-theme="dark"] .task-form,
+:root[data-theme="dark"] .board-form,
+:root[data-theme="dark"] .workflow-manager {
+  border-color: var(--border-strong);
+  background: var(--surface);
+}
+
+:root[data-theme="dark"] .task-form__field input,
+:root[data-theme="dark"] .task-form__field textarea,
+:root[data-theme="dark"] .task-form__field select,
+:root[data-theme="dark"] .workflow-manager__field input,
+:root[data-theme="dark"] .workflow-status-row__name-input,
+:root[data-theme="dark"] .workflow-status-row__color-input {
+  border-color: var(--border-strong);
+  color: var(--text);
+  background: var(--surface-muted);
+}
+
+:root[data-theme="dark"] .task-form__assignee-option {
+  border-color: var(--border);
+  background: var(--surface-muted);
+}
+
+:root[data-theme="dark"] .task-form__assignee-option:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-hover);
+}
+
+:root[data-theme="dark"] .task-form__assignee-option--selected {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+:root[data-theme="dark"] .task-form__draft-notice {
+  border-color: #355b8d;
+  color: #c9dcfa;
+  background: var(--primary-soft);
+}
+
+:root[data-theme="dark"] .task-form__draft-notice small {
+  color: #abc9f5;
+}
+
+:root[data-theme="dark"] .workflow-status-row {
+  border-color: var(--border);
+  background: var(--surface-muted);
+}
+
+:root[data-theme="dark"] .workflow-status-row:hover {
+  background: var(--surface-hover);
+}
+
+/* Access management */
+:root[data-theme="dark"] .access-role-help,
+:root[data-theme="dark"] .workspace-access-overview,
+:root[data-theme="dark"] .workspace-project-access-row--none {
+  color: var(--text-muted);
+  background: var(--surface-subtle);
+}
+
+:root[data-theme="dark"] .member-role {
+  color: var(--text);
+  background: var(--surface-muted);
+}
+
+:root[data-theme="dark"] .workspace-access-source--explicit {
+  color: #83e6ad;
+  background: #193b2a;
+}
+
+:root[data-theme="dark"] .workspace-access-source--inherited {
+  color: #9fc5ff;
+  background: #1b3356;
+}
+
+:root[data-theme="dark"] .workspace-action-notice {
+  border-color: #296443;
+  color: var(--success-text);
+  background: var(--success-surface);
+}
+
+:root[data-theme="dark"] .workspace-invitation-project--selected {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+/* Task metadata */
+:root[data-theme="dark"] .task-due-date--none,
+:root[data-theme="dark"] .task-assignee--unassigned .task-assignee__avatar {
+  border-color: var(--border-strong);
+  color: var(--text-muted);
+  background: var(--surface-subtle);
+}
+
+:root[data-theme="dark"] .task-due-date--upcoming {
+  border-color: #355b8d;
+  color: #9fc5ff;
+  background: #1b3356;
+}
+
+:root[data-theme="dark"] .task-due-date--today {
+  border-color: #765c25;
+  color: var(--warning-text);
+  background: var(--warning-surface);
+}
+
+:root[data-theme="dark"] .task-due-date--completed {
+  border-color: #296443;
+  color: var(--success-text);
+  background: var(--success-surface);
+}
+
+:root[data-theme="dark"] .task-assignee__avatar,
+:root[data-theme="dark"] .task-reporter__avatar {
+  border-color: #355b8d;
+  color: var(--primary-dark);
+  background: var(--primary-soft);
+}
+
+:root[data-theme="dark"] .task-card .task-assignee {
+  border-color: var(--border);
+  color: var(--text-muted);
+  background: var(--surface-muted);
+}
+
+:root[data-theme="dark"] .task-card .task-assignee__avatar,
+:root[data-theme="dark"] .task-reporter--card .task-reporter__avatar {
+  border-color: var(--surface);
+  color: #fff;
+}
+
+:root[data-theme="dark"] .task-card .task-assignee--unassigned {
+  color: var(--text-muted);
+  background: var(--surface-subtle);
+}
+
+:root[data-theme="dark"] .task-card .task-assignee--unassigned
+  .task-assignee__avatar {
+  border-color: var(--surface);
+  color: var(--text-muted);
+  background: var(--surface-hover);
+}
+
+:root[data-theme="dark"] .task-reporter--card .task-reporter__name {
+  color: var(--text-muted);
+}
+
+@media (max-width: 800px) {
+  :root[data-theme="dark"] .app-navbar {
+    background: rgb(14 17 23 / 94%);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root[data-theme="dark"] .app-navbar {
+    background: #141922;
+  }
+}
+
+@media (forced-colors: active) {
+  :root[data-theme="dark"] .theme-toggle,
+  :root[data-theme="dark"] .task-card,
+  :root[data-theme="dark"] .entity-card {
+    forced-color-adjust: auto;
+  }
+}

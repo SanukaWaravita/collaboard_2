@@ -9,3 +9,5 @@
 @import "./styles/workflow.css";
 @import "./styles/task-metadata.css";
 @import "./styles/refinement.css";
+@import "./styles/theme.css";
+@import "./styles/dark-theme.css";

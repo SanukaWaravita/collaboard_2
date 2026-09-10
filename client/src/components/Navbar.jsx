@@ -1,5 +1,6 @@
 import { NavLink, useLocation, useNavigate } from "react-router";
 import Icon from "./Icon";
+import ThemeToggle from "./ThemeToggle";
 import { clearSession, getCurrentUser } from "../services/api";
 
 function Navbar() {
@@ -66,6 +67,7 @@ function Navbar() {
       <div className="app-navbar__account">
         <span className="app-navbar__avatar" aria-hidden="true">{(user?.name ?? "U").slice(0, 1).toUpperCase()}</span>
         <span className="app-navbar__user"><strong>{user?.name ?? "Your account"}</strong><small>{user?.email ?? ""}</small></span>
+        <ThemeToggle />
         <button
           type="button"
           className="button button--secondary"
