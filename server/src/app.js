@@ -11,33 +11,10 @@ import taskRoutes from "./routes/taskRoutes.js";
 import workspaceRoutes from "./routes/workspaceRoutes.js";
 import swaggerUi from "swagger-ui-express";
 import openApiDocument from "./docs/openapi.js";
-
-const DEFAULT_ALLOWED_ORIGINS = [
-  "http://localhost:5173",
-  "http://127.0.0.1:5173",
-  "http://localhost:8080",
-  "http://127.0.0.1:8080",
-];
-
-function normalizeOrigin(value) {
-  return value
-    .trim()
-    .replace(/\/+$/, "");
-}
-
-function getAllowedOrigins() {
-  const configuredOrigins =
-    process.env.CORS_ALLOWED_ORIGINS
-      ?.split(",")
-      .map(normalizeOrigin)
-      .filter(Boolean) ?? [];
-
-  return new Set(
-    configuredOrigins.length > 0
-      ? configuredOrigins
-      : DEFAULT_ALLOWED_ORIGINS,
-  );
-}
+import {
+  getAllowedOrigins,
+  isAllowedOrigin,
+} from "./config/cors.js";
 
 const allowedOrigins = getAllowedOrigins();
 
@@ -59,12 +36,7 @@ app.use(
 
     callback(null, {
       origin(origin, callback) {
-        if (
-          !origin ||
-          allowedOrigins.has(
-            normalizeOrigin(origin),
-          )
-        ) {
+        if (isAllowedOrigin(origin, allowedOrigins)) {
           callback(null, true);
           return;
         }

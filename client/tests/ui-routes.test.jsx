@@ -4,6 +4,16 @@ import { MemoryRouter } from "react-router";
 import * as fixture from "../../docs/ui-preview/api.js";
 
 jest.unstable_mockModule("../src/services/api", () => fixture);
+jest.unstable_mockModule("../src/services/realtime", () => ({
+  getRealtimeSocket: () => ({
+    connected: false,
+    on() {},
+    off() {},
+    emit() {},
+    connect() {},
+  }),
+  disconnectRealtimeSocket() {},
+}));
 const { default: App } = await import("../src/App.jsx");
 beforeEach(() => fixture.saveSession());
 

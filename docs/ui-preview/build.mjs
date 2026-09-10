@@ -15,6 +15,7 @@ await build({
   define: { "process.env.NODE_ENV": JSON.stringify("production") },
   resolve: { alias: [
     { find: /^\.{1,2}\/services\/api$/, replacement: path.join(here, "api.js") },
+    { find: /^\.{1,2}\/services\/realtime$/, replacement: path.join(here, "realtime.js") },
     ...["react", "react-dom", "react-router"].map(name => ({ find: name, replacement: path.join(client, "node_modules", name) })),
   ] },
   build: { outDir: out, emptyOutDir: true, cssCodeSplit: false,
