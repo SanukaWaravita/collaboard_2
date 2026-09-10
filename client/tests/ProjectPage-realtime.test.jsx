@@ -1,9 +1,10 @@
-import { expect, jest, test } from "@jest/globals";
+import { beforeEach, expect, jest, test } from "@jest/globals";
 import { act, render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
 
 const listeners = new Map();
 let remoteTask = null;
+let connectImmediately = true;
 
 const apiRequest = jest.fn(async (path) => {
   if (path === "/projects/p1") {
@@ -69,8 +70,11 @@ const socket = {
     return socket;
   }),
   connect: jest.fn(() => {
-    socket.connected = true;
-    listeners.get("connect")?.forEach((listener) => listener());
+    if (connectImmediately) {
+      socket.connected = true;
+      listeners.get("connect")?.forEach((listener) => listener());
+    }
+
     return socket;
   }),
 };
@@ -95,6 +99,13 @@ jest.unstable_mockModule("../src/services/realtime", () => ({
 const { default: ProjectPage } = await import(
   "../src/pages/ProjectPage.jsx"
 );
+
+beforeEach(() => {
+  listeners.clear();
+  remoteTask = null;
+  connectImmediately = true;
+  socket.connected = false;
+});
 
 async function sendServerEvent(eventName, payload) {
   await act(async () => {
@@ -165,4 +176,70 @@ test("applies remote Task creation, update, movement, and deletion", async () =>
     version: 2,
   });
   expect(screen.queryByText("Updated remotely")).not.toBeInTheDocument();
+});
+
+test("shows connection loss and returns to Live after reconnecting", async () => {
+  connectImmediately = false;
+
+  render(
+    <MemoryRouter initialEntries={["/workspaces/w1/projects/p1"]}>
+      <Routes>
+        <Route
+          path="/workspaces/:workspaceId/projects/:projectId"
+          element={<ProjectPage />}
+        />
+      </Routes>
+    </MemoryRouter>,
+  );
+
+  expect(
+    await screen.findByRole("heading", { name: "Realtime Project" }),
+  ).toBeInTheDocument();
+  expect(await screen.findByText("Connecting")).toBeInTheDocument();
+
+  socket.connected = true;
+  await sendServerEvent("connect");
+  expect(await screen.findByText("Live")).toBeInTheDocument();
+
+  socket.connected = false;
+  await sendServerEvent("disconnect", "transport close");
+  expect(await screen.findByText("Reconnecting")).toBeInTheDocument();
+
+  socket.connected = true;
+  await sendServerEvent("connect");
+  expect(await screen.findByText("Live")).toBeInTheDocument();
+
+  const projectJoinCalls = socket.emit.mock.calls.filter(
+    ([eventName]) => eventName === "project:join",
+  );
+  expect(projectJoinCalls).toHaveLength(2);
+  expect(projectJoinCalls[0][1]).toEqual({ projectId: "p1" });
+  expect(projectJoinCalls[1][1]).toEqual({ projectId: "p1" });
+});
+
+test("shows Offline after a connection error and recovers", async () => {
+  connectImmediately = false;
+
+  render(
+    <MemoryRouter initialEntries={["/workspaces/w1/projects/p1"]}>
+      <Routes>
+        <Route
+          path="/workspaces/:workspaceId/projects/:projectId"
+          element={<ProjectPage />}
+        />
+      </Routes>
+    </MemoryRouter>,
+  );
+
+  expect(
+    await screen.findByRole("heading", { name: "Realtime Project" }),
+  ).toBeInTheDocument();
+  expect(await screen.findByText("Connecting")).toBeInTheDocument();
+
+  await sendServerEvent("connect_error", new Error("network unavailable"));
+  expect(await screen.findByText("Offline")).toBeInTheDocument();
+
+  socket.connected = true;
+  await sendServerEvent("connect");
+  expect(await screen.findByText("Live")).toBeInTheDocument();
 });

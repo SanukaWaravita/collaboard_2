@@ -53,6 +53,13 @@ function tokenFor(userId) {
   });
 }
 
+function expiredTokenFor(userId) {
+  return jwt.sign({}, process.env.JWT_SECRET, {
+    subject: userId,
+    expiresIn: -1,
+  });
+}
+
 function waitForConnection(socket) {
   return new Promise((resolve, reject) => {
     socket.once("connect", resolve);
@@ -85,12 +92,30 @@ function joinProject(socket, projectId) {
   });
 }
 
-function connect(token) {
+function connect(token, options = {}) {
   return createClient(serverUrl, {
     auth: token ? { token } : {},
     forceNew: true,
     reconnection: false,
     transports: ["websocket"],
+    ...options,
+  });
+}
+
+function withTimeout(promise, message, timeout = 5000) {
+  return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => reject(new Error(message)), timeout);
+
+    promise.then(
+      (value) => {
+        clearTimeout(timeoutId);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timeoutId);
+        reject(error);
+      },
+    );
   });
 }
 
@@ -136,6 +161,17 @@ describe("Authenticated real-time Project rooms", () => {
     const error = await waitForConnectionError(socket);
 
     expect(error.message).toBe("Authentication required");
+    socket.disconnect();
+  });
+
+  test.each([
+    ["invalid", "not-a-valid-jwt"],
+    ["expired", expiredTokenFor("reviewer")],
+  ])("rejects an %s bearer token", async (_tokenType, token) => {
+    const socket = connect(token);
+    const error = await waitForConnectionError(socket);
+
+    expect(error.message).toBe("Invalid or expired token");
     socket.disconnect();
   });
 
@@ -189,5 +225,93 @@ describe("Authenticated real-time Project rooms", () => {
     });
 
     socket.disconnect();
+  });
+
+  test("automatically reconnects and rejoins the authorized Project room", async () => {
+    const socket = connect(tokenFor("reviewer"), {
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 10,
+      reconnectionDelayMax: 50,
+      randomizationFactor: 0,
+    });
+    let joinCount = 0;
+    let resolveFirstJoin;
+    let resolveSecondJoin;
+    let rejectJoin;
+
+    const firstJoin = new Promise((resolve, reject) => {
+      resolveFirstJoin = resolve;
+      rejectJoin = reject;
+    });
+    const secondJoin = new Promise((resolve) => {
+      resolveSecondJoin = resolve;
+    });
+
+    socket.on("connect", () => {
+      socket.emit(
+        "project:join",
+        { projectId: "project" },
+        (acknowledgement) => {
+          if (!acknowledgement?.ok) {
+            rejectJoin(
+              new Error(
+                acknowledgement?.message || "Project room join failed",
+              ),
+            );
+            return;
+          }
+
+          joinCount += 1;
+
+          if (joinCount === 1) {
+            resolveFirstJoin();
+          } else if (joinCount === 2) {
+            resolveSecondJoin();
+          }
+        },
+      );
+    });
+
+    try {
+      await withTimeout(firstJoin, "Timed out waiting for the first room join");
+      const firstSocketId = socket.id;
+      const serverSocket = io.sockets.sockets.get(firstSocketId);
+
+      expect(serverSocket).toBeDefined();
+      serverSocket.conn.close();
+
+      await withTimeout(
+        secondJoin,
+        "Timed out waiting for the reconnected room join",
+      );
+
+      expect(socket.connected).toBe(true);
+      expect(socket.id).not.toBe(firstSocketId);
+      expect(joinCount).toBe(2);
+
+      const updatedEvent = waitForEvent(
+        socket,
+        TASK_REALTIME_EVENTS.UPDATED,
+      );
+
+      emitTaskEvent(
+        { app },
+        TASK_REALTIME_EVENTS.UPDATED,
+        {
+          id: "task-after-reconnect",
+          projectId: "project",
+          version: 2,
+        },
+      );
+
+      await expect(updatedEvent).resolves.toEqual({
+        projectId: "project",
+        taskId: "task-after-reconnect",
+        version: 2,
+      });
+    } finally {
+      socket.disconnect();
+    }
   });
 });
