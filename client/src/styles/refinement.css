@@ -85,6 +85,8 @@ h1, h2, h3 { text-wrap: balance; }
 .entity-card__actions { gap: .375rem; }
 .entity-card__actions .button { padding: .5rem .625rem; }
 .entity-card__actions .button--secondary { background: transparent; border-color: transparent; }
+.entity-card__actions .button.workspace-action-button, .entity-list__actions .button.workspace-action-button { flex: 0 0 2.5rem; width: 2.5rem; min-height: 2.5rem; padding: 0; }
+.workspace-action-button svg { width: 1rem; height: 1rem; }
 .entity-card__actions .entity-card__open-link { color: var(--primary); background: var(--primary-soft); border-color: transparent; }
 .entity-card__actions .entity-card__open-link:hover:not(:disabled) { background: #dae9ff; border-color: transparent; color: var(--primary-dark); }
 .entity-list, .task-list { border-radius: 1rem; box-shadow: var(--shadow-card); }
@@ -181,6 +183,7 @@ h1, h2, h3 { text-wrap: balance; }
   .entity-card .entity-card__heading { flex-direction: row; }
   .entity-card__actions { display: flex; flex-wrap: wrap; width: auto; }
   .entity-card__actions .button { width: auto; }
+  .entity-card__actions .button.workspace-action-button, .entity-list__actions .button.workspace-action-button { flex-basis: 2.75rem; width: 2.75rem; min-height: 2.75rem; }
   .entity-card__footer { align-items: center; flex-direction: row; }
   .task-board { grid-auto-columns: minmax(17rem, 82vw); gap: 1rem; scroll-snap-type: x proximity; }
   .task-column { scroll-snap-align: start; }
