@@ -151,7 +151,7 @@ Removing a member does not erase historical Task creator or Reporter identifiers
 | Production client server | Nginx |
 | Testing | Jest, Supertest, React Testing Library, and mongodb-memory-server |
 | Real-time updates | Socket.IO 4 |
-| Deployment | Local Docker Compose implemented; public hosting planned |
+| Deployment | Docker Compose locally, Firebase Hosting for the client, and Render for the API |
 
 ## Prerequisites
 
@@ -653,9 +653,9 @@ npm --prefix client run lint
 npm --prefix client run build
 ```
 
-The server has 22 Jest + Supertest/Socket.IO tests; the client has 28 Jest + React Testing Library tests. `npm --prefix server run test:docs` runs the nine Swagger/CORS regression cases alone. Database-backed tests use a temporary MongoDB process and never connect to Atlas or the development database. The first run may download its binary.
+The server has 25 Jest + Supertest/Socket.IO tests; the client has 30 Jest + React Testing Library tests. `npm --prefix server run test:docs` runs the nine Swagger/CORS regression cases alone. Database-backed tests use a temporary MongoDB process and never connect to Atlas or the development database. The first run may download its binary.
 
-GitHub Actions runs both suites on every push and pull request. See [M4 testing and bug-fix evidence](docs/m4-testing.md), including the database-startup limitation observed during preparation and the remaining local/CI verification.
+GitHub Actions runs both suites on every push and pull request. See [M4 testing and bug-fix evidence](docs/m4-testing.md) for the completed local/CI validation record and remaining submission-evidence links.
 
 ## Client routes
 
@@ -888,6 +888,7 @@ This provides optimistic concurrency control for Task edits alongside Socket.IO 
 - [Component tree](docs/component-tree.md)
 - [REST API contract](docs/api-contract.md)
 - [Real-time Task updates](docs/realtime-task-updates.md)
+- [Final verification record](docs/final-verification.md)
 
 ## Current limitations
 
@@ -895,8 +896,7 @@ This provides optimistic concurrency control for Task edits alongside Socket.IO 
 - Browser E2E tests are not implemented. M4 component/API suites are included; see [validation status](docs/m4-testing.md#validation-recorded-for-this-package).
 - Real-time delivery currently covers direct Task create, update, move, and delete operations. Workflow, membership, invitation, and Project metadata changes still require a refresh.
 - The default Socket.IO adapter is process-local. Multi-instance deployment requires a compatible shared adapter and, where applicable, sticky sessions.
-- Public hosting is not configured yet.
-- Production database credentials, secret management, backups, and operational monitoring are not configured yet.
+- Automated browser E2E monitoring and documented production backup/restore procedures are not configured yet.
 - The local Compose MongoDB service does not enable authentication and must not be exposed publicly.
 
 MongoDB persistence is implemented. Restarting the API does not discard users, Workspaces, Projects, memberships, invitations, workflow statuses, or Tasks.
