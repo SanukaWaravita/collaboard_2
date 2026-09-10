@@ -12,6 +12,11 @@ const reporters = [
   { userId: "creator", name: "Task Creator" },
   { userId: "reviewer", name: "Project Reviewer" },
 ];
+const assignees = [
+  { userId: "creator", name: "Task Creator" },
+  { userId: "reviewer", name: "Project Reviewer" },
+];
+const draftStorageKey = "collaboard:task-draft:v1:creator:project-1";
 
 function renderForm(overrides = {}) {
   const onSubmit = jest.fn();
@@ -76,5 +81,104 @@ describe("Task form", () => {
     expect(screen.getByLabelText("Title")).toBeDisabled();
     await user.click(screen.getByRole("button", { name: "Saving..." }));
     expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  test("automatically stores unfinished task details in localStorage", async () => {
+    const { user } = renderForm({ draftStorageKey, assignees });
+
+    await user.type(screen.getByLabelText("Title"), "Recovered task");
+    await user.type(screen.getByLabelText("Description"), "Still in progress");
+    await user.selectOptions(screen.getByLabelText("Status"), "done");
+    await user.click(screen.getByRole("checkbox", { name: "Project Reviewer" }));
+
+    expect(JSON.parse(localStorage.getItem(draftStorageKey))).toEqual(
+      expect.objectContaining({
+        version: 1,
+        title: "Recovered task",
+        description: "Still in progress",
+        status: "done",
+        assigneeIds: ["reviewer"],
+        reporterId: "creator",
+      }),
+    );
+  });
+
+  test("recovers a valid unfinished draft for the current project", () => {
+    localStorage.setItem(draftStorageKey, JSON.stringify({
+      version: 1,
+      savedAt: "2026-09-10T12:00:00.000Z",
+      title: "Recovered task",
+      description: "Continue after reload",
+      status: "done",
+      dueDate: "2026-09-30",
+      assigneeIds: ["reviewer", "former-member"],
+      reporterId: "reviewer",
+    }));
+
+    renderForm({ draftStorageKey, assignees, canAssignReporter: true });
+
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Unsaved draft recovered",
+    );
+    expect(screen.getByLabelText("Title")).toHaveValue("Recovered task");
+    expect(screen.getByLabelText("Description")).toHaveValue(
+      "Continue after reload",
+    );
+    expect(screen.getByLabelText("Status")).toHaveValue("done");
+    expect(screen.getByLabelText("Due date")).toHaveValue("2026-09-30");
+    expect(screen.getByLabelText("Reporter")).toHaveValue("reviewer");
+    expect(
+      screen.getByRole("checkbox", { name: "Project Reviewer" }),
+    ).toBeChecked();
+  });
+
+  test("lets the user discard a recovered draft and start clean", async () => {
+    localStorage.setItem(draftStorageKey, JSON.stringify({
+      version: 1,
+      title: "Discard me",
+      description: "Old work",
+      status: "done",
+      dueDate: "2026-09-30",
+      assigneeIds: ["reviewer"],
+      reporterId: "reviewer",
+    }));
+    const { user } = renderForm({
+      draftStorageKey,
+      assignees,
+      canAssignReporter: true,
+    });
+
+    await user.click(screen.getByRole("button", { name: "Discard draft" }));
+
+    expect(localStorage.getItem(draftStorageKey)).toBeNull();
+    expect(screen.getByLabelText("Title")).toHaveValue("");
+    expect(screen.getByLabelText("Description")).toHaveValue("");
+    expect(screen.getByLabelText("Status")).toHaveValue("todo");
+    expect(screen.getByLabelText("Due date")).toHaveValue("");
+    expect(screen.getByLabelText("Reporter")).toHaveValue("creator");
+    expect(screen.queryByText("Unsaved draft recovered")).not.toBeInTheDocument();
+  });
+
+  test("ignores task drafts while editing an existing task", () => {
+    localStorage.setItem(draftStorageKey, JSON.stringify({
+      version: 1,
+      title: "Creation draft",
+      status: "done",
+      assigneeIds: [],
+      reporterId: "creator",
+    }));
+
+    renderForm({
+      draftStorageKey,
+      initialTask: {
+        id: "task-1",
+        title: "Existing task",
+        status: "todo",
+        reporterId: "creator",
+      },
+    });
+
+    expect(screen.getByLabelText("Title")).toHaveValue("Existing task");
+    expect(screen.queryByText("Unsaved draft recovered")).not.toBeInTheDocument();
   });
 });

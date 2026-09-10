@@ -65,7 +65,7 @@ These are follow-up candidates, not features silently included in the update:
 3. **Task reading:** a dedicated read-only task detail view would help reviewers inspect long descriptions without opening an edit experience. Cards currently preserve the existing three-line description clamp.
 4. **Finding information:** search and filters would help once workspaces and tasks grow. They should be designed around actual team usage and tested with realistic volumes.
 5. **People/permissions:** workspace members and project access remain complex flows. Test the existing inherited-versus-explicit access explanations with teammates before simplifying them further.
-6. **Unsaved drafts:** explicit close/cancel and Escape dismiss the current forms; draft persistence or a dirty-form guard could protect lengthy edits. Saving already blocks dismissal. Backdrop clicks deliberately do not dismiss.
+6. **Unsaved drafts:** new-Task draft persistence was implemented on 10 September 2026 using browser `localStorage`, isolated by user and Project. Edit-form dirty-state protection remains a possible follow-up. Saving already blocks dismissal, and backdrop clicks deliberately do not dismiss.
 7. **Theme and motion:** dark mode, custom spring physics, touch drag-and-drop, and optimistic network updates are not part of this change.
 
 ## Verification

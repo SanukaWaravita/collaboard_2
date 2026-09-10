@@ -32,6 +32,38 @@
   margin: 3px 0 0;
 }
 
+.task-form__draft-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: -8px 0 20px;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  padding: 12px;
+  color: #1e3a8a;
+  background: #eff6ff;
+}
+
+.task-form__draft-notice > div {
+  display: grid;
+  gap: 2px;
+}
+
+.task-form__draft-notice strong {
+  font-size: 0.88rem;
+}
+
+.task-form__draft-notice small {
+  color: #1e40af;
+}
+
+.task-form__draft-notice .button {
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  font-size: 0.78rem;
+}
+
 .task-form__eyebrow {
   margin: 0;
   color: var(--primary);
@@ -86,6 +118,15 @@
 }
 
 @media (max-width: 480px) {
+  .task-form__draft-notice {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .task-form__draft-notice .button {
+    width: 100%;
+  }
+
   .task-form__due-date-control {
     grid-template-columns: 1fr;
   }
@@ -102,13 +143,30 @@
   .task-form__assignee-summary .button {
     width: 100%;
   }
+
+  .task-form__actions {
+    flex-wrap: wrap;
+  }
+
+  .task-form__autosave-status {
+    flex-basis: 100%;
+    margin: 0;
+    text-align: right;
+  }
 }
 
 .task-form__actions {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: 10px;
   margin-top: 24px;
+}
+
+.task-form__autosave-status {
+  margin-right: auto;
+  color: var(--text-muted);
+  font-size: 0.75rem;
 }
 
 .task-form__assignees {

@@ -45,6 +45,7 @@ The target users are small teams that need a shared space for organizing and mon
 - FR-16: Connected users shall receive task changes in real time.
 - FR-17: The system shall detect conflicting simultaneous task updates.
 - FR-18: The user shall be notified when another user has already changed the task being edited.
+- FR-19: An unfinished new-Task draft shall be recoverable in the same browser for the same user and Project.
 
 ## 4. Non-functional requirements
 
