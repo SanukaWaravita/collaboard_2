@@ -1,6 +1,11 @@
 import Modal from "./Modal";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getAssigneeInitial } from "../utils/taskAssignee";
+import {
+  clearTaskDraft,
+  readTaskDraft,
+  writeTaskDraft,
+} from "../utils/taskDraft";
 
 function TaskForm({
   initialTask = null,
@@ -15,28 +20,75 @@ function TaskForm({
   onCancel,
   isSubmitting = false,
   error = "",
+  draftStorageKey = null,
 }) {
-  const [title, setTitle] = useState(initialTask?.title ?? "");
+  const isEditing = Boolean(initialTask);
+  const defaultStatus =
+    initialTask?.status ?? initialStatusId ?? workflowStatuses[0]?.id ?? "";
+  const defaultReporterId =
+    initialTask?.reporterId ?? currentUser?.id ?? "";
+
+  const [recoveredDraft] = useState(() => {
+    if (isEditing || !draftStorageKey) {
+      return null;
+    }
+
+    return readTaskDraft(draftStorageKey);
+  });
+
+  const validStatusIds = new Set(
+    workflowStatuses.map((workflowStatus) => workflowStatus.id),
+  );
+  const validAssigneeIds = new Set(
+    assignees.map((assignee) => assignee.userId),
+  );
+  const validReporterIds = new Set(
+    reporters.map((reporter) => reporter.userId),
+  );
+
+  const recoveredStatus = validStatusIds.has(recoveredDraft?.status)
+    ? recoveredDraft.status
+    : defaultStatus;
+  const recoveredReporterId =
+    canAssignReporter && validReporterIds.has(recoveredDraft?.reporterId)
+      ? recoveredDraft.reporterId
+      : defaultReporterId;
+  const recoveredAssigneeIds = Array.isArray(recoveredDraft?.assigneeIds)
+    ? recoveredDraft.assigneeIds.filter((userId) =>
+        validAssigneeIds.has(userId),
+      )
+    : [];
+  const recoveredDueDate =
+    typeof recoveredDraft?.dueDate === "string" &&
+    /^\d{4}-\d{2}-\d{2}$/.test(recoveredDraft.dueDate)
+      ? recoveredDraft.dueDate
+      : initialTask?.dueDate ?? "";
+
+  const [title, setTitle] = useState(
+    typeof recoveredDraft?.title === "string"
+      ? recoveredDraft.title
+      : initialTask?.title ?? "",
+  );
 
   const [description, setDescription] = useState(
-    initialTask?.description ?? "",
+    typeof recoveredDraft?.description === "string"
+      ? recoveredDraft.description
+      : initialTask?.description ?? "",
   );
 
-  const [status, setStatus] = useState(
-    initialTask?.status ?? initialStatusId ?? workflowStatuses[0]?.id ?? "",
-  );
+  const [status, setStatus] = useState(recoveredStatus);
 
-  const [dueDate, setDueDate] = useState(initialTask?.dueDate ?? "");
+  const [dueDate, setDueDate] = useState(recoveredDueDate);
 
   const [assigneeIds, setAssigneeIds] = useState(
-    initialTask?.assigneeIds ?? [],
+    recoveredDraft ? recoveredAssigneeIds : initialTask?.assigneeIds ?? [],
   );
 
-  const [reporterId, setReporterId] = useState(
-    initialTask?.reporterId ?? currentUser?.id ?? "",
-  );
+  const [reporterId, setReporterId] = useState(recoveredReporterId);
 
-  const isEditing = Boolean(initialTask);
+  const [isDraftRecovered, setIsDraftRecovered] = useState(
+    Boolean(recoveredDraft),
+  );
 
   const hasWorkflowStatuses = workflowStatuses.length > 0;
 
@@ -56,6 +108,57 @@ function TaskForm({
     isSubmitting ||
     !reporterId ||
     (canEditTaskFields ? !hasWorkflowStatuses : !hasReporterChanged);
+
+  useEffect(() => {
+    if (isEditing || !draftStorageKey) {
+      return;
+    }
+
+    const hasUnfinishedWork = Boolean(
+      title.trim() ||
+        description.trim() ||
+        dueDate ||
+        assigneeIds.length > 0 ||
+        status !== defaultStatus ||
+        reporterId !== defaultReporterId,
+    );
+
+    if (!hasUnfinishedWork) {
+      clearTaskDraft(draftStorageKey);
+      return;
+    }
+
+    writeTaskDraft(draftStorageKey, {
+      title,
+      description,
+      status,
+      dueDate,
+      assigneeIds,
+      reporterId,
+    });
+  }, [
+    assigneeIds,
+    defaultReporterId,
+    defaultStatus,
+    description,
+    draftStorageKey,
+    dueDate,
+    isEditing,
+    reporterId,
+    status,
+    title,
+  ]);
+
+  function discardDraft() {
+    clearTaskDraft(draftStorageKey);
+    setTitle("");
+    setDescription("");
+    setStatus(defaultStatus);
+    setDueDate("");
+    setAssigneeIds([]);
+    setReporterId(defaultReporterId);
+    setIsDraftRecovered(false);
+  }
 
   function toggleAssignee(userId) {
     setAssigneeIds((currentAssigneeIds) =>
@@ -130,6 +233,24 @@ function TaskForm({
             ×
           </button>
         </header>
+
+        {!isEditing && isDraftRecovered && (
+          <div className="task-form__draft-notice" role="status">
+            <div>
+              <strong>Unsaved draft recovered</strong>
+              <small>Your task details were restored from this browser.</small>
+            </div>
+
+            <button
+              type="button"
+              className="button button--secondary"
+              onClick={discardDraft}
+              disabled={isSubmitting}
+            >
+              Discard draft
+            </button>
+          </div>
+        )}
 
         <div className="task-form__field">
           <label htmlFor="task-title">Title</label>
@@ -378,6 +499,12 @@ function TaskForm({
         )}
 
         <div className="task-form__actions">
+          {!isEditing && draftStorageKey && (
+            <small className="task-form__autosave-status">
+              Draft saved automatically on this device
+            </small>
+          )}
+
           <button
             type="button"
             className="button button--secondary"

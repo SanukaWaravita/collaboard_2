@@ -28,6 +28,7 @@ Implemented:
 - customizable and reorderable Project workflow statuses;
 - Kanban and List Task views;
 - Task creation, viewing, editing, movement, and deletion;
+- per-user, per-Project unfinished Task draft recovery in the same browser;
 - drag-and-drop Task movement;
 - multiple Task Assignees;
 - Task Due Dates and due-state indicators;
@@ -651,7 +652,7 @@ npm --prefix client run lint
 npm --prefix client run build
 ```
 
-The server has 19 Jest + Supertest tests; the client has 10 Jest + React Testing Library tests. `npm --prefix server run test:docs` runs the nine Swagger/CORS regression cases alone. Database-backed tests use a temporary MongoDB process and never connect to Atlas or the development database. The first run may download its binary.
+The server has 19 Jest + Supertest tests; the client has 24 Jest + React Testing Library tests. `npm --prefix server run test:docs` runs the nine Swagger/CORS regression cases alone. Database-backed tests use a temporary MongoDB process and never connect to Atlas or the development database. The first run may download its binary.
 
 GitHub Actions runs both suites on every push and pull request. See [M4 testing and bug-fix evidence](docs/m4-testing.md), including the database-startup limitation observed during preparation and the remaining local/CI verification.
 

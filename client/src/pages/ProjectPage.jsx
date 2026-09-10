@@ -9,11 +9,19 @@ import TaskList from "../components/TaskList";
 import WorkflowStatusManager from "../components/WorkflowStatusManager";
 import { PROJECT_PERMISSIONS } from "../constants/access";
 import { apiRequest, clearSession, getCurrentUser } from "../services/api";
+import {
+  clearTaskDraft,
+  getTaskDraftStorageKey,
+} from "../utils/taskDraft";
 
 function ProjectPage() {
   const { workspaceId, projectId } = useParams();
   const navigate = useNavigate();
   const currentUser = getCurrentUser();
+  const taskDraftStorageKey = getTaskDraftStorageKey(
+    projectId,
+    currentUser?.id,
+  );
 
   const [project, setProject] = useState(null);
   const [tasks, setTasks] = useState([]);
@@ -352,6 +360,7 @@ function ProjectPage() {
         });
 
         setTasks((currentTasks) => [...currentTasks, data.task]);
+        clearTaskDraft(taskDraftStorageKey);
       }
 
       setIsTaskFormOpen(false);
@@ -749,6 +758,7 @@ function ProjectPage() {
           onCancel={closeTaskForm}
           isSubmitting={isSavingTask}
           error={taskFormError}
+          draftStorageKey={editingTask ? null : taskDraftStorageKey}
         />
       )}
     </main>
