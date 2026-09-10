@@ -653,7 +653,7 @@ npm --prefix client run lint
 npm --prefix client run build
 ```
 
-The server has 25 Jest + Supertest/Socket.IO tests; the client has 30 Jest + React Testing Library tests. `npm --prefix server run test:docs` runs the nine Swagger/CORS regression cases alone. Database-backed tests use a temporary MongoDB process and never connect to Atlas or the development database. The first run may download its binary.
+The server has 25 Jest + Supertest/Socket.IO tests; the client has 31 Jest + React Testing Library tests. `npm --prefix server run test:docs` runs the nine Swagger/CORS regression cases alone. Database-backed tests use a temporary MongoDB process and never connect to Atlas or the development database. The first run may download its binary.
 
 GitHub Actions runs both suites on every push and pull request. See [M4 testing and bug-fix evidence](docs/m4-testing.md) for the completed local/CI validation record and remaining submission-evidence links.
 
