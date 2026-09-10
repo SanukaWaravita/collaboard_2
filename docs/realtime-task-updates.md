@@ -37,8 +37,8 @@ The server reuses `CORS_ALLOWED_ORIGINS` for both Express and Socket.IO. The pro
 
 ## Validation
 
-- Server tests cover missing-token rejection, Project-room authorization, and permission-safe room broadcasts.
-- Client tests cover idempotent reconciliation, stale-version protection, and Project-page create/update/move/delete delivery.
+- Server tests cover missing, invalid, and expired-token rejection; Project-room authorization; permission-safe room broadcasts; automatic reconnection; and authorized room rejoining.
+- Client tests cover connection-state transitions, reconnection room joins, recovery from connection errors, idempotent reconciliation, stale-version protection, and Project-page create/update/move/delete delivery.
 - The existing CI workflow automatically runs these tests on pushes and pull requests.
 
 ## Deployment note
