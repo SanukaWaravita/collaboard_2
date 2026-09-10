@@ -38,6 +38,36 @@
   white-space: nowrap;
 }
 
+.realtime-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 550;
+  white-space: nowrap;
+}
+
+.realtime-status__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--status-default);
+}
+
+.realtime-status--live .realtime-status__dot {
+  background: #16a34a;
+  box-shadow: 0 0 0 3px rgb(22 163 74 / 12%);
+}
+
+.realtime-status--reconnecting .realtime-status__dot {
+  background: #d97706;
+}
+
+.realtime-status--unavailable .realtime-status__dot {
+  background: var(--danger);
+}
+
 .project-view-toggle {
   display: inline-flex;
   flex-shrink: 0;

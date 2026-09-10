@@ -10,9 +10,24 @@ import WorkflowStatusManager from "../components/WorkflowStatusManager";
 import { PROJECT_PERMISSIONS } from "../constants/access";
 import { apiRequest, clearSession, getCurrentUser } from "../services/api";
 import {
+  disconnectRealtimeSocket,
+  getRealtimeSocket,
+} from "../services/realtime";
+import {
   clearTaskDraft,
   getTaskDraftStorageKey,
 } from "../utils/taskDraft";
+import {
+  reconcileRealtimeTask,
+  removeRealtimeTask,
+} from "../utils/realtimeTasks";
+
+const REALTIME_LABELS = {
+  connecting: "Connecting",
+  live: "Live",
+  reconnecting: "Reconnecting",
+  unavailable: "Offline",
+};
 
 function ProjectPage() {
   const { workspaceId, projectId } = useParams();
@@ -30,6 +45,7 @@ function ProjectPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
+  const [realtimeState, setRealtimeState] = useState("connecting");
 
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
 
@@ -51,6 +67,7 @@ function ProjectPage() {
   const [isSavingWorkflow, setIsSavingWorkflow] = useState(false);
 
   const [workflowError, setWorkflowError] = useState("");
+  const activeProjectId = project?.id;
 
   useEffect(() => {
     let shouldIgnore = false;
@@ -99,6 +116,133 @@ function ProjectPage() {
       shouldIgnore = true;
     };
   }, [workspaceId, projectId, navigate, reloadKey]);
+
+  useEffect(() => {
+    if (!activeProjectId || activeProjectId !== projectId) {
+      return undefined;
+    }
+
+    let isActive = true;
+    const socket = getRealtimeSocket();
+
+    function handleConnect() {
+      if (!isActive) {
+        return;
+      }
+
+      setRealtimeState("connecting");
+
+      socket.emit(
+        "project:join",
+        { projectId },
+        (acknowledgement) => {
+          if (!isActive) {
+            return;
+          }
+
+          setRealtimeState(
+            acknowledgement?.ok ? "live" : "unavailable",
+          );
+        },
+      );
+    }
+
+    function handleDisconnect() {
+      if (isActive) {
+        setRealtimeState("reconnecting");
+      }
+    }
+
+    function handleConnectError() {
+      if (isActive) {
+        setRealtimeState("unavailable");
+      }
+    }
+
+    async function refreshTask(payload) {
+      if (
+        !isActive ||
+        payload?.projectId !== projectId ||
+        typeof payload?.taskId !== "string"
+      ) {
+        return;
+      }
+
+      try {
+        const data = await apiRequest(`/tasks/${payload.taskId}`);
+
+        if (isActive) {
+          setTasks((currentTasks) =>
+            reconcileRealtimeTask(currentTasks, data.task),
+          );
+          setRealtimeState("live");
+        }
+      } catch (requestError) {
+        if (!isActive) {
+          return;
+        }
+
+        if (requestError.status === 401) {
+          clearSession();
+          disconnectRealtimeSocket();
+          navigate("/login", { replace: true });
+          return;
+        }
+
+        if (requestError.status === 404) {
+          setTasks((currentTasks) =>
+            removeRealtimeTask(currentTasks, payload.taskId),
+          );
+          return;
+        }
+
+        setRealtimeState("unavailable");
+      }
+    }
+
+    function handleTaskDeleted(payload) {
+      if (
+        !isActive ||
+        payload?.projectId !== projectId ||
+        typeof payload?.taskId !== "string"
+      ) {
+        return;
+      }
+
+      setTasks((currentTasks) =>
+        removeRealtimeTask(currentTasks, payload.taskId),
+      );
+    }
+
+    socket.on("connect", handleConnect);
+    socket.on("disconnect", handleDisconnect);
+    socket.on("connect_error", handleConnectError);
+    socket.on("task:created", refreshTask);
+    socket.on("task:updated", refreshTask);
+    socket.on("task:deleted", handleTaskDeleted);
+
+    if (socket.connected) {
+      handleConnect();
+    } else {
+      socket.connect();
+    }
+
+    return () => {
+      isActive = false;
+
+      if (socket.connected) {
+        socket.emit("project:leave", { projectId });
+      }
+
+      socket.off("connect", handleConnect);
+      socket.off("disconnect", handleDisconnect);
+      socket.off("connect_error", handleConnectError);
+      socket.off("task:created", refreshTask);
+      socket.off("task:updated", refreshTask);
+      socket.off("task:deleted", handleTaskDeleted);
+      disconnectRealtimeSocket();
+    };
+  }, [activeProjectId, navigate, projectId]);
 
   const canManageMembers =
     project?.permissions.includes(PROJECT_PERMISSIONS.MANAGE_MEMBERS) ?? false;
@@ -349,9 +493,7 @@ function ProjectPage() {
         });
 
         setTasks((currentTasks) =>
-          currentTasks.map((task) =>
-            task.id === data.task.id ? data.task : task,
-          ),
+          reconcileRealtimeTask(currentTasks, data.task),
         );
       } else {
         const data = await apiRequest(`/projects/${projectId}/tasks`, {
@@ -359,7 +501,9 @@ function ProjectPage() {
           body: taskData,
         });
 
-        setTasks((currentTasks) => [...currentTasks, data.task]);
+        setTasks((currentTasks) =>
+          reconcileRealtimeTask(currentTasks, data.task),
+        );
         clearTaskDraft(taskDraftStorageKey);
       }
 
@@ -377,9 +521,7 @@ function ProjectPage() {
         const latestTask = requestError.data.task;
 
         setTasks((currentTasks) =>
-          currentTasks.map((task) =>
-            task.id === latestTask.id ? latestTask : task,
-          ),
+          reconcileRealtimeTask(currentTasks, latestTask),
         );
 
         setEditingTask(latestTask);
@@ -482,9 +624,7 @@ function ProjectPage() {
       });
 
       setTasks((currentTasks) =>
-        currentTasks.map((task) =>
-          task.id === data.task.id ? data.task : task,
-        ),
+        reconcileRealtimeTask(currentTasks, data.task),
       );
     } catch (requestError) {
       if (requestError.status === 401) {
@@ -497,9 +637,7 @@ function ProjectPage() {
         const latestTask = requestError.data.task;
 
         setTasks((currentTasks) =>
-          currentTasks.map((task) =>
-            task.id === latestTask.id ? latestTask : task,
-          ),
+          reconcileRealtimeTask(currentTasks, latestTask),
         );
 
         setTaskActionError(
@@ -539,7 +677,7 @@ function ProjectPage() {
       });
 
       setTasks((currentTasks) =>
-        currentTasks.filter((currentTask) => currentTask.id !== task.id),
+        removeRealtimeTask(currentTasks, task.id),
       );
     } catch (requestError) {
       if (requestError.status === 401) {
@@ -624,6 +762,21 @@ function ProjectPage() {
         </div>
 
         <div className="project-view-toolbar__actions">
+          <span
+            className={
+              `realtime-status realtime-status--${realtimeState}`
+            }
+            role="status"
+            title={
+              realtimeState === "live"
+                ? "Task changes appear automatically"
+                : "The application will keep trying to reconnect"
+            }
+          >
+            <span className="realtime-status__dot" aria-hidden="true" />
+            {REALTIME_LABELS[realtimeState]}
+          </span>
+
           <span className="project-view-toolbar__summary">
             {workflowStatuses.length}{" "}
             {workflowStatuses.length === 1 ? "Status" : "Statuses"}

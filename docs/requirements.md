@@ -8,7 +8,7 @@ CollabBoard is a collaborative Kanban task-management application. It allows reg
 - Doing
 - Done
 
-The application will eventually support persistent storage, real-time updates, offline draft recovery, and simultaneous-edit conflict detection.
+The application supports persistent storage, real-time Task updates, offline draft recovery, and simultaneous-edit conflict detection.
 
 ## 2. Target users
 
