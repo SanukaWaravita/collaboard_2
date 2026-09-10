@@ -93,7 +93,7 @@ Local verification was completed on 8 September 2026.
 | Client tests | All 10 tests passed. |
 | Frontend lint | Passed. |
 | Production frontend build | Passed. |
-| GitHub Actions | Workflow configured; the first remote run remains to be verified. |
+| GitHub Actions | Both CI jobs passed after the feature branch was pushed and were subsequently exercised by later pull requests. |
 
 The complete server suite passed locally on Arch Linux in approximately 42 seconds, including all database-backed tests.
 
@@ -115,16 +115,16 @@ M4 verification checklist:
 - [x] Run all 10 client tests successfully locally.
 - [x] Complete frontend lint and production build checks.
 - [x] Fix a real bug and verify its regression test.
-- [ ] Push the feature branch and confirm both M4 CI jobs pass.
+- [x] Push the feature branch and confirm both M4 CI jobs pass.
 - [ ] Retain the successful GitHub Actions run URL or screenshot.
 - [ ] Record the actual bug-fix commit and pull request links.
 - [ ] Review the team's contribution history against the group brief.
 
-Branch: `feature/m4-tests-ci`.
+Historical implementation branch: `feature/m4-tests-ci`.
 
-Pull request target: `develop`.
+Pull request target used: `develop`.
 
-Suggested pull request title:
+Pull request title used/planned:
 `test: add M4 client and server suites, CI, and login redirect fix`
 
-Local verification is complete. M4's CI requirement still needs a successful GitHub Actions run.
+Local and CI verification are complete. The successful workflow URL or screenshot and the final commit/pull-request links still need to be retained as submission evidence.
